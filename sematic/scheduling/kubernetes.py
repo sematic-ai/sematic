@@ -37,9 +37,9 @@ from sematic.db.models.job import Job
 from sematic.graph import RerunMode
 from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
+    DEFAULT_RUNNER_RESOURCES,
     KUBERNETES_SECRET_NAME,
     KubernetesHostPathMount,
-    KubernetesResourceRequirements,
     KubernetesSecretMount,
     ResourceRequirements,
 )
@@ -54,6 +54,10 @@ from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 _kubeconfig_loaded = False
+
+
+# If a job still hasn't started after this time, consider it dead.
+_JOB_START_TIMEOUT_SECONDS = 24 * 3600
 
 # ordered from highest to lowest precedence
 # to be interpreted as: pods with phases earlier in the list are newer
@@ -73,11 +77,6 @@ POD_CONDITION_PRECEDENCE = [
     "PodHasNetwork",
     "PodScheduled",
 ]
-RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
-    kubernetes=KubernetesResourceRequirements(
-        requests={"cpu": "500m", "memory": "2Gi"},
-    )
-)
 
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
 
@@ -229,6 +228,7 @@ def cancel_job(job: Job) -> Job:
     details.still_exists = False
     details.canceled = True
     job.details = details
+    job.update_status(details.get_status(time.time()))
 
     return job
 
@@ -254,13 +254,28 @@ def refresh_job(job: Job) -> Job:
         if e.status == 404:
             logger.warning("Got 404 while looking for job %s", job.identifier())
             if not job.details.has_started:
+                # still hasn't started
                 job.update_status(
                     replace(
                         job.latest_status,
                         last_updated_epoch_seconds=time.time(),
                     )
                 )
-                return job  # still hasn't started
+                if (
+                    time.time() - job.created_at.timestamp()
+                    > _JOB_START_TIMEOUT_SECONDS
+                ):
+                    try:
+                        # Cancel in case there's still something in K8s
+                        # to clean, even though we got a 404 for the job
+                        # already, just to be safe.
+                        return cancel_job(job)
+                    except Exception:
+                        logger.exception("Error while cleaning job")
+                        job.set_details(job.details.force_clean())
+                        return job
+
+                return job
             else:
                 details.still_exists = False
                 job.details = details
@@ -708,6 +723,7 @@ def schedule_resolution_job(
     resolution_id: str,
     image: str,
     user_settings: Dict[str, str],
+    resource_requirements: Optional[ResourceRequirements] = None,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
     rerun_mode: Optional[RerunMode] = None,
@@ -722,6 +738,7 @@ def schedule_resolution_job(
     socketio_address_override = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
     )
+    resource_requirements = resource_requirements or DEFAULT_RUNNER_RESOURCES
 
     job = make_job(
         namespace=namespace,
@@ -760,7 +777,7 @@ def schedule_resolution_job(
         service_account=service_account,
         api_address_override=api_address_override,
         socketio_address_override=socketio_address_override,
-        resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
+        resource_requirements=resource_requirements,
         args=args,
     )
     return job

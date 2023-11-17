@@ -30,6 +30,7 @@ from sematic.db.models.run import Run
 from sematic.graph import FutureGraph, Graph, RerunMode
 from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
+from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.runners.silent_runner import SilentRunner
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
@@ -451,8 +452,12 @@ class LocalRunner(SilentRunner):
             run_command=get_run_command(),
             build_config=get_build_config(),
         )
+        pipeline_run.resource_requirements = self._get_runner_resources()
 
         return pipeline_run
+
+    def _get_runner_resources(self) -> Optional[ResourceRequirements]:
+        return None
 
     def _get_git_info(self, object: Any) -> Optional[GitInfo]:
         if self._git_info is not None:

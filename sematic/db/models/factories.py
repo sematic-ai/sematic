@@ -243,6 +243,7 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
     # a json encodable, but this property will auto-update the json
     # encodable field.
     cloned_resolution.git_info = resolution.git_info
+    cloned_resolution.resource_requirements = resolution.resource_requirements
 
     return cloned_resolution
 

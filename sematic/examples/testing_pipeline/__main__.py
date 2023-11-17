@@ -14,6 +14,10 @@ import debugpy
 # Sematic
 from sematic import CloudRunner, LocalRunner, SilentRunner
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.runners.state_machine_runner import StateMachineRunner
 
 logger = logging.getLogger(__name__)
@@ -154,6 +158,10 @@ EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
     "If specified without a value, defaults to 0. Defaults to None."
 )
+CUSTOM_RUNNER_RESOURCES_HELP = (
+    "Specifies custom resources for the CloudRunner. When used, a hard-coded "
+    "custom resource config will be used."
+)
 
 
 class StoreCacheNamespace(argparse.Action):
@@ -232,6 +240,7 @@ def _parse_args() -> argparse.Namespace:
             "--max-parallelism",
             "--oom",
             "--ray-resource",
+            "--custom-runner-resources",
         ),
     )
     parser.add_argument(
@@ -381,6 +390,12 @@ def _parse_args() -> argparse.Namespace:
         dest="exit_code",
         help=EXIT_HELP,
     )
+    parser.add_argument(
+        "--custom-runner-resources",
+        action="store_true",
+        default=False,
+        help=CUSTOM_RUNNER_RESOURCES_HELP,
+    )
 
     args = parser.parse_args()
     if args.log_level is not None:
@@ -412,11 +427,19 @@ def _get_runner(args: argparse.Namespace) -> StateMachineRunner:
             rerun_from=args.rerun_from, cache_namespace=args.cache_namespace
         )
 
+    extra_kwargs = dict()
+    if args.custom_runner_resources:
+        extra_kwargs["resources"] = ResourceRequirements(
+            kubernetes=KubernetesResourceRequirements(
+                requests={"memory": "3Gi"},
+            )
+        )
     return CloudRunner(
         detach=args.detach,
         cache_namespace=args.cache_namespace,
         max_parallelism=args.max_parallelism,
         rerun_from=args.rerun_from,
+        **extra_kwargs,
     )
 
 

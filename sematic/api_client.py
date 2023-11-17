@@ -478,7 +478,7 @@ def clean_orphaned_run(run_id: str) -> str:
     return response["content"]
 
 
-def clean_stale_pipeline_run(run_id: str) -> str:
+def clean_pipeline_run(run_id: str) -> str:
     """Clean up a pipeline run whose run has terminated."""
     response = _post(f"/resolutions/{run_id}/clean", retry=True)
     return response["content"]
@@ -492,6 +492,11 @@ def get_pipeline_run_ids_with_orphaned_jobs() -> List[str]:
 def get_pipeline_runs_with_stale_statuses() -> List[str]:
     """Get ids of pipeline runs that have terminated but still have non-terminal jobs."""
     return _search_for_gc_pipeline_runs("stale")
+
+
+def get_zombie_pipeline_run_ids() -> List[str]:
+    """Get ids of pipeline runs that are non-terminal but have no associated pod."""
+    return _search_for_gc_pipeline_runs("zombie")
 
 
 def _search_for_gc_pipeline_runs(filter_name: str) -> List[str]:

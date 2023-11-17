@@ -60,7 +60,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
-from sematic.scheduling.job_details import JobKind
+from sematic.scheduling.job_details import JobKind, JobStatus, KubernetesJobState
 from sematic.scheduling.job_scheduler import StateNotSchedulable
 from sematic.utils.env import environment_variables
 
@@ -127,6 +127,15 @@ def mock_schedule_resolution():
         side_effect=mock_schedule,
     ) as mock_schedule_resolution_:
         yield mock_schedule_resolution_
+
+
+@pytest.fixture
+def mock_refresh_jobs():
+    with mock.patch(
+        "sematic.api.endpoints.resolutions.refresh_jobs",
+        side_effect=lambda jobs: jobs,
+    ) as mock_refresh:
+        yield mock_refresh
 
 
 @pytest.fixture
@@ -375,6 +384,8 @@ def test_clean_resolution(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_schedule_kubernetes: mock.MagicMock,
 ):
+    job = make_job(run_id=persisted_resolution.root_id, kind="resolver")
+    save_job(job)
     response = test_client.post(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/clean",
     )
@@ -394,6 +405,94 @@ def test_clean_resolution(
     payload = typing.cast(typing.Dict[str, typing.Any], response.json)
 
     assert payload["content"] == "FAILED"
+
+
+def test_find_zombie_resolution(
+    mock_auth,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_schedule_kubernetes: mock.MagicMock,
+    mock_refresh_jobs: mock.MagicMock,
+):
+    run = get_run(persisted_resolution.root_id)  # noqa: F811
+    run.future_state = FutureState.SCHEDULED
+    save_run(run)
+
+    job = make_job(
+        run_id=persisted_resolution.root_id,
+        name="resolver-job",
+        kind="resolver",
+        status=JobStatus(
+            state=KubernetesJobState.Running,
+            message="doing the work",
+            last_updated_epoch_seconds=time.time(),
+        ),
+    )
+    save_job(job)
+    run_job = make_job(
+        run_id=persisted_resolution.root_id,
+        name="run-job",
+        kind="run",
+        status=JobStatus(
+            state=KubernetesJobState.Running,
+            message="doing the work",
+            last_updated_epoch_seconds=time.time(),
+        ),
+    )
+    save_job(run_job)
+    filters = {"zombie": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["root_id"]),
+    }
+
+    response = test_client.get(
+        "/api/v1/resolutions?{}".format(urlencode(query_params)),
+    )
+    resolution_ids = [
+        result["root_id"] for result in response.json["content"]  # type: ignore
+    ]
+    assert resolution_ids == []
+
+    job.update_status(
+        JobStatus(
+            state=KubernetesJobState.Failed,
+            message="it ded",
+            last_updated_epoch_seconds=time.time(),
+        )
+    )
+    save_job(job)
+    run_job.update_status(
+        JobStatus(
+            state=KubernetesJobState.Running,
+            message="still doing the work",
+            last_updated_epoch_seconds=time.time(),
+        )
+    )
+    save_job(run_job)
+    response = test_client.get(
+        "/api/v1/resolutions?{}".format(urlencode(query_params)),
+    )
+    resolution_ids = [
+        result["root_id"] for result in response.json["content"]  # type: ignore
+    ]
+    assert resolution_ids == []
+
+    run_job.update_status(
+        JobStatus(
+            state=KubernetesJobState.Failed,
+            message="it ded",
+            last_updated_epoch_seconds=time.time(),
+        )
+    )
+    save_job(run_job)
+    response = test_client.get(
+        "/api/v1/resolutions?{}".format(urlencode(query_params)),
+    )
+    resolution_ids = [
+        result["root_id"] for result in response.json["content"]  # type: ignore
+    ]
+    assert resolution_ids == [persisted_resolution.root_id]
 
 
 def test_clean_resolution_jobs(

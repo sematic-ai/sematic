@@ -21,6 +21,10 @@ from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
 from sematic.db.models.run import Run
 from sematic.future_context import context
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
+from sematic.resolvers.resource_requirements import (
+    DEFAULT_RUNNER_RESOURCES,
+    ResourceRequirements,
+)
 from sematic.runners.local_runner import LocalRunner, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
@@ -97,6 +101,9 @@ class CloudRunner(LocalRunner):
             old one and only execute what is necessary to determine the final result.
             The new pipeline run will use the EXISTING future graph, recreated from
             the runs in the DB.
+    resources: ResourceRequirements
+            Custom resources to use for the runner pod itself. Defaults to half a CPU
+            and 2 Gi of memory.
     _is_running_remotely: bool
         For Sematic internal usage. End users should always leave this at the
         default value of `False`.
@@ -113,6 +120,7 @@ class CloudRunner(LocalRunner):
         self,
         detach: bool = True,
         max_parallelism: Optional[int] = None,
+        resources: ResourceRequirements = DEFAULT_RUNNER_RESOURCES,
         _is_running_remotely: bool = False,
         _base_image_tag: str = "default",
         **kwargs,
@@ -142,6 +150,7 @@ class CloudRunner(LocalRunner):
         # When multiple base images are specified through the build info (Bazel target)
         # this is the tag we use to find the pipeline run image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
+        self._runner_resources = resources
 
     def run(self, future: AbstractFuture) -> Any:
         if not self._detach:
@@ -150,6 +159,9 @@ class CloudRunner(LocalRunner):
         with self._catch_pipeline_run_errors():
             self._enqueue_root_future(future)
             return self._detach_pipeline_run(future)
+
+    def _get_runner_resources(self) -> Optional[ResourceRequirements]:
+        return self._runner_resources
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """

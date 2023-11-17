@@ -40,6 +40,11 @@ from sematic.db.models.mixins.json_encodable_mixin import (
     REDACTED_KEY,
     JSONEncodableMixin,
 )
+from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.types.serialization import (
+    value_from_json_encodable,
+    value_to_json_encodable,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +114,10 @@ class ResolutionStatus(Enum):
     def terminal_states(cls) -> FrozenSet:
         return _TERMINAL_STATES
 
+    @classmethod
+    def non_terminal_states(cls) -> FrozenSet:
+        return _NON_TERMINAL_STATES
+
 
 _ALLOWED_TRANSITIONS = {
     # Local resolver can jump straight to RUNNING
@@ -141,6 +150,9 @@ _ALLOWED_TRANSITIONS = {
 
 _TERMINAL_STATES = frozenset(
     {state for state in ResolutionStatus if state.is_terminal()}
+)
+_NON_TERMINAL_STATES = frozenset(
+    {state for state in ResolutionStatus if not state.is_terminal()}
 )
 
 
@@ -194,6 +206,8 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
         The CLI command used to launch this resolution, if applicable.
     build_config:
         The configuration used to build the pipeline container image, if applicable.
+    resource_requirements_json:
+        The resource requirements the runner pod should use.
     """
 
     __tablename__ = "resolutions"
@@ -227,6 +241,7 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
     cache_namespace: Optional[str] = Column(types.String(), nullable=True)
     run_command: Optional[str] = Column(types.String(), nullable=True)
     build_config: Optional[str] = Column(types.String(), nullable=True)
+    resource_requirements_json: Optional[str] = Column(types.JSON(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:
@@ -331,6 +346,23 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
         # for the same reason, we can't use value_to_json_encodable, because it imposes
         # the values/types/root_type semantics
         self.git_info_json = json.dumps(dataclasses.asdict(value), sort_keys=True)
+
+    @property
+    def resource_requirements(self) -> Optional[ResourceRequirements]:
+        if self.resource_requirements_json is None:
+            return None
+
+        json_encodable = json.loads(self.resource_requirements_json)
+        return value_from_json_encodable(json_encodable, ResourceRequirements)
+
+    @resource_requirements.setter
+    def resource_requirements(self, value: Optional[ResourceRequirements]) -> None:
+        if value is None:
+            self.resource_requirements_json = None
+            return
+        self.resource_requirements_json = json.dumps(
+            value_to_json_encodable(value, ResourceRequirements)
+        )
 
 
 # Aliases to aid in the rename of resolution -> pipeline run
