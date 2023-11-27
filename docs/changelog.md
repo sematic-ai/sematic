@@ -7,16 +7,16 @@ with nothing else on the line.
 * HEAD
 * [0.36.0](https://pypi.org/project/sematic/0.36.0/)
     * [feature] Allow custom Kubernetes resources to be specified for the `CloudRunner`.
-    * [feature] Add APIs for blocking on a run anf getting its output using the run id.
-    * [improvement] Open a new tab when command/ctrl-clicking a row from the pipeline
+    * [feature] Add APIs for blocking on a run and getting its output using the run id.
+    * [improvement] Open a new tab when command/CTRL-clicking a row from the pipeline
       and run search results.
     * [improvement] Have the cleaner clean pipeline run metadata when the runner pod is
       gone.
     * [improvement] Provide more informative error message when doing comparisons with
       Futures.
-    * [improvement] Ensure server pods restart following helm configmap changes
+    * [improvement] Ensure server pods restart following helm configmap changes.
     * [bugfix] Fail with more explicit error message when writes to external storage fail.
-    * [bugfix] Add email domain fallback for Google OAuth
+    * [bugfix] Add email domain fallback for Google OAuth.
     * [bugfix] Fix bug with timeouts that occur at the same moment for multiple runs.
     * [bugfix] Make Kuberay version parsing more robust for Ray integration.
 * [0.35.0](https://pypi.org/project/sematic/0.35.0/)
