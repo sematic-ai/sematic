@@ -131,7 +131,7 @@ const FunctionSection = () => {
 
         return <>
             {runDuration}
-            on&nbsp;
+            &nbsp;on&nbsp;
             {completeAt}
         </>;
     }, [selectedRun]);
