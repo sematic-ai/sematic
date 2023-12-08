@@ -1,5 +1,6 @@
 # Standard Library
 import sys
+import time
 from typing import Iterable, List
 
 # Third-party
@@ -70,8 +71,11 @@ def finite_logs(n_lines: int) -> Iterable[LogLine]:
     )
 
 
-def fake_streamer(to_stream: Iterable[LogLine]) -> Iterable[LogLine]:
+def fake_streamer(
+    to_stream: Iterable[LogLine], delay_seconds: float = 0.0
+) -> Iterable[LogLine]:
     for line in to_stream:
+        time.sleep(delay_seconds)
         _streamed_lines.append(line.line)
         yield line
 
@@ -237,6 +241,43 @@ def test_get_log_lines_from_line_stream_filter():
         ),
         result,
     )
+
+
+def test_get_log_lines_from_line_stream_timeout():
+    max_lines = 100
+    result = get_log_lines_from_line_stream(
+        line_stream=fake_streamer(infinite_logs(), 0.1),
+        still_running=False,
+        cursor_file=None,
+        cursor_line_index=-1,
+        traversal_had_lines=False,
+        run_id=_DUMMY_RUN_ID,
+        max_lines=max_lines,
+        filter_strings=["2"],
+        time_limit_seconds=0.3,
+    )
+    cursor = Cursor.from_token(result.forward_cursor_token)
+
+    assert len(result.lines) < max_lines
+    assert result.can_continue_forward
+    assert cursor.traversal_had_lines
+
+    result = get_log_lines_from_line_stream(
+        line_stream=fake_streamer(finite_logs(2 * max_lines), 0.1),
+        still_running=False,
+        cursor_file=None,
+        cursor_line_index=-1,
+        traversal_had_lines=False,
+        run_id=_DUMMY_RUN_ID,
+        max_lines=max_lines,
+        filter_strings=["2"],
+        time_limit_seconds=0.3,
+    )
+    cursor = Cursor.from_token(result.reverse_cursor_token)
+
+    assert len(result.lines) < max_lines
+    assert result.can_continue_backward
+    assert cursor.traversal_had_lines
 
 
 def prepare_logs_v2(
