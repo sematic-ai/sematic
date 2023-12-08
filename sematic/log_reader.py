@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import sys
+import time
 from dataclasses import asdict, dataclass, replace
 from enum import Enum, unique
 from typing import Iterable, List, Optional, TypeVar
@@ -27,6 +28,8 @@ LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
 
 DEFAULT_END_INDEX = sys.maxsize
 DEFAULT_START_INDEX = -1
+
+DEFAULT_READ_TIMEOUT_SECONDS = 10.0
 
 logger = logging.getLogger(__name__)
 
@@ -626,6 +629,7 @@ def get_log_lines_from_line_stream(
     cursor_line_index: Optional[int] = None,
     default_log_info_message: Optional[str] = None,
     reverse: bool = False,
+    time_limit_seconds: float = DEFAULT_READ_TIMEOUT_SECONDS,
 ) -> LogLineResult:
     """Given a stream of log lines, produce an object containing the desired subset
 
@@ -654,6 +658,9 @@ def get_log_lines_from_line_stream(
         to be provided.
     reverse:
         Whether the log lines are being traversed in reverse order.
+    time_limit_seconds:
+        The LogLineResult should be returned in less than this amount of time even if
+        max_lines have not been found, provided that at least one line has been found.
 
     Returns
     -------
@@ -663,8 +670,10 @@ def get_log_lines_from_line_stream(
     original_cursor_line_index = cursor_line_index
     buffer_iterator = iter(line_stream)
     keep_going = True
+    search_timed_out = False
     lines: List[str] = []
     line_ids: List[int] = []
+    started_traversal = time.time()
 
     def passes_filter(line: LogLine) -> bool:
         return all(substring in line.line for substring in filter_strings)
@@ -700,6 +709,10 @@ def get_log_lines_from_line_stream(
             line_ids.append(to_line_id(line.source_file, line.source_file_index))
             if len(lines) >= max_lines:
                 keep_going = False
+            if len(lines) >= 1 and time.time() - started_traversal > time_limit_seconds:
+                logger.info("Reached time limit while traversing logs")
+                keep_going = False
+                search_timed_out = True
         except StopIteration:
             keep_going = False
 
@@ -739,7 +752,8 @@ def get_log_lines_from_line_stream(
     forward_cursor_token = None
     reverse_cursor_token = None
     if forward_cursor_file is not None:
-        if reverse or (len(lines) == max_lines or still_running):
+        # there might be a chance to continue in the forward direction
+        if reverse or (len(lines) == max_lines or still_running or search_timed_out):
             forward_cursor_token = Cursor(
                 source_log_key=forward_cursor_file,
                 source_file_line_index=forward_cursor_index,  # type: ignore
@@ -749,7 +763,8 @@ def get_log_lines_from_line_stream(
                 reverse=False,
             ).to_token()
     if reverse_cursor_file is not None:
-        if not reverse or len(lines) == max_lines:
+        # there might be a chance to continue in the reverse direction
+        if not reverse or len(lines) == max_lines or search_timed_out:
             reverse_cursor_token = Cursor(
                 source_log_key=reverse_cursor_file,
                 source_file_line_index=reverse_cursor_index,  # type: ignore
