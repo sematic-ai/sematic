@@ -29,6 +29,8 @@ LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
 DEFAULT_END_INDEX = sys.maxsize
 DEFAULT_START_INDEX = -1
 
+DEFAULT_READ_TIMEOUT_SECONDS = 10.0
+
 logger = logging.getLogger(__name__)
 
 
@@ -627,7 +629,7 @@ def get_log_lines_from_line_stream(
     cursor_line_index: Optional[int] = None,
     default_log_info_message: Optional[str] = None,
     reverse: bool = False,
-    time_limit_seconds: float = 10.0,
+    time_limit_seconds: float = DEFAULT_READ_TIMEOUT_SECONDS,
 ) -> LogLineResult:
     """Given a stream of log lines, produce an object containing the desired subset
 
