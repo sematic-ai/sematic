@@ -94,7 +94,7 @@ export function renderArtifactRow(name: string, typeSerialization: AnyTypeSerial
         ({ type, renderDetails } = result);
     } else { // Fallback to repr or val
         ({ type } = typeSerialization);
-        if (valueSummary["repr"] !== undefined) {
+        if (valueSummary?.["repr"] !== undefined) {
             renderDetails = TypeComponents.get("repr")!;
         } else {
             renderDetails = TypeComponents.get("val")!;
