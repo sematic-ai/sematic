@@ -18,6 +18,8 @@ class HasOrganizationMixin:
         The ID of the Organization, if any.
     """
 
+    __allow_unmapped__ = True
+
     @declared_attr
     def organization_id(cls) -> Mapped[Optional[str]]:
         return Column(types.String(), ForeignKey("organizations.id"), nullable=True)

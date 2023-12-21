@@ -53,14 +53,14 @@ def _is_migration_file(file_name: str) -> bool:
 def _get_current_versions() -> List[str]:
     with db().get_engine().connect() as conn:
         conn.execute(
-            (
+            text(
                 "CREATE TABLE IF NOT EXISTS "
                 '"schema_migrations" (version varchar(255) primary key);'
             )
         )
 
         schema_migrations = conn.execute(
-            "SELECT version FROM schema_migrations ORDER BY version ASC;"
+            text("SELECT version FROM schema_migrations ORDER BY version ASC;")
         )
 
         versions = [row[0] for row in schema_migrations]
@@ -128,7 +128,7 @@ def _run_sql_migration(
             if len(statement) == 0:
                 continue
 
-            conn.execute("{};".format(statement))
+            conn.execute(text("{};".format(statement)))
 
         _update_version(conn, version, direction)
 
@@ -159,7 +159,7 @@ def _update_version(conn: Connection, version: str, direction: MigrationDirectio
         else "DELETE FROM schema_migrations WHERE version = :version"
     )
 
-    conn.execute(text(statement), version=version)
+    conn.execute(text(statement), dict(version=version))
 
 
 def common_options(f):
