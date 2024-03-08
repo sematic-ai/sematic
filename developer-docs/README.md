@@ -11,6 +11,12 @@ whenever `requirements/ci-requirements.txt`) will be updated:
 $ make install-dev-deps
 ```
 
+### Bazel installation
+
+Be sure to install a compatible version of bazel: `sudo apt update && sudo apt install bazel-6.1.1`
+
+You may also want to add the following to your .bashrc: `export USE_BAZEL_VERSION=6.1.1`
+
 ## Testing
 
 Guideline for testing changes that might impact pipeline runs:
@@ -169,9 +175,17 @@ changes.
     1. Smoke test new features that were included or significantly updated in the
     release.
 
+    1. Ensure you have a compatible version of bazel:
+
+      ```bash
+      $ export USE_BAZEL_VERSION=6.1.1
+      $ sudo apt update && sudo apt install bazel-6.1.1
+      ```
+
     1. Run the Testing Pipeline with the test cases listed below on this deployment, and
       check that it completes successfully, while perusing its outputs and logs to check
       that they render correctly.
+      
         ```bash
         $ # STAGE:
         $ bazel run sematic/examples/testing_pipeline:__main__ -- \
