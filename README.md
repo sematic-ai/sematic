@@ -4,7 +4,7 @@
 
 <h3 align="center">Build ML pipelines with only Python, run on your laptop, or in the cloud.</h3>
 
-![PyPI](https://img.shields.io/pypi/v/sematic/0.36.0?style=for-the-badge)
+![PyPI](https://img.shields.io/pypi/v/sematic/0.37.0?style=for-the-badge)
 [![CircleCI](https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=60d1953bfee5b6bf8201f8e84a10eaa5bf5622fe)](https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all)
 ![PyPI - License](https://img.shields.io/pypi/l/sematic?style=for-the-badge)
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-blue?style=for-the-badge&logo=none)](https://python.org)
