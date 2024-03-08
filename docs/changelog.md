@@ -5,6 +5,10 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.37.0](https://pypi.org/project/sematic/0.37.0/)
+    * [improvement] Make log reading more responsive
+    * [bugfix] Fix an issue when rendering subclasses of dataclasses in collections
+    * [bugfix] Fix an issue with rendering of the completion date
 * [0.36.0](https://pypi.org/project/sematic/0.36.0/)
     * [feature] Allow custom Kubernetes resources to be specified for the `CloudRunner`.
     * [feature] Add APIs for blocking on a run and getting its output using the run id.
