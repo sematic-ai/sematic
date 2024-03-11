@@ -283,7 +283,7 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     try:
         run = get_run(run_id)
     except NoResultFound:
-        return jsonify_error(
+        return flask.jsonify(
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
