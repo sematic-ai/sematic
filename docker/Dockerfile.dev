@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1
+
+# Use the same base image as the sematic worker template to ensure compatibility with the examples
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG USER_ID=1000
+
+# Install Bazel
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  apt-get update && \
+  apt-get install -y curl gnupg
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg && \
+  mv bazel.gpg /etc/apt/trusted.gpg.d/ && \
+  echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list && \
+  apt-get update && \
+  apt-get install -y bazel default-jre default-jdk xvfb libgtk-3-0 libgtk-3-0 libgbm-dev
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+
+# Install node.js, python, and other core dependencies
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  apt-get update && \
+  apt-get install -y npm && \
+  npm install -g n && \
+  n stable
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  apt-get update && \
+  apt-get install -y \
+    git \
+    libmagic1 \
+    sqlite3 \
+    python3-dev \
+    python3-pip \
+    python-dev-is-python3
+
+# Bazel python requires a non-root user, so create one and set it up
+RUN \
+  --mount=type=cache,target=/var/cache/apt \
+  apt-get update && apt-get install -y sudo
+RUN useradd -m -d /home/sematicdev -g root -G sudo -u ${USER_ID} sematicdev
+RUN usermod -aG sudo sematicdev
+# Set user password
+RUN echo "sematicdev:sematicdev" | chpasswd
+# Ensure sudo group users are not asked for a password when using sudo command by ammending sudoers file
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Switch to new uer and workdir.
+USER ${USER_ID}
+WORKDIR /home/sematicdev
+
+ENV PATH="${PATH}:/home/sematicdev/.local/bin"
+SHELL ["/bin/bash", "-c"]

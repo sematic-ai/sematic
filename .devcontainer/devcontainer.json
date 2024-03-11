@@ -1,0 +1,12 @@
+{
+  "name": "Sematic Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "sematic-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "extensions": [
+    "mutantdino.resourcemonitor",
+    "ms-azuretools.vscode-docker",
+    "ms-python.python"
+  ] 
+}
