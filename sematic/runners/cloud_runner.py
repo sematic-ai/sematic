@@ -158,7 +158,7 @@ class CloudRunner(LocalRunner):
         # where it left off in this case in a new pod. We shouldn't worry about
         # stale runner metadata in this case, because the cleaner should identify
         # orphaned runs if it doesn't actually get restarted in a new pod.
-        return not self._detach
+        return not self._is_running_remotely
 
     def run(self, future: AbstractFuture) -> Any:
         if not self._detach:
