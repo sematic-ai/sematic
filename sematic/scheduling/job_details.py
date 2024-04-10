@@ -173,8 +173,8 @@ class PodSummary:
     def string_summary(self, use_newlines=False) -> str:
         if use_newlines:
             return (
-                f"{self.pod_name} is in phase '{self.phase}'\n"
-                f"{self.condition_message}\n"
+                f"{self.pod_name} is in phase '{self.phase}';\n"
+                f"{self.condition_message};\n"
                 f"{self.container_condition_message}"
             )
         else:
@@ -385,9 +385,10 @@ class JobDetails:
                 last_updated_epoch_seconds=last_updated_epoch_seconds,
             )
         elif self.canceled or not self.still_exists:
-            return JobStatus(
-                state=KubernetesJobState.Deleted,
-                message="The job no longer exists",
+            return self._get_job_gone_status(
+                latest_summary=latest_summary,
+                canceled=self.canceled,
+                still_exists=self.still_exists,
                 last_updated_epoch_seconds=last_updated_epoch_seconds,
             )
         elif most_recent_condition == KubernetesJobCondition.Complete.name:
@@ -491,6 +492,35 @@ class JobDetails:
         # Warning instead of error because it's normal for user jobs to fail
         # even when Sematic/the server is healthy.
         logger.warning("Worker pod %s failed: %s", pod_name, description)
+
+        return JobStatus(
+            state=state_name,
+            message=description,
+            last_updated_epoch_seconds=last_updated_epoch_seconds,
+        )
+
+    @classmethod
+    def _get_job_gone_status(
+        cls,
+        latest_summary: Optional[PodSummary],
+        canceled: bool,
+        still_exists: bool,
+        last_updated_epoch_seconds: float,
+    ):
+        state_name = KubernetesJobState.Deleted
+        description = "Job no longer exists. "
+        pod_name = latest_summary.pod_name if latest_summary is not None else "UNKNOWN"
+
+        if latest_summary is None:
+            description += " No pod detectable."
+        else:
+            description += " Final detected state was: \n{}.".format(
+                latest_summary.string_summary(use_newlines=True)
+            )
+
+        # Warning instead of error because it's normal for user jobs to fail
+        # even when Sematic/the server is healthy.
+        logger.warning("Worker pod %s gone: %s", pod_name, description)
 
         return JobStatus(
             state=state_name,
