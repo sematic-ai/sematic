@@ -214,6 +214,30 @@ def cancel_job(job: Job) -> Job:
         return job
 
     try:
+        refreshed_job = refresh_job(job)
+        details = refreshed_job.details
+        logger.info("Refreshed job %s prior to deletion", job.name)
+    except ApiException as e:
+        if e.status == 404:
+            details.still_exists = False
+            details.current_pods = []
+            logger.warning(
+                "Prior to deletion, the job %s was detected to not exist: %s.",
+                job.name,
+                e,
+            )
+        logger.warning("API error prior to deletion of job %s: %s.", job.name, e)
+        details.has_infra_failure = True
+    except Exception as e:
+        logger.warning(
+            "Failed to get final job details for %s before deletion: %s.", job.name, e
+        )
+
+    # incorporate information from above attempt
+    job.details = details
+    job.update_status(details.get_status(time.time()))
+
+    try:
         kubernetes.client.BatchV1Api().delete_namespaced_job(
             namespace=job.namespace,
             name=job.name,
@@ -221,14 +245,15 @@ def cancel_job(job: Job) -> Job:
             propagation_policy="Background",
         )
     except ApiException as e:
-        logging.warning("Error attempting to delete Kubernetes job: %s", e)
+        logging.warning("Error attempting to delete Kubernetes job %s: %s", job.name, e)
         if e.status == 404:
             pass
 
     details.still_exists = False
     details.canceled = True
     job.details = details
-    job.update_status(details.get_status(time.time()))
+    if job.get_latest_status().is_active():
+        job.update_status(details.get_status(time.time()))
 
     return job
 
@@ -278,6 +303,7 @@ def refresh_job(job: Job) -> Job:
                 return job
             else:
                 details.still_exists = False
+                details.current_pods = []
                 job.details = details
                 job.update_status(details.get_status(time.time()))
                 return job
