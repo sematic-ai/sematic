@@ -152,6 +152,14 @@ class CloudRunner(LocalRunner):
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
         self._runner_resources = resources
 
+    def _cancel_on_sigterm(self) -> bool:
+        # If k8s evicts a runner pod, it may send a sigterm to the runner pod.
+        # we don't want to cancel the run, as it should be able to pick up
+        # where it left off in this case in a new pod. We shouldn't worry about
+        # stale runner metadata in this case, because the cleaner should identify
+        # orphaned runs if it doesn't actually get restarted in a new pod.
+        return not self._is_running_remotely
+
     def run(self, future: AbstractFuture) -> Any:
         if not self._detach:
             return super().run(future)

@@ -7,6 +7,7 @@ import logging
 import math
 import os
 import signal
+import sys
 import time
 import typing
 from contextlib import contextmanager
@@ -147,20 +148,37 @@ class StateMachineRunner(Runner, abc.ABC):
 
         self._enqueue_future(future)
 
+    def _cancel_on_sigterm(self) -> bool:
+        return True
+
     def _register_signal_handlers(self):
         runner_pid = os.getpid()
         original_handlers: typing.Dict[int, HandlerType] = dict()
 
         def _handle_sig_cancel(signum: int, frame: FrameType) -> None:
             if runner_pid == os.getpid():
-                logger.warning("Received signal %s; canceling pipeline run...", signum)
-                self._pipeline_run_did_cancel()
+                if self._cancel_on_sigterm():
+                    logger.warning(
+                        "Received signal %s; canceling pipeline run...", signum
+                    )
+                    self._pipeline_run_did_cancel()
 
-                # Raising an error ensures execution doesn't resume where it left off
-                # after the handler exits.
-                raise CancellationError(
-                    f"Pipeline run cancelled due to signal {signum}"
-                )
+                    # Raising an error ensures execution doesn't resume where it left off
+                    # after the handler exits.
+                    raise CancellationError(
+                        f"Pipeline run cancelled due to signal {signum}"
+                    )
+                else:
+                    # Common exit code for exits due to a particular signal
+                    # is signal number + 128:
+                    # https://stackoverflow.com/a/1535733/2540669
+                    exit_code = 128 + signum
+                    logger.warning(
+                        "Received signal %s; exiting with code %s...", signum, exit_code
+                    )
+                    sys.stderr.flush()
+                    sys.stdout.flush()
+                    sys.exit(exit_code)
 
             # this branch is possible when using LocalRunner,
             # or if inlined funcs spawn processes when using CloudRunner
