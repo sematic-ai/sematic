@@ -18,15 +18,6 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "state_machine_resolver",
-    srcs = ["state_machine_resolver.py"],
-    deps = [
-        "//sematic:resolver",
-        "//sematic/runners:state_machine_runner",
-    ],
-)
-
-sematic_py_lib(
     name = "silent_resolver",
     srcs = ["silent_resolver.py"],
     deps = [
