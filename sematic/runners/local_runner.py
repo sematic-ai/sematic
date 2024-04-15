@@ -480,21 +480,22 @@ class LocalRunner(SilentRunner):
         run.future_state = FutureState.SCHEDULED
         run.started_at = datetime.datetime.utcnow()
 
-    def _execute_future(self, future: AbstractFuture) -> None:
+    def _execute_future(self, future: AbstractFuture) -> bool:
         """
         Attempts to execute the given Future.
 
         If the wrapped func is configured for caching, this function attempts to look up
         an Artifact in the cache for the Run, and directly assigns a concrete value for
         the Future given that artifact, without actually executing the Future.
+
+        Returns true if the future was executed or a cached value was found.
         """
         run = self._get_run(future.id)
         # we are certain all input args are concrete and can compute the cache key
         run.cache_key = self._get_cache_key(future=future)
 
         if run.cache_key is None:
-            super()._execute_future(future=future)
-            return
+            return super()._execute_future(future=future)
 
         # attempt to directly obtain a concrete value for the run based on previous
         # executions:
@@ -508,8 +509,7 @@ class LocalRunner(SilentRunner):
 
             if len(run_results) == 0:
                 logger.debug("Cache key %s did not hit any artifact", run.cache_key)
-                super()._execute_future(future=future)
-                return
+                return super()._execute_future(future=future)
 
             original_run = run_results[0]
             _, artifacts, edges = api_client.get_graph(
@@ -532,8 +532,7 @@ class LocalRunner(SilentRunner):
                 exc_info=1,  # type: ignore
             )
 
-            super()._execute_future(future=future)
-            return
+            return super()._execute_future(future=future)
 
         logger.debug(
             "Cache key %s hit run %s with output artifact %s",
@@ -567,6 +566,7 @@ class LocalRunner(SilentRunner):
 
         value = api_client.get_artifact_value(artifact=original_artifact)
         self._update_future_with_value(future=future, value=value)
+        return True
 
     def _get_output_artifact(
         self, run_id: str, artifacts: List[Artifact], edges: List[Edge]
