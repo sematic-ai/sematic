@@ -103,6 +103,7 @@ class StateMachineRunner(Runner, abc.ABC):
                     )
 
             if not state_changed:
+                logger.info("Entering wait")
                 # we only want to enter a waiting state if nothing changed.
                 # otherwise there might be other things we can schedule
                 # before starting the wait.
@@ -472,8 +473,7 @@ class StateMachineRunner(Runner, abc.ABC):
 
         if all_args_concrete:
             future.resolved_kwargs = concrete_kwargs
-            self._execute_future(future)
-            return True
+            return self._execute_future(future)
         return False
 
     def _execute_future(self, future: AbstractFuture) -> bool:

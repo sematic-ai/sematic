@@ -64,7 +64,7 @@ export default function Blog() {
     return <Container>
         <StyledSection>
             <span>
-                Latest blog pipelines
+                Latest blog posts
             </span>
             <span>
                 <Link variant="subtitle1" type="menu" target={"_blank"} href={"https://www.sematic.dev/blog"}>

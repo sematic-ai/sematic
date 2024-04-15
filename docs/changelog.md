@@ -5,6 +5,11 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.38.0](https://pypi.org/project/sematic/0.38.0/)
+    * [improvement] Add more pod information before deleting kubernete jobs
+    * [bugfix] Stop the `CloudRunner` from marking itself as canceled when its pod
+      is evicted
+    * [bugfix] Improve the `CloudRunner`'s ability to take advantage of parallelism
 * [0.37.0](https://pypi.org/project/sematic/0.37.0/)
     * [improvement] Make log reading more responsive
     * [bugfix] Fix an issue when rendering subclasses of dataclasses in collections
