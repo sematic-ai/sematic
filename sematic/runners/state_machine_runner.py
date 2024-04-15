@@ -80,15 +80,19 @@ class StateMachineRunner(Runner, abc.ABC):
         self._pipeline_run_will_start()
 
         while not self._root_future.state.is_terminal():
+            state_changed = False
             for future_ in self._futures:
                 if future_.state == FutureState.CREATED:
                     self._schedule_future_if_args_concrete(future_)
+                    state_changed = True
                     continue
                 if future_.state == FutureState.RETRYING:
                     self._execute_future(future_)
+                    state_changed = True
                     continue
                 if future_.state == FutureState.RAN:
                     self._run_nested_future(future_)
+                    state_changed = True
                     continue
 
                 # should be unreachable code, here for a sanity check
@@ -101,7 +105,11 @@ class StateMachineRunner(Runner, abc.ABC):
                         " when it should have been already processed"
                     )
 
-            self._wait_for_scheduled_runs_with_timeout()
+            if not state_changed:
+                # we only want to enter a waiting state if nothing changed.
+                # otherwise there might be other things we can schedule
+                # before starting the wait.
+                self._wait_for_scheduled_runs_with_timeout()
 
         if self._root_future.state == FutureState.RESOLVED:
             self._pipeline_run_did_succeed()
