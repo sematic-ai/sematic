@@ -332,7 +332,9 @@ def do_retry(val: float, failure_probability: float = 0.5) -> float:
         "Executing: do_retry(val=%s, failure_probability=%s)", val, failure_probability
     )
     time.sleep(5)
-    if random.random() < failure_probability:
+    p = random.random()
+    logger.info("p=%s", p)
+    if p < failure_probability:
         raise ValueError("test retriable exception")
     return val
 
