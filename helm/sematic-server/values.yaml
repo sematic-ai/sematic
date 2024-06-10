@@ -144,6 +144,8 @@ worker:
   can_customize_security_context: false
   can_mount_host_paths: false
   image_pull_secrets: null
+  allowed_annotation_keys: []
+  allowed_label_keys: []
 
 service:
   create: true

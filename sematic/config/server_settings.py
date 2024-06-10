@@ -44,6 +44,14 @@ class ServerSettingsVar(AbstractPluginSettingsVar):
     # uses for jobs.
     SEMATIC_WORKER_KUBERNETES_SA = "SEMATIC_WORKER_KUBERNETES_SA"
 
+    # Controls which Kubernetes annotations pipeline authors
+    # can apply to their jobs.
+    SEMATIC_WORKER_ALLOWED_ANNOTATION_KEYS = "SEMATIC_WORKER_ALLOWED_ANNOTATION_KEYS"
+
+    # Controls which Kubernetes labels pipeline authors
+    # can apply to their jobs.
+    SEMATIC_WORKER_ALLOWED_LABEL_KEYS = "SEMATIC_WORKER_ALLOWED_LABEL_KEYS"
+
     # What, if any, imagePullSecrets should be used for runner and
     # standalone jobs?
     WORKER_IMAGE_PULL_SECRETS = "WORKER_IMAGE_PULL_SECRETS"

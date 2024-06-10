@@ -228,6 +228,20 @@ Information on the Kubernetes resources required.
     administrator has enabled the `ALLOW_HOST_PATH_MOUNTING` Server setting. More details
     can be found here: https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
 
+- `annotations`: Dict[str, str]
+
+    The annotations that should be applied to the Kubernetes job (and therefore pod).
+    Note that ONLY annotations whose keys have been explicitly allowed by your
+    Sematic cluster administrator will actually be applied. Any annotations whose
+    keys have not been approved will be ignored.
+
+- `labels`: Dict[str, str]
+
+    The labels that should be applied to the Kubernetes job (and therefore pod).
+    Note that ONLY labels whose keys have been explicitly allowed by your
+    Sematic cluster administrator will actually be applied. Any labels whose
+    keys have not been approved will be ignored.
+
 ### `KubernetesSecretMount`
 
 Information about how to expose Kubernetes secrets when running a Sematic func.

@@ -51,6 +51,8 @@ data:
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
+  SEMATIC_WORKER_ALLOWED_ANNOTATION_KEYS: {{ toJson .Values.worker.allowed_annotation_keys | quote }}
+  SEMATIC_WORKER_ALLOWED_LABEL_KEYS: {{ toJson .Values.worker.allowed_label_keys | quote }}
   ALLOW_CUSTOM_SECURITY_CONTEXTS: {{ .Values.worker.can_customize_security_context | quote }}
   ALLOW_HOST_PATH_MOUNTING: {{ .Values.worker.can_mount_host_paths | quote }}
   WORKER_IMAGE_PULL_SECRETS: {{ toJson .Values.worker.image_pull_secrets | quote }}

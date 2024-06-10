@@ -648,7 +648,7 @@ def testing_pipeline(
 
     if expand_shared_memory:
         k8_resource_requirements = KubernetesResourceRequirements(
-            mount_expanded_shared_memory=True
+            mount_expanded_shared_memory=True,
         )
         resource_requirements = ResourceRequirements(
             kubernetes=k8_resource_requirements

@@ -335,6 +335,14 @@ class KubernetesResourceRequirements:
         Sematic cluster administrator has enabled the `ALLOW_HOST_PATH_MOUNTING` Server
         setting. Defaults to an empty list. More details can be found here:
         https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+    annotations: Dict[str, str]
+        Kubernetes annotations to apply to the created pod. Only annotation keys
+        which have been allowed by your Sematic administrator can be used here.
+        Others will be ignored.
+    labels: Dict[str, str]
+        Kubernetes labels to apply to the created pod. Only label keys
+        which have been allowed by your Sematic administrator can be used here.
+        Others will be ignored.
     """
 
     node_selector: Dict[str, str] = field(default_factory=dict)
@@ -344,6 +352,8 @@ class KubernetesResourceRequirements:
     mount_expanded_shared_memory: bool = field(default=False)
     security_context: Optional[KubernetesSecurityContext] = field(default=None)
     host_path_mounts: List[KubernetesHostPathMount] = field(default_factory=list)
+    annotations: Dict[str, str] = field(default_factory=dict)
+    labels: Dict[str, str] = field(default_factory=dict)
 
     def clone(self) -> "KubernetesResourceRequirements":
         """Deep copy these requirements."""
@@ -354,6 +364,8 @@ class KubernetesResourceRequirements:
             requests=dict(self.requests),
             tolerations=[t for t in self.tolerations],
             host_path_mounts=[m for m in self.host_path_mounts],
+            annotations=dict(self.annotations),
+            labels=dict(self.labels),
         )
 
 
