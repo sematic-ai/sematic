@@ -450,7 +450,7 @@ def _get_runner(args: argparse.Namespace) -> StateMachineRunner:
                 labels={
                     "allowed-label-1": "43",
                     "allowed-label-2": "yo",
-                    "forbidden-label": "xxx",
+                    "forbidden-label": "1337-hax",
                 },
             )
         )
