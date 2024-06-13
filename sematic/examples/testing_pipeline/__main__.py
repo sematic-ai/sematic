@@ -442,6 +442,16 @@ def _get_runner(args: argparse.Namespace) -> StateMachineRunner:
         extra_kwargs["resources"] = ResourceRequirements(
             kubernetes=KubernetesResourceRequirements(
                 requests={"memory": "3Gi"},
+                annotations={
+                    "allowed-annotation-1": "42",
+                    "allowed-annotation-2": "foo",
+                    "forbidden-annotation": "bad-wolf",
+                },
+                labels={
+                    "allowed-label-1": "43",
+                    "allowed-label-2": "yo",
+                    "forbidden-label": "1337-hax",
+                },
             )
         )
     return CloudRunner(

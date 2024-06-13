@@ -112,6 +112,16 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
                     type="Directory",
                 ),
             ],
+            annotations={
+                "allowed-annotation-1": "42",
+                "allowed-annotation-2": "43",
+                "forbidden-annotation": "666",
+            },
+            labels={
+                "allowed-label-1": "-42",
+                "allowed-label-2": "-43",
+                "forbidden-label": "-666",
+            },
         )
     )
 
@@ -121,6 +131,12 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
             "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true",
             "ALLOW_HOST_PATH_MOUNTING": "true",
             "WORKER_IMAGE_PULL_SECRETS": json.dumps([{"name": "foo-secret"}]),
+            "SEMATIC_WORKER_ALLOWED_ANNOTATION_KEYS": json.dumps(
+                ["allowed-annotation-1", "allowed-annotation-2"]
+            ),
+            "SEMATIC_WORKER_ALLOWED_LABEL_KEYS": json.dumps(
+                ["allowed-label-1", "allowed-label-2"]
+            ),
         }
     ):
         _schedule_kubernetes_job(

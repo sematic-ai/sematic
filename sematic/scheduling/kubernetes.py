@@ -596,6 +596,8 @@ def _schedule_kubernetes_job(
     security_context = None
     image_pull_secrets = _get_image_pull_secrets()
 
+    annotations = {"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}
+    labels: Dict[str, str] = {}
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
         resource_requests = resource_requirements.kubernetes.requests
@@ -645,6 +647,11 @@ def _schedule_kubernetes_job(
                 volumes.append(volume)
                 volume_mounts.append(mount)
 
+        annotations.update(
+            _sanitize_annotations(resource_requirements.kubernetes.annotations)
+        )
+        labels.update(_sanitize_labels(resource_requirements.kubernetes.labels))
+
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
         )
@@ -662,6 +669,8 @@ def _schedule_kubernetes_job(
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
         logger.debug("kubernetes tolerations: %s", tolerations)
         logger.debug("kubernetes security context: %s", security_context)
+        logger.debug("kubernetes annotations: %s", annotations)
+        logger.debug("kubernetes labels: %s", labels)
 
     pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
         name=KUBERNETES_POD_NAME_ENV_VAR,
@@ -681,9 +690,8 @@ def _schedule_kubernetes_job(
         spec=kubernetes.client.V1JobSpec(  # type: ignore
             template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
                 metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
-                    annotations={
-                        "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
-                    },
+                    annotations=annotations,
+                    labels=labels,
                 ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
                     node_selector=node_selector,
@@ -1060,3 +1068,40 @@ def _validate_rfc1123_label(label_value: str, label_name: str) -> None:
             f"{label_name} must start with an alphanumeric character and only contain "
             f"alphanumeric characters and dashes. Got: '{label_value}'"
         )
+
+
+def _sanitize_annotations(annotations: Dict[str, str]) -> Dict[str, str]:
+    allowed_keys = set(
+        get_json_server_setting(
+            ServerSettingsVar.SEMATIC_WORKER_ALLOWED_ANNOTATION_KEYS, []
+        )
+    )
+    results: Dict[str, str] = {}
+    for key, value in annotations.items():
+        if key not in allowed_keys:
+            logger.error(
+                "User requested illegal annotation (will be ignored): '%s': '%s'",
+                key,
+                value,
+            )
+            continue
+        results[key] = value
+    return results
+
+
+def _sanitize_labels(labels: Dict[str, str]) -> Dict[str, str]:
+    allowed_keys = set(
+        get_json_server_setting(ServerSettingsVar.SEMATIC_WORKER_ALLOWED_LABEL_KEYS, [])
+    )
+    allowed_keys.difference_update({"job-name"})  # reserved for Sematic
+    results: Dict[str, str] = {}
+    for key, value in labels.items():
+        if key not in allowed_keys:
+            logger.error(
+                "User requested illegal label (will be ignored): '%s': '%s'",
+                key,
+                value,
+            )
+            continue
+        results[key] = value
+    return results
