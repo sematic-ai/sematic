@@ -5,6 +5,8 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.38.1](https://pypi.org/project/sematic/0.38.1/)
+    * [feature] Allow specifiction of annotations and labels in `KubernetesResourceRequirements`
 * [0.38.0](https://pypi.org/project/sematic/0.38.0/)
     * [improvement] Add more pod information before deleting kubernete jobs
     * [bugfix] Stop the `CloudRunner` from marking itself as canceled when its pod
