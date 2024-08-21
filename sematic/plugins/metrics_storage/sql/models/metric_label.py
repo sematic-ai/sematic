@@ -1,5 +1,6 @@
 # Third-party
-from sqlalchemy import Column, Index, types
+from sqlalchemy import Index, types
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 
 # Sematic
@@ -32,10 +33,10 @@ class MetricLabel(HasOrganizationMixin, Base):
 
     __tablename__ = "metric_labels"
 
-    metric_id: str = Column(types.String(), nullable=False, primary_key=True)
-    metric_name: str = Column(types.String(), nullable=False)
-    metric_labels: MetricsLabels = Column(JSONB(), nullable=False)
-    metric_type: MetricType = Column(IntEnum(MetricType), nullable=False)
+    metric_id: Mapped[str] = mapped_column(types.String(), nullable=False, primary_key=True)
+    metric_name: Mapped[str] = mapped_column(types.String(), nullable=False)
+    metric_labels: Mapped[MetricsLabels] = mapped_column(JSONB(), nullable=False)
+    metric_type: Mapped[MetricType] = mapped_column(IntEnum(MetricType), nullable=False)
 
     __table_args__ = (
         Index(

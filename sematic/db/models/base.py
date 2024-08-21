@@ -1,8 +1,8 @@
 # Third-party
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
 
-class AbstractBase:
+class Base(DeclarativeBase):
     def __repr__(self):
         return "{}({})".format(
             self.__class__.__name__,
@@ -12,5 +12,3 @@ class AbstractBase:
             ),
         )
 
-
-Base = declarative_base(cls=AbstractBase)
