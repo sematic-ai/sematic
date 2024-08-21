@@ -6,7 +6,7 @@ Sematic currently supports Linux and MacOS. If you're using Windows, you can
 run Sematic in
 [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
 
-Python versions `3.8`, `3.9`, and `3.10` are supported.
+Python versions `3.8` - `3.12` are supported.
 
 ## Installation
 

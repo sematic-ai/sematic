@@ -4,6 +4,7 @@ load("@rules_python//python/pip_install:requirements.bzl", compile_pip_requireme
 load("@python3_8//:defs.bzl", py_binary3_8="py_binary")
 load("@python3_9//:defs.bzl", py_binary3_9="py_binary")
 load("@python3_10//:defs.bzl", py_binary3_10="py_binary")
+load("@python3_11//:defs.bzl", py_binary3_11="py_binary")
 
 compile_pip_requirements(
     name = "requirements3_8",
@@ -43,3 +44,17 @@ compile_pip_requirements(
     requirements_in = "//requirements:requirements.in",
     requirements_txt = "//requirements:requirements3_10.txt",
 )
+
+compile_pip_requirements(
+    name = "requirements3_11",
+    py_binary=py_binary3_11,
+    size = "large",
+    timeout = "long",
+    extra_args = [
+        "--resolver=backtracking",
+        "--allow-unsafe",
+    ],
+    requirements_in = "//requirements:requirements.in",
+    requirements_txt = "//requirements:requirements3_11.txt",
+)
+

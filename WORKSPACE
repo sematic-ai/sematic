@@ -46,11 +46,18 @@ gazelle_dependencies()
 ## PYTHON RULES
 
 ### Standard python rules
+
+# If we go past 0.25.0, we hit https://github.com/bazelbuild/rules_python/issues/1543
+# Sadly 0.25.0 doesn't have python >=3.12, so we can't build and test those versions
+# in bazel. We'll have to rely on basic manual testing for such versions and just rely
+# on the fact that breaking changes between pythin versions are rare.
+# The key thing that determines what versions of python our wheel will support
+# is the wheel_python_requires constant in wheel_constants.bzl
 http_archive(
     name = "rules_python",
-    sha256 = "497ca47374f48c8b067d786b512ac10a276211810f4a580178ee9b9ad139323a",
-    strip_prefix = "rules_python-0.16.1",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.16.1.tar.gz",
+    sha256 = "5868e73107a8e85d8f323806e60cad7283f34b32163ea6ff1020cf27abef6036",
+    strip_prefix = "rules_python-0.25.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.25.0/rules_python-0.25.0.tar.gz",
 )
 
 # Canonical toolchain
@@ -83,6 +90,13 @@ python_register_toolchains(
     register_toolchains = False,
 )
 
+python_register_toolchains(
+    name = "python3_11",
+    python_version = "3.11",
+    # See above comment about why this is False.
+    register_toolchains = False,
+)
+
 # Used to register a default toolchain in /WORKSPACE.bazel,
 # this is ultimately what makes it so bazel sees our stub
 # interpreter as the thing to use for python things.
@@ -101,6 +115,7 @@ register_toolchains(
 load("@python3_8//:defs.bzl", interpreter3_8="interpreter")
 load("@python3_9//:defs.bzl", interpreter3_9="interpreter")
 load("@python3_10//:defs.bzl", interpreter3_10="interpreter")
+load("@python3_11//:defs.bzl", interpreter3_11="interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
@@ -121,15 +136,23 @@ pip_parse(
     requirements_lock = "//requirements:requirements3_10.txt",
 )
 
+pip_parse(
+    name = "pip_dependencies3_11",
+    python_interpreter_target = interpreter3_11,
+    requirements_lock = "//requirements:requirements3_11.txt",
+)
+
 load("@pip_dependencies3_8//:requirements.bzl", install_deps3_8="install_deps")
 load("@pip_dependencies3_9//:requirements.bzl", install_deps3_9="install_deps")
 load("@pip_dependencies3_10//:requirements.bzl", install_deps3_10="install_deps")
+load("@pip_dependencies3_11//:requirements.bzl", install_deps3_11="install_deps")
 
 # Actually does the 3rd party dep installs for each of our
 # hermetic interpreters to use.
 install_deps3_8()
 install_deps3_9()
 install_deps3_10()
+install_deps3_11()
 
 # Used to enable multiple interpreters for tests
 # approach from https://blog.aspect.dev/many-python-versions-one-bazel-build

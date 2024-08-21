@@ -8,6 +8,7 @@ sematic_py_lib(
         "torch",
         "torchvision",
     ],
+    py_versions = [PY3.PY3_8, PY3.PY3_9],
     deps = [
         "//sematic:function",
         "//sematic/ee:ray",

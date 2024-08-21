@@ -7,6 +7,7 @@ This file gets loaded before every BUILD file
 load("@pip_dependencies3_8//:requirements.bzl", requirement3_8="requirement")
 load("@pip_dependencies3_9//:requirements.bzl", requirement3_9="requirement")
 load("@pip_dependencies3_10//:requirements.bzl", requirement3_10="requirement")
+load("@pip_dependencies3_11//:requirements.bzl", requirement3_11="requirement")
 
 # @unused
 load(
