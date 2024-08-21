@@ -31,4 +31,5 @@ wheel_deps = [
     "//sematic:init",
     "//sematic/testing:init",
     "//sematic/cli:main_lib",
+    "//sematic/examples/mnist/pytorch:pytorch_lib",
 ]

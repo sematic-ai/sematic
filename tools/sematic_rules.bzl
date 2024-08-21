@@ -52,10 +52,13 @@ PY3 = struct(**{
 
 # <default py version change>: This line will need to be updated if we change the default
 # python version for sematic.
-DEFAULT_PY_VERSION = PY3.PY3_8
+DEFAULT_PY_VERSION = PY3.PY3_9
 requirement = _PYTHON_VERSION_INFO[DEFAULT_PY_VERSION].pip_requirement
 
-ALL_PY3_VERSIONS = sorted([key for key in _PYTHON_VERSION_INFO.keys()], key=lambda k: int(k.replace("PY3_", "")))
+# The order of this list also defines precedence.
+# 3.8 is lowest precedence because it will soon be
+# end-of-life.
+ALL_PY3_VERSIONS = ["PY3_9", "PY3_10", "PY3_11", "PY3_8"]
 PY3_DEFAULT_TEST_VERSIONS = ALL_PY3_VERSIONS
 
 def env_and_runfiles_for_python(version):
@@ -94,7 +97,7 @@ def pytest_test(
 
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
-    py_versions = sorted(py_versions, key=lambda k: int(k.replace("PY3_", "")))
+    py_versions = sorted(py_versions, key=ALL_PY3_VERSIONS.index)
     deps = deps + ["//sematic:torch_patch"]
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
@@ -104,7 +107,7 @@ def pytest_test(
             py_version = py3_version,
         )
 
-        # Use the lowest python version provided for the default target,
+        # Use the highest precedence python version provided for the default target,
         # all other python versions should have a suffix like _py3_8
         new_name = name if i == 0 else "{}_{}".format(name, py3_version.lower())
         py_test(
@@ -120,7 +123,7 @@ def pytest_test(
         )
 
         if i == 0:
-            # Only have coverage tests for the lowest version python interpreter
+            # Only have coverage tests for the higest precedence python interpreter
             # These won't get run during a normal bazel test because of our .bazelrc which
             # filters to tests with nocov set. You can execute coverage tests as:
             # bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov

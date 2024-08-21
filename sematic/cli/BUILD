@@ -210,7 +210,7 @@ sematic_py_binary(
     name = "main",
     srcs = ["main.py"],
     main = "main.py",
-    py_versions = [PY3.PY3_8, PY3.PY3_9],
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
     deps = [
         ":main_lib",
         # This is to make sure we can test via Bazel

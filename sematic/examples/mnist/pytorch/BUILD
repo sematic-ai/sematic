@@ -2,7 +2,7 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_example(
     name = "pytorch",
-    py_versions = [PY3.PY3_8, PY3.PY3_9],
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
     requirements = [
         "torch",
         "torchvision",
@@ -41,7 +41,7 @@ sematic_py_lib(
         "*.py",
         "**/*.py",
     ]),
-    py_versions = [PY3.PY3_8, PY3.PY3_9],
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
     deps = [
         "//sematic:init",
     ],
