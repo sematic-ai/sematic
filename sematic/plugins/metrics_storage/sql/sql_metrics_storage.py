@@ -178,10 +178,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         try:
             with db().get_session() as session:
-                query = (
-                    session.query(*select_fields)  # type: ignore
-                    .filter(*predicates)
-                    .order_by(MetricValue.metric_time)
+                query = session.query(*select_fields).filter(  # type: ignore
+                    *predicates
                 )
 
                 if len(group_by_clauses) > 0:
@@ -189,6 +187,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
                 if rollup == "auto":
                     field_ = func.extract("epoch", MetricValue.metric_time)
+                    query = query.order_by(field_)
                     record_count = query.add_columns(field_).group_by(field_).count()
 
                     if record_count > _MAX_SERIES_POINTS:
@@ -200,6 +199,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
                     query = query.add_columns(field_).group_by(field_)
                     extra_field_names.append("timestamp")
+                else:
+                    query = query.order_by(MetricValue.metric_time)
                 records = query.order_by(order_by_field).all()
         except sqlalchemy.exc.OperationalError as e:
             # User has old SQLite version that does not support querying JSONB fields.

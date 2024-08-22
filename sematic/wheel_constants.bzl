@@ -23,7 +23,7 @@ wheel_python_tag = "py3"
 wheel_requires = [
     # Specifying this by hand because sematic_py_wheel doesn't know
     # how to fix versions
-    "SQLAlchemy<2.0.0",
+    "SQLAlchemy>2.0.0",
     "Cython==0.29.33",
 ]
 wheel_deps = [

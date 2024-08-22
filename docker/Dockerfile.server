@@ -4,7 +4,7 @@
 
 # see https://stackoverflow.com/questions/65612411/forcing-docker-to-use-linux-amd64-platform-by-default-on-macos/69636473#69636473
 # for why --platform
-FROM --platform=linux/amd64 python:3.9-bullseye
+FROM --platform=linux/amd64 python:3.12-bookworm
 ARG EXTRA
 
 RUN python3 -m pip install --upgrade pip
