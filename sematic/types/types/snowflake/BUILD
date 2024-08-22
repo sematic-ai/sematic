@@ -2,9 +2,6 @@ sematic_py_lib(
     name = "snowflake_table",
     srcs = ["snowflake_table.py"],
     data = ["requirements.txt"],
-    pip_deps = [
-        "sqlalchemy",
-    ],
     deps = [
         "//sematic/config:user_settings",
         "//sematic/types:registry",
@@ -19,3 +16,4 @@ sematic_py_lib(
         ":snowflake_table",
     ]
 )
+
