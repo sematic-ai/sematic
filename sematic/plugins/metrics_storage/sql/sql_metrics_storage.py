@@ -5,7 +5,8 @@ from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
 import sqlalchemy.exc
-from sqlalchemy import func
+from sqlalchemy import cast as sql_cast
+from sqlalchemy import func, Integer
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -101,7 +102,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         with db().get_session() as session:
             metric_names = (
                 session.query(MetricLabel.metric_name)
-                .distinct(MetricLabel.metric_name)
+                .group_by(MetricLabel.metric_name)
                 .filter(*_make_predicates_from_labels(labels))
                 .all()
             )
@@ -156,8 +157,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         if isinstance(rollup, int):
             interval_seconds = max(interval_seconds, rollup)
             field_ = (
-                func.extract("epoch", MetricValue.metric_time)
-                / interval_seconds
+                sql_cast(func.extract("epoch", MetricValue.metric_time) / interval_seconds, Integer)
                 * interval_seconds
             )
             select_fields.append(field_)
@@ -188,7 +188,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                     record_count = query.add_columns(field_).group_by(field_).count()
 
                     if record_count > _MAX_SERIES_POINTS:
-                        field_ = field_ / interval_seconds * interval_seconds
+                        field_ = sql_cast(field_ / interval_seconds, Integer) * interval_seconds
                     order_by_field = field_  # type: ignore
 
                     query = query.add_columns(field_).group_by(field_)
@@ -211,7 +211,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             if metric_type == MetricType.GAUGE.value:
                 metric_value = float(metric_sum) / (metric_count or 1)
 
-            output.series.append((metric_value, tuple(record[n_basic_fields:])))
+            output_labels = tuple(str(label) for label in record[n_basic_fields:])
+            output.series.append((metric_value, output_labels))
 
         return output
 

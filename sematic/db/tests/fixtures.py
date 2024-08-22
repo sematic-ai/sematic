@@ -7,6 +7,7 @@ from typing import Any
 import psycopg2
 import pytest
 import testing.postgresql  # type: ignore
+from sqlalchemy import text
 
 # Sematic
 import sematic.db.db as db
@@ -48,9 +49,9 @@ def handler(postgresql):
     conn = psycopg2.connect(**postgresql.dsn())
 
     cursor = conn.cursor()
-    cursor.execute(schema)
+    cursor.execute(text(schema))
     # Needed because the schema creates tables in the public schema.
-    cursor.execute("SET search_path=public;")
+    cursor.execute(text("SET search_path=public;"))
     cursor.close()
     conn.commit()
     conn.close()

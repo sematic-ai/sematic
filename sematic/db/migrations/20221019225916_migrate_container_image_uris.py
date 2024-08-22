@@ -11,10 +11,12 @@ from sematic.db.db import db
 def up():
     with db().get_engine().begin() as conn:
         resolution_id_container_image_uri_pairs = conn.execute(
-            "SELECT root_id, container_image_uri "
-            "FROM resolutions "
-            "WHERE container_image_uris IS NULL "
-            "AND container_image_uri IS NOT NULL"
+            text(
+                "SELECT root_id, container_image_uri "
+                "FROM resolutions "
+                "WHERE container_image_uris IS NULL "
+                "AND container_image_uri IS NOT NULL"
+            )
         )
 
         for (

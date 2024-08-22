@@ -13,7 +13,7 @@ def up_sqlite():
     back_up_db_file(suffix="0.32.0")
 
     with db().get_engine().begin() as conn:
-        conn.execute(
+        execute_text(
             """
             CREATE TABLE resolutions_new (
                     root_id TEXT NOT NULL,
@@ -37,7 +37,7 @@ def up_sqlite():
                 );
             """
         )
-        conn.execute(
+        execute_text(
             """
             INSERT INTO resolutions_new
                 SELECT
@@ -57,10 +57,10 @@ def up_sqlite():
                 FROM resolutions;
             """
         )
-        conn.execute("DROP TABLE resolutions;")
-        conn.execute("ALTER TABLE resolutions_new RENAME TO resolutions;")
+        execute_text("DROP TABLE resolutions;")
+        execute_text("ALTER TABLE resolutions_new RENAME TO resolutions;")
 
-        conn.execute(
+        execute_text(
             """
             CREATE TABLE runs_new (
                     id character(32) NOT NULL,
@@ -96,7 +96,7 @@ def up_sqlite():
                 );
             """
         )
-        conn.execute(
+        execute_text(
             """
             INSERT INTO runs_new
                 SELECT
@@ -127,12 +127,12 @@ def up_sqlite():
                 FROM runs;
             """
         )
-        conn.execute("DROP TABLE runs;")
-        conn.execute("ALTER TABLE runs_new RENAME TO runs;")
-        conn.execute("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        conn.execute("CREATE INDEX ix_runs_function_path ON runs (function_path);")
+        execute_text("DROP TABLE runs;")
+        execute_text("ALTER TABLE runs_new RENAME TO runs;")
+        execute_text("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
+        execute_text("CREATE INDEX ix_runs_function_path ON runs (function_path);")
 
-        conn.execute(
+        execute_text(
             """
             CREATE TABLE metric_labels_new (
                     metric_id TEXT NOT NULL,
@@ -147,7 +147,7 @@ def up_sqlite():
                 );
             """
         )
-        conn.execute(
+        execute_text(
             """
             INSERT INTO metric_labels_new
                 SELECT
@@ -159,13 +159,13 @@ def up_sqlite():
                 FROM metric_labels;
             """
         )
-        conn.execute("DROP TABLE metric_labels;")
-        conn.execute("ALTER TABLE metric_labels_new RENAME TO metric_labels;")
-        conn.execute(
+        execute_text("DROP TABLE metric_labels;")
+        execute_text("ALTER TABLE metric_labels_new RENAME TO metric_labels;")
+        execute_text(
             "CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);"
         )
 
-        conn.execute(
+        execute_text(
             """
             CREATE TABLE artifacts_new (
                 id character(40) NOT NULL,
@@ -181,7 +181,7 @@ def up_sqlite():
             );
             """
         )
-        conn.execute(
+        execute_text(
             """
             INSERT INTO artifacts_new
                 SELECT
@@ -194,8 +194,8 @@ def up_sqlite():
                 FROM artifacts;
             """
         )
-        conn.execute("DROP TABLE artifacts;")
-        conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
+        execute_text("DROP TABLE artifacts;")
+        execute_text("ALTER TABLE artifacts_new RENAME TO artifacts;")
 
 
 def down_sqlite():
@@ -204,7 +204,7 @@ def down_sqlite():
 
 def up_postgres():
     with db().get_engine().begin() as conn:
-        conn.execute(
+        execute_text(
             """
             ALTER TABLE resolutions ADD COLUMN organization_id character(32) REFERENCES organizations(id);
             ALTER TABLE runs ADD COLUMN organization_id character(32) REFERENCES organizations(id);
@@ -216,7 +216,7 @@ def up_postgres():
 
 def down_postgres():
     with db().get_engine().begin() as conn:
-        conn.execute(
+        execute_text(
             """
             ALTER TABLE resolutions DROP COLUMN organization_id;
             ALTER TABLE runs DROP COLUMN organization_id;
@@ -224,6 +224,9 @@ def down_postgres():
             ALTER TABLE artifacts DROP COLUMN organization_id;
             """
         )
+
+def execute_text(conn, statement):
+    conn.execute(text(statement))
 
 
 def up():

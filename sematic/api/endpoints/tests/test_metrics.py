@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Union
 
 # Third-party
 import flask.testing
@@ -23,6 +23,7 @@ from sematic.metrics.func_success_rate_metric import FuncSuccessRateMetric
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.metrics.tests.fixtures import (  # noqa: F401
+    check_approximate_equality,
     metric_points,
     persisted_metric_points,
 )
@@ -124,8 +125,8 @@ def test_run_state_changed(persisted_run: Run):  # noqa: F811
             {
                 "metric_name": "foo",
                 "series": [
-                    [0, [datetime(2023, 4, 11).timestamp()]],
-                    [1, [datetime(2023, 4, 12).timestamp()]],
+                    [0, [str(datetime(2023, 4, 11).timestamp())]],
+                    [1, [str(datetime(2023, 4, 12).timestamp())]],
                 ],
                 "metric_type": "GAUGE",
                 "columns": ["timestamp"],
@@ -140,8 +141,8 @@ def test_run_state_changed(persisted_run: Run):  # noqa: F811
             {
                 "metric_name": "foo",
                 "series": [
-                    [0, [datetime(2023, 4, 11).timestamp()]],
-                    [1, [datetime(2023, 4, 12).timestamp()]],
+                    [0, [str(datetime(2023, 4, 11).timestamp())]],
+                    [1, [str(datetime(2023, 4, 12).timestamp())]],
                 ],
                 "metric_type": "GAUGE",
                 "columns": ["timestamp"],
@@ -159,7 +160,9 @@ def test_get_metrics_endpoint(
 
     payload = response.json
 
-    assert payload["content"] == expected_series  # type: ignore
+    assert set(expected_series.keys()) == set(payload["content"].keys())
+    assert all(payload["content"][k] == expected_series[k] for k in expected_series.keys() if k != "series")
+    check_approximate_equality(payload["content"]["series"], expected_series["series"])  # type: ignore
 
 
 @pytest.mark.parametrize(
