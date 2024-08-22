@@ -23,7 +23,9 @@ class Artifact(Base, HasOrganizationMixin, JSONEncodableMixin):
     __tablename__ = "artifacts"
 
     id: Mapped[str] = mapped_column(types.String(), primary_key=True)
-    json_summary: Mapped[str] = mapped_column(types.JSON(), nullable=False, info={JSON_KEY: True})
+    json_summary: Mapped[str] = mapped_column(
+        types.JSON(), nullable=False, info={JSON_KEY: True}
+    )
     type_serialization: Mapped[str] = mapped_column(
         types.JSON(), nullable=False, info={JSON_KEY: True}
     )

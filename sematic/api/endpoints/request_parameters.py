@@ -21,7 +21,7 @@ from urllib.parse import urlsplit, urlunsplit
 # Third-party
 import flask
 import sqlalchemy
-from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
+from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
 from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
@@ -54,7 +54,7 @@ class SearchRequestParameters:
     order: Callable[[Any], Any]
     cursor: Optional[str]
     group_by: Optional[sqlalchemy.Column]
-    filters: Optional[BooleanClauseList]
+    filters: Optional[ColumnElement[bool]]
     fields: Optional[List[str]]
 
 
@@ -324,7 +324,7 @@ def _get_sql_predicates(
     filters: Filters,
     column_mapping: ColumnMapping,
     model: type,
-) -> BooleanClauseList:
+) -> ColumnElement[bool]:
     """
     Basic support for AND and OR filter predicates.
 
@@ -482,7 +482,7 @@ def _extract_single_predicate(
         return column == value
 
     if operator == "in":
-        return column.in_(value)
+        return column.in_(value)  # type: ignore
 
     if operator == "contains":
         contains_filter = column.info.get(CONTAIN_FILTER_KEY)

@@ -33,7 +33,9 @@ class OrganizationUser(Base, JSONEncodableMixin):
     organization_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("organizations.id"), primary_key=True
     )
-    user_id: Mapped[str] = mapped_column(types.String(), ForeignKey("users.id"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("users.id"), primary_key=True
+    )
     admin: Mapped[bool] = mapped_column(types.Boolean, nullable=False, default=False)
 
     # Lifecycle timestamps

@@ -1,6 +1,7 @@
 # Standard Library
 import json
 
+# Third-party
 from sqlalchemy import text
 
 # Sematic
@@ -24,7 +25,7 @@ def up():
                 dict(
                     e_json=exception_json,
                     run_id=run_id,
-                )
+                ),
             )
 
 
@@ -41,5 +42,6 @@ def down():
         for run_id, exception_json in run_id_exception_json_pairs:
             exception = json.loads(exception_json)["repr"]
             conn.execute(
-                text("UPDATE runs SET exception = :e WHERE id = :run_id"), dict(e=exception, run_id=run_id)
+                text("UPDATE runs SET exception = :e WHERE id = :run_id"),
+                dict(e=exception, run_id=run_id),
             )

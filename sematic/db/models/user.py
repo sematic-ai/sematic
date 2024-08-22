@@ -22,12 +22,18 @@ class User(Base, JSONEncodableMixin):
 
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
-    email: Mapped[str] = mapped_column(types.String(), nullable=False, info={REDACTED_KEY: True})
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
+    email: Mapped[str] = mapped_column(
+        types.String(), nullable=False, info={REDACTED_KEY: True}
+    )
     first_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    api_key: Mapped[str] = mapped_column(types.String(), nullable=False, info={REDACTED_KEY: True})
+    api_key: Mapped[str] = mapped_column(
+        types.String(), nullable=False, info={REDACTED_KEY: True}
+    )
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow

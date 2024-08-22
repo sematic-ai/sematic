@@ -108,17 +108,24 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     organization_id: Optional[str]
         The organization under which this resolution was submitted.
     """
+
     __tablename__ = "runs"
 
     id: Mapped[str] = mapped_column(types.String(), primary_key=True)
-    original_run_id: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    original_run_id: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
     future_state: Mapped[FutureState] = mapped_column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )
     name: Mapped[str] = mapped_column(types.String(), nullable=True)
-    function_path: Mapped[str] = mapped_column(types.String(), nullable=False, index=True)
+    function_path: Mapped[str] = mapped_column(
+        types.String(), nullable=False, index=True
+    )
     parent_id: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    root_id: Mapped[str] = mapped_column(types.String(), ForeignKey("runs.id"), nullable=False)
+    root_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), nullable=False
+    )
     description: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     tags: Mapped[List[str]] = mapped_column(  # type: ignore
         types.String(),
@@ -128,15 +135,19 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     )
     source_code: Mapped[str] = mapped_column(types.String(), nullable=False)
 
-    nested_future_id: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    exception_metadata_json: Mapped[Optional[Dict[str, Union[str, List[str]]]]] = mapped_column(
-        types.JSON(), nullable=True
+    nested_future_id: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
     )
-    external_exception_metadata_json: Mapped[Optional[
-        Dict[str, Union[str, List[str]]]
-    ]] = mapped_column(types.JSON(), nullable=True)
+    exception_metadata_json: Mapped[
+        Optional[Dict[str, Union[str, List[str]]]]
+    ] = mapped_column(types.JSON(), nullable=True)
+    external_exception_metadata_json: Mapped[
+        Optional[Dict[str, Union[str, List[str]]]]
+    ] = mapped_column(types.JSON(), nullable=True)
 
-    container_image_uri: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    container_image_uri: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
 
     # Lifecycle timestamps
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -148,14 +159,24 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
-    started_at: Mapped[Optional[datetime.datetime]] = mapped_column(types.DateTime(), nullable=True)
-    ended_at: Mapped[Optional[datetime.datetime]] = mapped_column(types.DateTime(), nullable=True)
-    resolved_at: Mapped[Optional[datetime.datetime]] = mapped_column(types.DateTime(), nullable=True)
-    failed_at: Mapped[Optional[datetime.datetime]] = mapped_column(types.DateTime(), nullable=True)
+    started_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    ended_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    resolved_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    failed_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
     resource_requirements_json: Mapped[Optional[str]] = mapped_column(
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
-    cache_key: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True, index=True)
+    cache_key: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True, index=True
+    )
 
     # Relationships
     root_run: Mapped["Run"] = relationship("Run", remote_side=[id], lazy="select")

@@ -16,7 +16,9 @@ class Edge(Base, JSONEncodableMixin):
 
     __tablename__ = "edges"
 
-    id: Mapped[str] = mapped_column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
 
     # Edge endpoints
     source_run_id: Mapped[Optional[str]] = mapped_column(
@@ -26,7 +28,9 @@ class Edge(Base, JSONEncodableMixin):
     destination_run_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=True, index=True
     )
-    destination_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    destination_name: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
 
     # Artifact
     artifact_id: Mapped[Optional[str]] = mapped_column(

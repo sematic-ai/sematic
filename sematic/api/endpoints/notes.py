@@ -37,7 +37,7 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
             query = query.filter(sql_predicates)
 
         if "function_path" in flask.request.args:
-            query = query.join(Run, Run.id == Note.root_id).filter(
+            query = query.join(Run, Run.id == Note.root_id).filter(  # type: ignore
                 Run.function_path == flask.request.args["function_path"]
             )
 

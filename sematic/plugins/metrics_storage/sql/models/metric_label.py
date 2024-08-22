@@ -1,7 +1,7 @@
 # Third-party
 from sqlalchemy import Index, types
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -33,7 +33,9 @@ class MetricLabel(HasOrganizationMixin, Base):
 
     __tablename__ = "metric_labels"
 
-    metric_id: Mapped[str] = mapped_column(types.String(), nullable=False, primary_key=True)
+    metric_id: Mapped[str] = mapped_column(
+        types.String(), nullable=False, primary_key=True
+    )
     metric_name: Mapped[str] = mapped_column(types.String(), nullable=False)
     metric_labels: Mapped[MetricsLabels] = mapped_column(JSONB(), nullable=False)
     metric_type: Mapped[MetricType] = mapped_column(IntEnum(MetricType), nullable=False)

@@ -64,7 +64,8 @@ def get_artifact(artifact_id: str) -> Artifact:
         Fetched artifact
     """
     with db().get_session() as session:
-        return session.query(Artifact).filter(Artifact.id == artifact_id).one()
+        query = session.query(Artifact).filter(Artifact.id == artifact_id)
+        return query.one()  # type: ignore
 
 
 def get_organizations() -> List[Organization]:
@@ -72,7 +73,8 @@ def get_organizations() -> List[Organization]:
     Get all organizations from the database.
     """
     with db().get_session() as session:
-        return session.query(Organization).order_by(Organization.name).all()
+        query = session.query(Organization).order_by(Organization.name)
+        return query.all()  # type: ignore
 
 
 def get_users() -> List[User]:
@@ -80,7 +82,7 @@ def get_users() -> List[User]:
     Get all users from the database.
     """
     with db().get_session() as session:
-        return session.query(User).order_by(User.first_name).all()
+        return session.query(User).order_by(User.first_name).all()  # type: ignore
 
 
 def get_users_by_id(user_ids: List[str]) -> List[User]:
@@ -98,7 +100,8 @@ def get_users_by_id(user_ids: List[str]) -> List[User]:
         List of users
     """
     with db().get_session() as session:
-        return session.query(User).filter(User.id.in_(list(set(user_ids)))).all()
+        query = session.query(User).filter(User.id.in_(list(set(user_ids))))
+        return query.all()  # type: ignore
 
 
 def get_user(user_id: str) -> User:
@@ -116,7 +119,7 @@ def get_user(user_id: str) -> User:
         Fetched user
     """
     with db().get_session() as session:
-        return session.query(User).filter(User.id == user_id).one()
+        return session.query(User).filter(User.id == user_id).one()  # type: ignore
 
 
 def get_user_by_email(email: str) -> User:
@@ -134,7 +137,7 @@ def get_user_by_email(email: str) -> User:
         Fetched user
     """
     with db().get_session() as session:
-        return session.query(User).filter(User.email == email).one()
+        return session.query(User).filter(User.email == email).one()  # type: ignore
 
 
 def get_run(run_id: str) -> Run:
@@ -152,7 +155,7 @@ def get_run(run_id: str) -> Run:
         Fetched run
     """
     with db().get_session() as session:
-        return session.query(Run).filter(Run.id == run_id).one()
+        return session.query(Run).filter(Run.id == run_id).one()  # type: ignore
 
 
 def get_existing_run_ids(run_ids: Iterable[str]) -> Set[str]:
@@ -170,7 +173,8 @@ def get_existing_run_ids(run_ids: Iterable[str]) -> Set[str]:
         The set of existing run IDs.
     """
     with db().get_session() as session:
-        existing_run_ids = session.query(Run.id).filter(Run.id.in_(run_ids)).all()
+        query = session.query(Run.id).filter(Run.id.in_(run_ids))
+        existing_run_ids = query.all()  # type: ignore
 
     return set([row[0] for row in existing_run_ids])
 
@@ -198,7 +202,7 @@ def get_run_status_details(
     """
     with db().get_session() as session:
         query_results = list(
-            session.query(Run.id, Run.future_state, Job)
+            session.query(Run.id, Run.future_state, Job)  # type: ignore
             .outerjoin(Job, Job.run_id == Run.id, full=True)
             .filter(Run.id.in_(run_ids))
             # Job kind can be None when there are no jobs for the run yet.
@@ -224,7 +228,8 @@ def get_run_status_details(
 
 def get_function_path(run_id: str) -> str:
     with db().get_session() as session:
-        row = session.query(Run.function_path).filter(Run.id == run_id).one()
+        query = session.query(Run.function_path).filter(Run.id == run_id)
+        row = query.one()  # type: ignore
 
     return row[0]
 
@@ -239,7 +244,7 @@ class BasicPipelineMetrics:
 def get_basic_pipeline_metrics(function_path: str):
     with db().get_session() as session:
         count_by_state = list(
-            session.query(Run.future_state, sqlalchemy.func.count())
+            session.query(Run.future_state, sqlalchemy.func.count())  # type: ignore
             .filter(Run.function_path == function_path)
             .group_by(Run.future_state)
         )
@@ -284,9 +289,8 @@ def save_run(run: Run) -> Run:
         saved run
     """
     with db().get_session() as session:
-        existing_run_future_state = (
-            session.query(Run.future_state).filter(Run.id == run.id).one_or_none()
-        )
+        query = session.query(Run.future_state).filter(Run.id == run.id)
+        existing_run_future_state = query.one_or_none()  # type: ignore
         existing_run_future_state = (
             existing_run_future_state[0]
             if existing_run_future_state is not None
@@ -319,7 +323,7 @@ def get_job(job_name: str, job_namespace: str) -> Optional[Job]:
     """Get a job by name and namespace (or None if it doesn't exist)."""
     with db().get_session() as session:
         return (
-            session.query(Job)
+            session.query(Job)  # type: ignore
             .filter(Job.name == job_name)
             .filter(Job.namespace == job_namespace)
             .one_or_none()
@@ -332,7 +336,7 @@ def save_job(job: Job) -> Job:
         # do this instead of get_job so we can keep it in one
         # session to avoid race conditions.
         existing_job = (
-            session.query(Job)
+            session.query(Job)  # type: ignore
             .filter(Job.name == job.name)
             .filter(Job.namespace == job.namespace)
             .one_or_none()
@@ -354,7 +358,7 @@ def save_job(job: Job) -> Job:
 def get_run_ids_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
-            session.query(
+            session.query(  # type: ignore
                 Job.run_id,
                 sqlalchemy.func.max(Job.kind),
                 sqlalchemy.func.max(Job.state),
@@ -387,7 +391,7 @@ def get_run_ids_with_orphaned_jobs() -> List[str]:
 def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
-            session.query(
+            session.query(  # type: ignore
                 Job.run_id, Job.kind, Job.state, Resolution.root_id, Resolution.status
             )
             .filter(Job.run_id == Resolution.root_id)
@@ -416,9 +420,9 @@ def get_active_resolution_ids(
     resolution_kind: ResolutionKind = ResolutionKind.KUBERNETES,
 ) -> List[str]:
     with db().get_session() as session:
+        query = session.query(Resolution.root_id, Resolution.status, Resolution.kind)
         query_results = list(
-            session.query(Resolution.root_id, Resolution.status, Resolution.kind)
-            .filter(
+            query.filter(  # type: ignore
                 Resolution.status.in_(
                     [status.value for status in ResolutionStatus.non_terminal_states()]
                 )
@@ -446,7 +450,7 @@ def get_orphaned_run_ids() -> List[str]:
     """
     with db().get_session() as session:
         query_results = list(
-            session.query(
+            session.query(  # type: ignore
                 Run.id,
                 Run.root_id,
                 Run.future_state,
@@ -484,7 +488,7 @@ def get_stale_resolution_ids() -> List[str]:
     """
     with db().get_session() as session:
         query_results = list(
-            session.query(
+            session.query(  # type: ignore
                 Run.id,
                 Run.root_id,
                 Run.future_state,
@@ -531,7 +535,7 @@ def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[J
     """
     with db().get_session() as session:
         return list(
-            session.query(Job)
+            session.query(Job)  # type: ignore
             .filter(Job.run_id == run_id)
             .filter(Job.kind == kind)
             .all()
@@ -556,7 +560,7 @@ def count_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> int:
     """
     with db().get_session() as session:
         return (
-            session.query(Job)
+            session.query(Job)  # type: ignore
             .filter(Job.run_id == run_id)
             .filter(Job.kind == kind)
             .count()
@@ -602,7 +606,7 @@ def get_external_resource_record(resource_id: str) -> Optional[ExternalResource]
     """Get an ExternalResource from the DB"""
     with db().get_session() as session:
         return (
-            session.query(ExternalResource)
+            session.query(ExternalResource)  # type: ignore
             .filter(ExternalResource.id == resource_id)
             .one_or_none()
         )
@@ -617,7 +621,7 @@ def get_orphaned_resource_records() -> List[ExternalResource]:
     """
     with db().get_session() as session:
         results = (
-            session.query(
+            session.query(  # type: ignore
                 ExternalResource,
                 Resolution.root_id,
                 RunExternalResource,
@@ -669,7 +673,7 @@ def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
     """Get a list of external resources associated with a particular root run."""
     with db().get_session() as session:
         results = (
-            session.query(ExternalResource, ExternalResource.id)
+            session.query(ExternalResource, ExternalResource.id)  # type: ignore
             .filter(ExternalResource.id == RunExternalResource.resource_id)
             .filter(Run.id == RunExternalResource.run_id)
             .filter(Run.root_id == root_run_id)
@@ -682,8 +686,10 @@ def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
 def get_run_ids_for_resource(external_resource_id: str) -> List[str]:
     with db().get_session() as session:
         results = (
-            session.query(RunExternalResource.run_id)
-            .filter(external_resource_id == RunExternalResource.resource_id)
+            session.query(RunExternalResource.run_id)  # type: ignore
+            .filter(
+                external_resource_id == RunExternalResource.resource_id  # type: ignore
+            )
             .distinct()
             .all()
         )
@@ -700,7 +706,7 @@ def get_external_resources_by_run_id(run_id: str) -> List[ExternalResource]:
             .join(
                 RunExternalResource,
                 sqlalchemy.and_(
-                    run_id == RunExternalResource.run_id,
+                    run_id == RunExternalResource.run_id,  # type: ignore
                     ExternalResource.id == RunExternalResource.resource_id,
                 ),
             )
@@ -722,9 +728,8 @@ def get_resolution(resolution_id: str) -> Resolution:
     Fetched resolution
     """
     with db().get_session() as session:
-        return (
-            session.query(Resolution).filter(Resolution.root_id == resolution_id).one()
-        )
+        query = session.query(Resolution).filter(Resolution.root_id == resolution_id)
+        return query.one()  # type: ignore
 
 
 def save_resolution(resolution: Resolution) -> Resolution:
@@ -812,13 +817,13 @@ def get_graph(
     (e.g. Run.root_id == root_id, or Run.id == run_id)
     """
     with db().get_session() as session:
-        runs: List[Run] = session.query(Run).filter(run_predicate).all()
+        runs: List[Run] = session.query(Run).filter(run_predicate).all()  # type: ignore
         run_ids = [run.id for run in runs]
 
         edges: List[Edge] = []
         if include_edges:
             edges = (
-                session.query(Edge)
+                session.query(Edge)  # type: ignore
                 .filter(
                     sqlalchemy.or_(
                         Edge.source_run_id.in_(run_ids),
@@ -833,9 +838,8 @@ def get_graph(
             artifact_ids = {
                 edge.artifact_id for edge in edges if edge.artifact_id is not None
             }
-            artifacts = (
-                session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
-            )
+            query = session.query(Artifact).filter(Artifact.id.in_(artifact_ids))
+            artifacts = query.all()  # type: ignore
 
     return runs, artifacts, edges
 
@@ -845,7 +849,7 @@ def get_note(note_id: str) -> Note:
     Get note from DB.
     """
     with db().get_session() as session:
-        return session.query(Note).filter(Note.id == note_id).one()
+        return session.query(Note).filter(Note.id == note_id).one()  # type: ignore
 
 
 def save_note(note: Note) -> Note:
@@ -876,7 +880,7 @@ def delete_note(note: Note):
 def _get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
     with db().get_session() as session:
         results = (
-            session.query(Run, Edge, Artifact)
+            session.query(Run, Edge, Artifact)  # type: ignore
             .filter(
                 sqlalchemy.and_(
                     Run.root_id == root_run_id,
@@ -908,7 +912,7 @@ def get_user_by_api_key(api_key: str) -> User:
     Get a user by API key
     """
     with db().get_session() as session:
-        return session.query(User).filter(User.api_key == api_key).one()
+        return session.query(User).filter(User.api_key == api_key).one()  # type: ignore
 
 
 def save_user(user: User) -> User:
@@ -924,7 +928,7 @@ def save_user(user: User) -> User:
 
         # also ensure the user is a member of their own personal organization
         row = (
-            session.query(OrganizationUser)
+            session.query(OrganizationUser)  # type: ignore
             .filter(OrganizationUser.user_id == user.id)
             .join(Organization, OrganizationUser.organization_id == Organization.id)
             .one_or_none()

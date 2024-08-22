@@ -11,4 +11,3 @@ class Base(DeclarativeBase):
                 for column in self.__class__.__table__.columns
             ),
         )
-

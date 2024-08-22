@@ -9,7 +9,10 @@ import pytest
 from sematic.db.db import DB
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
-from sematic.metrics.tests.fixtures import check_approximate_equality, metric_points  # noqa: F401
+from sematic.metrics.tests.fixtures import (  # noqa: F401
+    check_approximate_equality,
+    metric_points,
+)
 from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricSeries,

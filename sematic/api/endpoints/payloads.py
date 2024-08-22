@@ -3,6 +3,10 @@
 import logging
 from typing import Any, Dict, List, Protocol, Sequence
 
+# Third-party
+from sqlalchemy import String
+from sqlalchemy.orm import declared_attr
+
 # Sematic
 from sematic.db.queries import get_user, get_users_by_id
 
@@ -11,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class _JSONEncodableWithUser(Protocol):
     @property
-    def user_id(self) -> str:
+    def user_id(self) -> declared_attr[String]:
         ...
 
     def to_json_encodable(self) -> Dict[str, Any]:
@@ -23,7 +27,7 @@ def _get_payload_with_user(item: _JSONEncodableWithUser) -> Dict[str, Any]:
 
     user_payload = None
     if item.user_id is not None:
-        user = get_user(item.user_id)
+        user = get_user(item.user_id)  # type: ignore
         user_payload = user.to_json_encodable()
 
     item_payload["user"] = user_payload
@@ -41,7 +45,8 @@ def _get_collection_payload_with_user(
     users_by_id = {}
     if len(user_ids) > 0:
         users_by_id = {
-            user.id: user.to_json_encodable() for user in get_users_by_id(user_ids)
+            user.id: user.to_json_encodable()
+            for user in get_users_by_id(user_ids)  # type: ignore
         }
 
     for item in items:
@@ -49,7 +54,7 @@ def _get_collection_payload_with_user(
         item_payload["user"] = None
 
         if item.user_id is not None:
-            item_payload["user"] = users_by_id[item.user_id]
+            item_payload["user"] = users_by_id[item.user_id]  # type: ignore
 
         items_payload.append(item_payload)
 

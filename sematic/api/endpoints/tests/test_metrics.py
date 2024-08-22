@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from datetime import datetime, timedelta
-from typing import List, Union
+from typing import List
 
 # Third-party
 import flask.testing
@@ -160,9 +160,16 @@ def test_get_metrics_endpoint(
 
     payload = response.json
 
-    assert set(expected_series.keys()) == set(payload["content"].keys())
-    assert all(payload["content"][k] == expected_series[k] for k in expected_series.keys() if k != "series")
-    check_approximate_equality(payload["content"]["series"], expected_series["series"])  # type: ignore
+    assert set(expected_series.keys()) == set(payload["content"].keys())  # type: ignore
+    assert all(
+        payload["content"][k] == expected_series[k]  # type: ignore
+        for k in expected_series.keys()
+        if k != "series"
+    )
+    check_approximate_equality(
+        payload["content"]["series"],  # type: ignore
+        expected_series["series"],  # type: ignore
+    )
 
 
 @pytest.mark.parametrize(

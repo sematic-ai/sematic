@@ -16,10 +16,16 @@ class Note(HasUserMixin, Base, JSONEncodableMixin):
 
     __tablename__ = "notes"
 
-    id: Mapped[str] = mapped_column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
     note: Mapped[str] = mapped_column(types.String(), nullable=False)
-    run_id: Mapped[str] = mapped_column(types.String(), ForeignKey("runs.id"), nullable=False)
-    root_id: Mapped[str] = mapped_column(types.String(), ForeignKey("runs.id"), nullable=False)
+    run_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), nullable=False
+    )
+    root_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), nullable=False
+    )
     # Lifecycle timestamps
     created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow

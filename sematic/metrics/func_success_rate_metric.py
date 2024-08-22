@@ -65,7 +65,7 @@ class FuncSuccessRateMetric(AbstractSystemMetric):
 
     def _get_backfill_query(self, session: Session) -> Query:
         return (
-            session.query(Run)
+            session.query(Run)  # type: ignore
             .filter(
                 Run.future_state.in_([state.value for state in INCLUDED_STATES]),
                 Run.original_run_id.is_(None),

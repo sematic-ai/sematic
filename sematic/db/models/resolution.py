@@ -235,13 +235,21 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
         types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
 
-    container_image_uris: Mapped[Optional[Dict[str, str]]] = mapped_column(types.JSON(), nullable=True)
-    container_image_uri: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    container_image_uris: Mapped[Optional[Dict[str, str]]] = mapped_column(
+        types.JSON(), nullable=True
+    )
+    container_image_uri: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
     client_version: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    cache_namespace: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    cache_namespace: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
     run_command: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     build_config: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    resource_requirements_json: Mapped[Optional[str]] = mapped_column(types.JSON(), nullable=True)
+    resource_requirements_json: Mapped[Optional[str]] = mapped_column(
+        types.JSON(), nullable=True
+    )
 
     @validates("status")
     def validate_status(self, key, value) -> str:

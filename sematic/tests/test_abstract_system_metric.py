@@ -40,7 +40,7 @@ class ConcreteMetric(AbstractSystemMetric):
 
     def _get_backfill_query(self, session: Session) -> Query:
         return (
-            session.query(Run)
+            session.query(Run)  # type: ignore
             .options(joinedload(Run.root_run))
             .filter(Run.function_path != "do_not_query")
         )

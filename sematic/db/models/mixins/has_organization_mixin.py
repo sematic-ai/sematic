@@ -4,7 +4,7 @@ from typing import Optional
 # Third-party
 from sqlalchemy import ForeignKey, types
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class HasOrganizationMixin:
@@ -19,4 +19,6 @@ class HasOrganizationMixin:
 
     @declared_attr
     def organization_id(cls) -> Mapped[Optional[str]]:
-        return mapped_column(types.String(), ForeignKey("organizations.id"), nullable=True)
+        return mapped_column(
+            types.String(), ForeignKey("organizations.id"), nullable=True
+        )

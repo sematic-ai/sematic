@@ -5,8 +5,9 @@ from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
 import sqlalchemy.exc
+from sqlalchemy import Integer
 from sqlalchemy import cast as sql_cast
-from sqlalchemy import func, Integer
+from sqlalchemy import func
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -80,7 +81,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             existing_metric_ids = (
-                session.query(MetricLabel.metric_id)
+                session.query(MetricLabel.metric_id)  # type: ignore
                 .filter(MetricLabel.metric_id.in_(metric_labels.keys()))
                 .all()
             )
@@ -101,7 +102,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
     def get_metrics(self, labels: MetricsLabels) -> Tuple[str, ...]:
         with db().get_session() as session:
             metric_names = (
-                session.query(MetricLabel.metric_name)
+                session.query(MetricLabel.metric_name)  # type: ignore
                 .group_by(MetricLabel.metric_name)
                 .filter(*_make_predicates_from_labels(labels))
                 .all()
@@ -118,7 +119,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         # Early check as later queries fail when there are no rows.
         try:
             with db().get_session() as session:
-                session.query(MetricLabel.metric_id).filter(
+                session.query(MetricLabel.metric_id).filter(  # type: ignore
                     MetricLabel.metric_name == filter.name
                 ).limit(1).one()
         except sqlalchemy.exc.NoResultFound:
@@ -157,7 +158,10 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         if isinstance(rollup, int):
             interval_seconds = max(interval_seconds, rollup)
             field_ = (
-                sql_cast(func.extract("epoch", MetricValue.metric_time) / interval_seconds, Integer)
+                sql_cast(
+                    func.extract("epoch", MetricValue.metric_time) / interval_seconds,
+                    Integer,
+                )
                 * interval_seconds
             )
             select_fields.append(field_)
@@ -175,7 +179,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         try:
             with db().get_session() as session:
                 query = (
-                    session.query(*select_fields)
+                    session.query(*select_fields)  # type: ignore
                     .filter(*predicates)
                     .order_by(MetricValue.metric_time)
                 )
@@ -188,7 +192,10 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                     record_count = query.add_columns(field_).group_by(field_).count()
 
                     if record_count > _MAX_SERIES_POINTS:
-                        field_ = sql_cast(field_ / interval_seconds, Integer) * interval_seconds
+                        field_ = (
+                            sql_cast(field_ / interval_seconds, Integer)
+                            * interval_seconds
+                        )
                     order_by_field = field_  # type: ignore
 
                     query = query.add_columns(field_).group_by(field_)
@@ -221,7 +228,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             metric_ids: Sequence[str] = (
-                session.query(MetricLabel.metric_id)
+                session.query(MetricLabel.metric_id)  # type: ignore
                 .filter(MetricLabel.metric_name == filter.name, *labels_predicates)
                 .all()
             )

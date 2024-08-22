@@ -33,7 +33,9 @@ class Organization(Base, JSONEncodableMixin):
 
     __tablename__ = "organizations"
 
-    id: Mapped[str] = mapped_column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
     name: Mapped[str] = mapped_column(types.String(), nullable=False)
     kubernetes_namespace: Mapped[Optional[str]] = mapped_column(types.String())
 

@@ -67,16 +67,20 @@ class Job(Base, JSONEncodableMixin):
     run_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=False, index=True
     )
-    last_updated_epoch_seconds: Mapped[float] = mapped_column(types.Float(), nullable=False)
-    state: Mapped[KubernetesJobStateString] = mapped_column(types.String(), nullable=False)
+    last_updated_epoch_seconds: Mapped[float] = mapped_column(
+        types.Float(), nullable=False
+    )
+    state: Mapped[KubernetesJobStateString] = mapped_column(
+        types.String(), nullable=False
+    )
     kind: Mapped[JobKindString] = mapped_column(types.String(), nullable=False)
     message: Mapped[str] = mapped_column(types.String(), nullable=False)
     detail_serialization: Mapped[Dict[str, Any]] = mapped_column(  # type: ignore
         types.JSON(), nullable=False
     )
-    status_history_serialization: Mapped[List[Dict[str, Union[str, float]]]] = mapped_column(
-        types.JSON(), nullable=False
-    )
+    status_history_serialization: Mapped[
+        List[Dict[str, Union[str, float]]]
+    ] = mapped_column(types.JSON(), nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )

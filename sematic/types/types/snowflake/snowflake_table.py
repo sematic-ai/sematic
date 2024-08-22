@@ -26,7 +26,6 @@ except ImportError as e:
     print("Install them with\n")
     print("\tpip3 install -r {}".format(requirements_path))
     raise e
-from sqlalchemy import text
 
 # Sematic
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
@@ -69,7 +68,7 @@ class SnowflakeTable:
             Maximum number of rows to return. Defaults to -1, i.e. all.
         """
         with self._cursor() as cursor:
-            cursor.execute(text("SELECT * FROM :table LIMIT :limit;"), dict(table=self.table, limit=limit))
+            cursor.execute("SELECT * FROM {} LIMIT {};".format(self.table, limit))
             return cursor.fetch_pandas_all()
 
 

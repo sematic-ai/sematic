@@ -27,7 +27,9 @@ class RunExternalResource(Base, JSONEncodableMixin):
     resource_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("external_resources.id"), primary_key=True
     )
-    run_id: Mapped[str] = mapped_column(types.String(), ForeignKey("runs.id"), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), primary_key=True
+    )
 
     def __repr__(self) -> str:
         key_value_strings = [

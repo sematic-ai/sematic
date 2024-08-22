@@ -13,7 +13,8 @@ def up():
         users = conn.execute(
             text(
                 "SELECT "
-                "email, first_name, last_name, avatar_url, api_key, created_at, updated_at "
+                "email, first_name, last_name, "
+                "avatar_url, api_key, created_at, updated_at "
                 "FROM users;"
             )
         )
@@ -47,9 +48,11 @@ def down():
         conn.execute(
             text(
                 "INSERT INTO users "
-                "(email, first_name, last_name, avatar_url, api_key, created_at, updated_at) "
+                "(email, first_name, last_name, avatar_url, "
+                "api_key, created_at, updated_at) "
                 "SELECT "
-                "email, first_name, last_name, avatar_url, api_key, created_at, updated_at "
+                "email, first_name, last_name, avatar_url, "
+                "api_key, created_at, updated_at "
                 "FROM users_tmp;"
             )
         )

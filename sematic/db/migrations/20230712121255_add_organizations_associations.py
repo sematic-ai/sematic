@@ -225,6 +225,7 @@ def down_postgres():
             """
         )
 
+
 def execute_text(conn, statement):
     conn.execute(text(statement))
 

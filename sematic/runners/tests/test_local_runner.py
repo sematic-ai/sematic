@@ -746,7 +746,7 @@ def test_cancel_non_terminal_futures(
 def _get_runs_and_artifacts(db: DB) -> List[Tuple[Run, Artifact]]:
     with db.get_session() as session:
         return (
-            session.query(Run, Artifact)
+            session.query(Run, Artifact)  # type: ignore
             .join(Edge, Edge.source_run_id == Run.id)
             .filter(Edge.artifact_id == Artifact.id)
             .order_by(Run.created_at)

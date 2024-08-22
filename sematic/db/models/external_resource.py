@@ -92,10 +92,16 @@ class ExternalResource(Base, JSONEncodableMixin):
         nullable=False,
     )
     status_message: Mapped[str] = mapped_column(types.String(), nullable=False)
-    last_updated_epoch_seconds: Mapped[int] = mapped_column(types.BIGINT(), nullable=False)
-    type_serialization: Mapped[TypeSerialization] = mapped_column(types.JSON(), nullable=False)
-    value_serialization: Mapped[Dict[str, Any]] = mapped_column(types.JSON(), nullable=False)
-    history_serializations: Mapped[Tuple[Dict[str, Any], ...]] = mapped_column(  # type: ignore
+    last_updated_epoch_seconds: Mapped[int] = mapped_column(
+        types.BIGINT(), nullable=False
+    )
+    type_serialization: Mapped[TypeSerialization] = mapped_column(
+        types.JSON(), nullable=False
+    )
+    value_serialization: Mapped[Dict[str, Any]] = mapped_column(
+        types.JSON(), nullable=False
+    )
+    history_serializations: Mapped[Tuple[Dict[str, Any], ...]] = mapped_column(
         types.JSON(), nullable=False
     )
     created_at: Mapped[datetime.datetime] = mapped_column(
