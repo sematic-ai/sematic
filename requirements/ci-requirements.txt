@@ -11,7 +11,7 @@ pytest
 pip-tools
 
 # Required for mypy
-sqlalchemy[mypy]<2.0.0
+sqlalchemy>=2.0.0
 flask
 types-requests
 pandas-stubs
