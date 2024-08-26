@@ -18,7 +18,7 @@ wheel_description_file = "//:README.rst"
 wheel_entry_points = {"console_scripts": ["sematic = sematic.cli.main:cli"]}
 wheel_homepage = "https://sematic.dev"
 wheel_platform = "any"
-wheel_python_requires = ">=3.8,<3.11"
+wheel_python_requires = ">=3.8,<3.13"
 wheel_python_tag = "py3"
 wheel_requires = [
     # Specifying this by hand because sematic_py_wheel doesn't know
@@ -31,4 +31,5 @@ wheel_deps = [
     "//sematic:init",
     "//sematic/testing:init",
     "//sematic/cli:main_lib",
+    "//sematic/examples/mnist/pytorch:pytorch_lib",
 ]

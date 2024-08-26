@@ -21,7 +21,6 @@ sematic_py_lib(
         # These do not add dependencies on 3rd party packages
         "//sematic/examples/add:add_lib",
         "//sematic/examples/summarization_finetune:summarization_finetune_lib",
-        "//sematic/examples/mnist/pytorch:pytorch_lib",
         "//sematic/examples/liver_cirrhosis:liver_cirrhosis_lib",
         "//sematic/examples/hackernews_summarization:hackernews_summarization_lib",
     ],
@@ -211,10 +210,12 @@ sematic_py_binary(
     name = "main",
     srcs = ["main.py"],
     main = "main.py",
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
     deps = [
         ":main_lib",
         # This is to make sure we can test via Bazel
         "//sematic/examples/mnist/pytorch:requirements",
+        "//sematic/examples/mnist/pytorch:pytorch_lib",
         "//sematic/examples/liver_cirrhosis:requirements",
         "//sematic/examples/hackernews_summarization:requirements",
     ],

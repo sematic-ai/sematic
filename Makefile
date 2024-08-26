@@ -41,6 +41,7 @@ ifeq ($(UNAME_S),Linux)
 	bazel run //requirements:requirements3_8.update
 	bazel run //requirements:requirements3_9.update
 	bazel run //requirements:requirements3_10.update
+	bazel run //requirements:requirements3_11.update
 else
 	echo "${RED}Refreshing dependencies should only be done from Linux${NO_COLOR}"
 	exit 1

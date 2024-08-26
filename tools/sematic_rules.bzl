@@ -13,9 +13,11 @@ load(
 load("@pip_dependencies3_8//:requirements.bzl", requirement3_8 = "requirement")
 load("@pip_dependencies3_9//:requirements.bzl", requirement3_9 = "requirement")
 load("@pip_dependencies3_10//:requirements.bzl", requirement3_10 = "requirement")
+load("@pip_dependencies3_11//:requirements.bzl", requirement3_11 = "requirement")
 load("@python3_8//:defs.bzl", interpreter3_8 = "interpreter")
 load("@python3_9//:defs.bzl", interpreter3_9 = "interpreter")
 load("@python3_10//:defs.bzl", interpreter3_10 = "interpreter")
+load("@python3_11//:defs.bzl", interpreter3_11 = "interpreter")
 
 # <add python version>: This section will need to be updated when a python version is added
 _PYTHON_VERSION_INFO = dict(
@@ -34,6 +36,11 @@ _PYTHON_VERSION_INFO = dict(
         interpreter = interpreter3_10,
         pip_requirement = requirement3_10,
     ),
+    PY3_11 = struct(
+        workspace_name = "python3_11",
+        interpreter = interpreter3_11,
+        pip_requirement = requirement3_11,
+    ),
 )
 PYTHON_VERSION_INFO = struct(**_PYTHON_VERSION_INFO)
 
@@ -45,10 +52,13 @@ PY3 = struct(**{
 
 # <default py version change>: This line will need to be updated if we change the default
 # python version for sematic.
-DEFAULT_PY_VERSION = PY3.PY3_8
+DEFAULT_PY_VERSION = PY3.PY3_9
 requirement = _PYTHON_VERSION_INFO[DEFAULT_PY_VERSION].pip_requirement
 
-ALL_PY3_VERSIONS = sorted([key for key in _PYTHON_VERSION_INFO.keys()], key=lambda k: int(k.replace("PY3_", "")))
+# The order of this list also defines precedence.
+# 3.8 is lowest precedence because it will soon be
+# end-of-life.
+ALL_PY3_VERSIONS = ["PY3_9", "PY3_10", "PY3_11", "PY3_8"]
 PY3_DEFAULT_TEST_VERSIONS = ALL_PY3_VERSIONS
 
 def env_and_runfiles_for_python(version):
@@ -87,7 +97,7 @@ def pytest_test(
 
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
-    py_versions = sorted(py_versions, key=lambda k: int(k.replace("PY3_", "")))
+    py_versions = sorted(py_versions, key=ALL_PY3_VERSIONS.index)
     deps = deps + ["//sematic:torch_patch"]
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
@@ -97,7 +107,7 @@ def pytest_test(
             py_version = py3_version,
         )
 
-        # Use the lowest python version provided for the default target,
+        # Use the highest precedence python version provided for the default target,
         # all other python versions should have a suffix like _py3_8
         new_name = name if i == 0 else "{}_{}".format(name, py3_version.lower())
         py_test(
@@ -113,7 +123,7 @@ def pytest_test(
         )
 
         if i == 0:
-            # Only have coverage tests for the lowest version python interpreter
+            # Only have coverage tests for the higest precedence python interpreter
             # These won't get run during a normal bazel test because of our .bazelrc which
             # filters to tests with nocov set. You can execute coverage tests as:
             # bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
@@ -132,13 +142,15 @@ def pytest_test(
                 **kwargs
             )
 
-def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = None):
+def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = None, py_versions = None):
     if pip_deps == None:
         pip_deps = []
     if visibility == None:
         visibility = ["//visibility:public"]
     if data == None:
         data = []
+    if py_versions == None:
+        py_versions = ALL_PY3_VERSIONS
 
     def create_targets(target_name, pyenv, runfiles, py_version):
         py_library(
@@ -161,13 +173,15 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
             data = data + runfiles,
         )
 
-    create_multipy_targets(name, create_targets)
+    create_multipy_targets(name, create_targets, py_versions)
 
-def sematic_example(name, requirements = None, data = None, extras = None):
+def sematic_example(name, requirements = None, data = None, extras = None, py_versions = None):
     if data == None:
         data = []
     if extras == None:
         extras = []
+    if py_versions == None:
+        py_versions = ALL_PY3_VERSIONS
     
     sematic_deps = [
         "//sematic:init"
@@ -176,6 +190,7 @@ def sematic_example(name, requirements = None, data = None, extras = None):
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),
         data = ["requirements.txt", "README.md", "AUTHORS"] + (data or []),
+        py_versions=py_versions,
         deps = sematic_deps,
     )
 
@@ -183,6 +198,7 @@ def sematic_example(name, requirements = None, data = None, extras = None):
         name = "requirements",
         srcs = ["__main__.py"],
         deps = [],
+        py_versions=py_versions,
         pip_deps = [
             req
             for req in (requirements or [])
@@ -218,15 +234,17 @@ def sematic_example(name, requirements = None, data = None, extras = None):
             data = data + runfiles,
         )
 
-    create_multipy_targets(name, create_targets)
+    create_multipy_targets(name, create_targets, py_versions)
 
-def sematic_py_binary(name, main, srcs, deps, pip_deps = None, data = None, env = None, **kwargs):
+def sematic_py_binary(name, main, srcs, deps, pip_deps = None, data = None, env = None, py_versions = None, **kwargs):
     if data == None:
         data = []
     if env == None:
         env = {}
     if pip_deps == None:
         pip_deps = []
+    if py_versions == None:
+        py_versions = ALL_PY3_VERSIONS
 
     def create_targets(target_name, pyenv, runfiles, py_version):
         full_deps = full_versioned_deps(deps, pip_deps, py_version)
@@ -241,7 +259,7 @@ def sematic_py_binary(name, main, srcs, deps, pip_deps = None, data = None, env 
             **kwargs
         )
 
-    create_multipy_targets(name, create_targets)
+    create_multipy_targets(name, create_targets, py_versions)
 
 def versioned_pip_deps(pip_deps, py_version):
     final_deps = []
@@ -259,8 +277,8 @@ def versioned_sematic_deps(deps, py_version):
 def full_versioned_deps(deps, pip_deps, py_version):
     return versioned_sematic_deps(deps, py_version) + versioned_pip_deps(pip_deps, py_version)
 
-def create_multipy_targets(base_name, target_creator):
-    for i, py_version in enumerate(ALL_PY3_VERSIONS):
+def create_multipy_targets(base_name, target_creator, py_versions):
+    for i, py_version in enumerate(py_versions):
         full_name = "{}_{}".format(base_name, py_version.lower())
         (pyenv, runfiles) = env_and_runfiles_for_python(py_version)
         target_creator(full_name, pyenv, runfiles, py_version)

@@ -10,6 +10,7 @@ sematic_py_lib(
         "//sematic:init",
         "//sematic/ee:ray",
     ],
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
     pip_deps = [
         "numpy",
         "ray",

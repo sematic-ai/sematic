@@ -6,4 +6,5 @@ pytest_test(
         "//sematic/testing:init",
         "//sematic/examples/lightning_resnet:lib",
     ],
+    py_versions = [PY3.PY3_9, PY3.PY3_8],
 )
