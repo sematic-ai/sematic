@@ -187,10 +187,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
                 if rollup == "auto":
                     field_ = func.extract("epoch", MetricValue.metric_time)
-                    query = query.order_by(field_)  # type: ignore
-                    record_count = (
-                        query.add_columns(field_).group_by(field_).count()
-                    )  # type: ignore
+                    query = query.order_by(field_).add_columns(field_)  # type: ignore
+                    record_count = query.group_by(field_).count()  # type: ignore
 
                     if record_count > _MAX_SERIES_POINTS:
                         field_ = (

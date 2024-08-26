@@ -2,6 +2,9 @@
 # Standard Library
 import logging
 
+# Third-party
+from sqlalchemy import text
+
 # Sematic
 from sematic.db.db import db
 from sematic.db.migration_utils import back_up_db_file, reinstate_db_file_from_backup
