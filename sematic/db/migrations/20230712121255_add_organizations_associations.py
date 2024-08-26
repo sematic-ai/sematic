@@ -14,6 +14,7 @@ def up_sqlite():
 
     with db().get_engine().begin() as conn:
         execute_text(
+            conn,
             """
             CREATE TABLE resolutions_new (
                     root_id TEXT NOT NULL,
@@ -35,9 +36,10 @@ def up_sqlite():
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY (organization_id) REFERENCES organizations(id)
                 );
-            """
+            """,
         )
         execute_text(
+            conn,
             """
             INSERT INTO resolutions_new
                 SELECT
@@ -55,12 +57,13 @@ def up_sqlite():
                     build_config,
                     NULL
                 FROM resolutions;
-            """
+            """,
         )
-        execute_text("DROP TABLE resolutions;")
-        execute_text("ALTER TABLE resolutions_new RENAME TO resolutions;")
+        execute_text(conn, "DROP TABLE resolutions;")
+        execute_text(conn, "ALTER TABLE resolutions_new RENAME TO resolutions;")
 
         execute_text(
+            conn,
             """
             CREATE TABLE runs_new (
                     id character(32) NOT NULL,
@@ -94,9 +97,10 @@ def up_sqlite():
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY (organization_id) REFERENCES organizations(id)
                 );
-            """
+            """,
         )
         execute_text(
+            conn,
             """
             INSERT INTO runs_new
                 SELECT
@@ -125,14 +129,17 @@ def up_sqlite():
                     user_id,
                     NULL
                 FROM runs;
-            """
+            """,
         )
-        execute_text("DROP TABLE runs;")
-        execute_text("ALTER TABLE runs_new RENAME TO runs;")
-        execute_text("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        execute_text("CREATE INDEX ix_runs_function_path ON runs (function_path);")
+        execute_text(conn, "DROP TABLE runs;")
+        execute_text(conn, "ALTER TABLE runs_new RENAME TO runs;")
+        execute_text(conn, "CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
+        execute_text(
+            conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);"
+        )
 
         execute_text(
+            conn,
             """
             CREATE TABLE metric_labels_new (
                     metric_id TEXT NOT NULL,
@@ -145,9 +152,10 @@ def up_sqlite():
 
                     FOREIGN KEY (organization_id) REFERENCES organizations(id)
                 );
-            """
+            """,
         )
         execute_text(
+            conn,
             """
             INSERT INTO metric_labels_new
                 SELECT
@@ -157,15 +165,17 @@ def up_sqlite():
                     metric_type,
                     NULL
                 FROM metric_labels;
-            """
+            """,
         )
-        execute_text("DROP TABLE metric_labels;")
-        execute_text("ALTER TABLE metric_labels_new RENAME TO metric_labels;")
+        execute_text(conn, "DROP TABLE metric_labels;")
+        execute_text(conn, "ALTER TABLE metric_labels_new RENAME TO metric_labels;")
         execute_text(
-            "CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);"
+            conn,
+            "CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);",
         )
 
         execute_text(
+            conn,
             """
             CREATE TABLE artifacts_new (
                 id character(40) NOT NULL,
@@ -179,9 +189,10 @@ def up_sqlite():
 
                 FOREIGN KEY (organization_id) REFERENCES organizations(id)
             );
-            """
+            """,
         )
         execute_text(
+            conn,
             """
             INSERT INTO artifacts_new
                 SELECT
@@ -192,10 +203,10 @@ def up_sqlite():
                     type_serialization,
                     NULL
                 FROM artifacts;
-            """
+            """,
         )
-        execute_text("DROP TABLE artifacts;")
-        execute_text("ALTER TABLE artifacts_new RENAME TO artifacts;")
+        execute_text(conn, "DROP TABLE artifacts;")
+        execute_text(conn, "ALTER TABLE artifacts_new RENAME TO artifacts;")
 
 
 def down_sqlite():
@@ -205,24 +216,26 @@ def down_sqlite():
 def up_postgres():
     with db().get_engine().begin() as conn:
         execute_text(
+            conn,
             """
             ALTER TABLE resolutions ADD COLUMN organization_id character(32) REFERENCES organizations(id);
             ALTER TABLE runs ADD COLUMN organization_id character(32) REFERENCES organizations(id);
             ALTER TABLE metric_labels ADD COLUMN organization_id character(32) REFERENCES organizations(id);
             ALTER TABLE artifacts ADD COLUMN organization_id character(32) REFERENCES organizations(id);
-            """
+            """,
         )
 
 
 def down_postgres():
     with db().get_engine().begin() as conn:
         execute_text(
+            conn,
             """
             ALTER TABLE resolutions DROP COLUMN organization_id;
             ALTER TABLE runs DROP COLUMN organization_id;
             ALTER TABLE metric_labels DROP COLUMN organization_id;
             ALTER TABLE artifacts DROP COLUMN organization_id;
-            """
+            """,
         )
 
 

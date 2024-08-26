@@ -165,7 +165,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                 * interval_seconds
             )
             select_fields.append(field_)
-            group_by_clauses.append(field_)
+            group_by_clauses.append(field_)  # type: ignore
             extra_field_names.append("timestamp")
             order_by_field = field_  # type: ignore
 
@@ -174,7 +174,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             field_ = MetricLabel.metric_labels[gb.value].astext
 
             select_fields.append(field_)
-            group_by_clauses.append(field_)
+            group_by_clauses.append(field_)  # type: ignore
 
         try:
             with db().get_session() as session:
@@ -183,12 +183,14 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                 )
 
                 if len(group_by_clauses) > 0:
-                    query = query.group_by(*group_by_clauses)
+                    query = query.group_by(*group_by_clauses)  # type: ignore
 
                 if rollup == "auto":
                     field_ = func.extract("epoch", MetricValue.metric_time)
-                    query = query.order_by(field_)
-                    record_count = query.add_columns(field_).group_by(field_).count()
+                    query = query.order_by(field_)  # type: ignore
+                    record_count = (
+                        query.add_columns(field_).group_by(field_).count()
+                    )  # type: ignore
 
                     if record_count > _MAX_SERIES_POINTS:
                         field_ = (
@@ -197,11 +199,11 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                         )
                     order_by_field = field_  # type: ignore
 
-                    query = query.add_columns(field_).group_by(field_)
+                    query = query.add_columns(field_).group_by(field_)  # type: ignore
                     extra_field_names.append("timestamp")
                 else:
-                    query = query.order_by(MetricValue.metric_time)
-                records = query.order_by(order_by_field).all()
+                    query = query.order_by(MetricValue.metric_time)  # type: ignore
+                records = query.order_by(order_by_field).all()  # type: ignore
         except sqlalchemy.exc.OperationalError as e:
             # User has old SQLite version that does not support querying JSONB fields.
             if str(e).startswith('(sqlite3.OperationalError) near ">>"'):
