@@ -13,6 +13,7 @@ from sematic.db.db import DB, db  # noqa: F401
 from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
+from sematic.metrics.tests.fixtures import check_approximate_equality
 from sematic.plugins.abstract_metrics_storage import GroupBy, MetricSeries
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
@@ -39,7 +40,7 @@ class ConcreteMetric(AbstractSystemMetric):
 
     def _get_backfill_query(self, session: Session) -> Query:
         return (
-            session.query(Run)
+            session.query(Run)  # type: ignore
             .options(joinedload(Run.root_run))
             .filter(Run.function_path != "do_not_query")
         )
@@ -168,20 +169,20 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
     timestamp = (
         int(runs[0].started_at.timestamp()) // DAY_SECONDS * DAY_SECONDS  # type: ignore
     )
+    assert set(aggregation.keys()) == {SQLMetricsStorage.get_path()}
+    series_container = aggregation[SQLMetricsStorage.get_path()]
+    assert isinstance(series_container, MetricSeries)
+    assert series_container.metric_name == "sematic.concrete_metric"
+    assert series_container.metric_type == MetricType.COUNT.name
+    assert series_container.columns == ["timestamp", "function_path"]
 
-    assert aggregation == {
-        SQLMetricsStorage.get_path(): MetricSeries(
-            metric_name="sematic.concrete_metric",
-            metric_type=MetricType.COUNT.name,
-            columns=["timestamp", "function_path"],
-            series=[
-                (
-                    1,
-                    (
-                        timestamp,
-                        runs[0].function_path,
-                    ),
-                )
-            ],
+    expected = [
+        (
+            1,
+            (
+                str(timestamp),
+                runs[0].function_path,
+            ),
         )
-    }
+    ]
+    check_approximate_equality(series_container.series, expected)

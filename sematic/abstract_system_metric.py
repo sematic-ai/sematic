@@ -129,7 +129,7 @@ class AbstractSystemMetric(abc.ABC):
 
             for i in range(pages):
                 records = (
-                    query.limit(_BACKFILL_PAGE_SIZE)
+                    query.limit(_BACKFILL_PAGE_SIZE)  # type: ignore
                     .offset(i * _BACKFILL_PAGE_SIZE)
                     .all()
                 )

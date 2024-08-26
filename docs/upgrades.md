@@ -117,6 +117,17 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### vX.X.X to v0.39.0
+
+In v0.39.0, Sematic switched its [SQLAlchemy](https://www.sqlalchemy.org/)
+dependency from a pre 2.0 version to a post 2.0 version. SQLAlchemy introduced
+breaking changes in 2.0, so if you arte using Sematic in a python environment
+that depends on SQLAlchemy <2.0 (even transiently), you will need to upgrade
+your code and its dependencies to use SQLAlchemy >=2.0 before upgrading
+to or past this version of Sematic. If you need to know what changes to
+make to your own code, a migration guide can be found
+[here](https://docs.sqlalchemy.org/en/20/changelog/migration_20.html)
+
 ### vX.X.X to v0.35.0
 
 In v0.35.0 support for deploying Sematic with a combined API and SocketIO server

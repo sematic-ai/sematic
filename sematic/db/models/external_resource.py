@@ -4,8 +4,8 @@ from copy import deepcopy
 from typing import Any, Dict, Tuple, Type, Union
 
 # Third-party
-from sqlalchemy import Column, types
-from sqlalchemy.orm import validates
+from sqlalchemy import types
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 # Sematic
 from sematic.db.models.base import Base
@@ -82,26 +82,32 @@ class ExternalResource(Base, JSONEncodableMixin):
 
     __tablename__ = "external_resources"
 
-    id: str = Column(types.String(), primary_key=True)
-    resource_state: ResourceState = Column(  # type: ignore
+    id: Mapped[str] = mapped_column(types.String(), primary_key=True)
+    resource_state: Mapped[ResourceState] = mapped_column(  # type: ignore
         types.Enum(ResourceState),
         nullable=False,
     )
-    managed_by: ManagedBy = Column(  # type: ignore
+    managed_by: Mapped[ManagedBy] = mapped_column(  # type: ignore
         types.Enum(ManagedBy),
         nullable=False,
     )
-    status_message: str = Column(types.String(), nullable=False)
-    last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
-    type_serialization: TypeSerialization = Column(types.JSON(), nullable=False)
-    value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
-    history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
+    status_message: Mapped[str] = mapped_column(types.String(), nullable=False)
+    last_updated_epoch_seconds: Mapped[int] = mapped_column(
+        types.BIGINT(), nullable=False
+    )
+    type_serialization: Mapped[TypeSerialization] = mapped_column(
         types.JSON(), nullable=False
     )
-    created_at: datetime.datetime = Column(
+    value_serialization: Mapped[Dict[str, Any]] = mapped_column(
+        types.JSON(), nullable=False
+    )
+    history_serializations: Mapped[Tuple[Dict[str, Any], ...]] = mapped_column(
+        types.JSON(), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

@@ -4,7 +4,8 @@ import uuid
 from typing import Optional
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -32,15 +33,17 @@ class Organization(Base, JSONEncodableMixin):
 
     __tablename__ = "organizations"
 
-    id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
-    name: str = Column(types.String(), nullable=False)
-    kubernetes_namespace: Optional[str] = Column(types.String())
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
+    name: Mapped[str] = mapped_column(types.String(), nullable=False)
+    kubernetes_namespace: Mapped[Optional[str]] = mapped_column(types.String())
 
     # Lifecycle timestamps
-    created_at: datetime.datetime = Column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

@@ -4,7 +4,8 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -61,25 +62,29 @@ class Job(Base, JSONEncodableMixin):
 
     __tablename__ = "jobs"
 
-    name: str = Column(types.String(), primary_key=True)
-    namespace: str = Column(types.String(), primary_key=True)
-    run_id: str = Column(
+    name: Mapped[str] = mapped_column(types.String(), primary_key=True)
+    namespace: Mapped[str] = mapped_column(types.String(), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=False, index=True
     )
-    last_updated_epoch_seconds: float = Column(types.Float(), nullable=False)
-    state: KubernetesJobStateString = Column(types.String(), nullable=False)
-    kind: JobKindString = Column(types.String(), nullable=False)
-    message: str = Column(types.String(), nullable=False)
-    detail_serialization: Dict[str, Any] = Column(  # type: ignore
+    last_updated_epoch_seconds: Mapped[float] = mapped_column(
+        types.Float(), nullable=False
+    )
+    state: Mapped[KubernetesJobStateString] = mapped_column(
+        types.String(), nullable=False
+    )
+    kind: Mapped[JobKindString] = mapped_column(types.String(), nullable=False)
+    message: Mapped[str] = mapped_column(types.String(), nullable=False)
+    detail_serialization: Mapped[Dict[str, Any]] = mapped_column(  # type: ignore
         types.JSON(), nullable=False
     )
-    status_history_serialization: List[Dict[str, Union[str, float]]] = Column(
-        types.JSON(), nullable=False
-    )
-    created_at: datetime.datetime = Column(
+    status_history_serialization: Mapped[
+        List[Dict[str, Union[str, float]]]
+    ] = mapped_column(types.JSON(), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

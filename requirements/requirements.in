@@ -9,7 +9,7 @@ ipython==8.2.0
 setuptools==58.1.0
 
 # DB
-SQLAlchemy==1.4.36
+SQLAlchemy>=2.0
 psycopg2-binary
 
 # Code

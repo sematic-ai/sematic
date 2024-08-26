@@ -1,5 +1,6 @@
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -23,10 +24,12 @@ class RunExternalResource(Base, JSONEncodableMixin):
 
     __tablename__ = "runs_external_resources"
 
-    resource_id: str = Column(
+    resource_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("external_resources.id"), primary_key=True
     )
-    run_id: str = Column(types.String(), ForeignKey("runs.id"), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), primary_key=True
+    )
 
     def __repr__(self) -> str:
         key_value_strings = [

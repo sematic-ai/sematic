@@ -7,8 +7,8 @@ from dataclasses import asdict
 from typing import Dict, List, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 # Sematic
 from sematic.abstract_function import AbstractFunction
@@ -111,56 +111,76 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
 
     __tablename__ = "runs"
 
-    id: str = Column(types.String(), primary_key=True)
-    original_run_id: Optional[str] = Column(types.String(), nullable=True)
-    future_state: FutureState = Column(  # type: ignore
+    id: Mapped[str] = mapped_column(types.String(), primary_key=True)
+    original_run_id: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
+    future_state: Mapped[FutureState] = mapped_column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )
-    name: str = Column(types.String(), nullable=True)
-    function_path: str = Column(types.String(), nullable=False, index=True)
-    parent_id: Optional[str] = Column(types.String(), nullable=True)
-    root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
-    description: Optional[str] = Column(types.String(), nullable=True)
-    tags: List[str] = Column(  # type: ignore
+    name: Mapped[str] = mapped_column(types.String(), nullable=True)
+    function_path: Mapped[str] = mapped_column(
+        types.String(), nullable=False, index=True
+    )
+    parent_id: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    root_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("runs.id"), nullable=False
+    )
+    description: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    tags: Mapped[List[str]] = mapped_column(  # type: ignore
         types.String(),
         nullable=False,
         default="[]",
         info={JSON_KEY: True, CONTAIN_FILTER_KEY: json_string_list_contains},
     )
-    source_code: str = Column(types.String(), nullable=False)
+    source_code: Mapped[str] = mapped_column(types.String(), nullable=False)
 
-    nested_future_id: Optional[str] = Column(types.String(), nullable=True)
-    exception_metadata_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
-        types.JSON(), nullable=True
+    nested_future_id: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
     )
-    external_exception_metadata_json: Optional[
-        Dict[str, Union[str, List[str]]]
-    ] = Column(types.JSON(), nullable=True)
+    exception_metadata_json: Mapped[
+        Optional[Dict[str, Union[str, List[str]]]]
+    ] = mapped_column(types.JSON(), nullable=True)
+    external_exception_metadata_json: Mapped[
+        Optional[Dict[str, Union[str, List[str]]]]
+    ] = mapped_column(types.JSON(), nullable=True)
 
-    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
+    container_image_uri: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
 
     # Lifecycle timestamps
-    created_at: datetime.datetime = Column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
-    started_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
-    ended_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
-    resolved_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
-    failed_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
-    resource_requirements_json: Optional[str] = Column(
+    started_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    ended_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    resolved_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    failed_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        types.DateTime(), nullable=True
+    )
+    resource_requirements_json: Mapped[Optional[str]] = mapped_column(
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
-    cache_key: Optional[str] = Column(types.String(), nullable=True, index=True)
+    cache_key: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True, index=True
+    )
 
     # Relationships
-    root_run: "Run" = relationship("Run", remote_side=[id], lazy="select")
-    pipeline_run: Resolution = relationship(
+    root_run: Mapped["Run"] = relationship("Run", remote_side=[id], lazy="select")
+    pipeline_run: Mapped[Resolution] = relationship(
         "Resolution",
         foreign_keys=[root_id],
         viewonly=True,

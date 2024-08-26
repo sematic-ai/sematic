@@ -110,7 +110,7 @@ def _get_runs(commit_sha: str) -> List[Run]:
     tag = f"{COMMIT_CHECK_PREFIX}{commit_sha}"
     with db().get_session() as session:
         runs = list(
-            session.query(Run)
+            session.query(Run)  # type: ignore
             .filter(Run.tags.info[CONTAIN_FILTER_KEY](Run.tags, tag))
             .all()
         )
@@ -139,7 +139,7 @@ def _validate_run_git_info(
     resolution_ids = [run.id for run in runs]
     with db().get_session() as session:
         resolutions = (
-            session.query(Resolution)
+            session.query(Resolution)  # type: ignore
             .filter(
                 Resolution.root_id.in_(resolution_ids),
             )

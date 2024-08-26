@@ -60,7 +60,7 @@ class FuncEffectiveRuntimeMetric(AbstractSystemMetric):
 
     def _get_backfill_query(self, session: Session) -> Query:
         return (
-            session.query(Run)
+            session.query(Run)  # type: ignore
             .filter(
                 Run.future_state == FutureState.RESOLVED.value,
                 Run.original_run_id.is_(None),

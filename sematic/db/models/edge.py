@@ -4,7 +4,8 @@ import uuid
 from typing import Optional
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -15,32 +16,36 @@ class Edge(Base, JSONEncodableMixin):
 
     __tablename__ = "edges"
 
-    id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
 
     # Edge endpoints
-    source_run_id: Optional[str] = Column(
+    source_run_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=True, index=True
     )
-    source_name: Optional[str] = Column(types.String(), nullable=True)
-    destination_run_id: Optional[str] = Column(
+    source_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    destination_run_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=True, index=True
     )
-    destination_name: Optional[str] = Column(types.String(), nullable=True)
+    destination_name: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
 
     # Artifact
-    artifact_id: Optional[str] = Column(
+    artifact_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("artifacts.id"), nullable=True
     )
 
-    parent_id: Optional[str] = Column(
+    parent_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("edges.id"), nullable=True
     )
 
     # Lifecycle timestamps
-    created_at: datetime.datetime = Column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

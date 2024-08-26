@@ -2,7 +2,8 @@
 import datetime
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -21,15 +22,17 @@ class Artifact(Base, HasOrganizationMixin, JSONEncodableMixin):
 
     __tablename__ = "artifacts"
 
-    id: str = Column(types.String(), primary_key=True)
-    json_summary: str = Column(types.JSON(), nullable=False, info={JSON_KEY: True})
-    type_serialization: str = Column(
+    id: Mapped[str] = mapped_column(types.String(), primary_key=True)
+    json_summary: Mapped[str] = mapped_column(
         types.JSON(), nullable=False, info={JSON_KEY: True}
     )
-    created_at: datetime.datetime = Column(
+    type_serialization: Mapped[str] = mapped_column(
+        types.JSON(), nullable=False, info={JSON_KEY: True}
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

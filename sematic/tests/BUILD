@@ -191,6 +191,7 @@ pytest_test(
         "//sematic/db:db",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
+        "//sematic/metrics/tests:fixtures",
         "//sematic/metrics:metric_point",
         "//sematic/utils:exceptions",
     ],

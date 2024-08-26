@@ -26,8 +26,8 @@ from enum import Enum, unique
 from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
-from sqlalchemy.orm import validates
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 # Sematic
 from sematic.db.models.base import Base
@@ -212,36 +212,44 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
 
     __tablename__ = "resolutions"
 
-    root_id: str = Column(
+    root_id: Mapped[str] = mapped_column(
         types.String(),
         ForeignKey("runs.id"),
         nullable=False,
         primary_key=True,
     )
-    status: ResolutionStatus = Column(  # type: ignore
+    status: Mapped[ResolutionStatus] = mapped_column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: ResolutionStatus}
     )
-    kind: ResolutionKind = Column(  # type: ignore
+    kind: Mapped[ResolutionKind] = mapped_column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: ResolutionKind}
     )
-    git_info_json: Optional[str] = Column(  # type: ignore
+    git_info_json: Mapped[Optional[str]] = mapped_column(  # type: ignore
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
     # REDACTED_KEY: Scrub the environment variables before returning from the
     # API. They can contain sensitive info like API keys. On write,
     # we consider this field to be immutable, so we will just re-use
     # whatever was already in the DB for it
-    settings_env_vars: Dict[str, str] = Column(
+    settings_env_vars: Mapped[Dict[str, str]] = mapped_column(
         types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
 
-    container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
-    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
-    client_version: Optional[str] = Column(types.String(), nullable=True)
-    cache_namespace: Optional[str] = Column(types.String(), nullable=True)
-    run_command: Optional[str] = Column(types.String(), nullable=True)
-    build_config: Optional[str] = Column(types.String(), nullable=True)
-    resource_requirements_json: Optional[str] = Column(types.JSON(), nullable=True)
+    container_image_uris: Mapped[Optional[Dict[str, str]]] = mapped_column(
+        types.JSON(), nullable=True
+    )
+    container_image_uri: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
+    client_version: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    cache_namespace: Mapped[Optional[str]] = mapped_column(
+        types.String(), nullable=True
+    )
+    run_command: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    build_config: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    resource_requirements_json: Mapped[Optional[str]] = mapped_column(
+        types.JSON(), nullable=True
+    )
 
     @validates("status")
     def validate_status(self, key, value) -> str:

@@ -93,7 +93,7 @@ def mock_requests(test_client):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as request_mock:
         for rule in sematic_api.url_map.iter_rules():
             path_to_match = re.sub(
-                pattern=r"<\w+>", repl="\\\w+", string=rule.rule  # noqa: W605
+                pattern=r"<\w+>", repl=r"\\w+", string=rule.rule  # noqa: W605
             )
             url = re.compile(r"http:\/\/[\w\.]+:\d{1,5}" + path_to_match)
             for method in rule.methods:

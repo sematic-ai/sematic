@@ -2,7 +2,8 @@
 import datetime
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import ForeignKey, types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -29,17 +30,19 @@ class OrganizationUser(Base, JSONEncodableMixin):
 
     __tablename__ = "organizations_users"
 
-    organization_id: str = Column(
+    organization_id: Mapped[str] = mapped_column(
         types.String(), ForeignKey("organizations.id"), primary_key=True
     )
-    user_id: str = Column(types.String(), ForeignKey("users.id"), primary_key=True)
-    admin: bool = Column(types.Boolean, nullable=False, default=False)
+    user_id: Mapped[str] = mapped_column(
+        types.String(), ForeignKey("users.id"), primary_key=True
+    )
+    admin: Mapped[bool] = mapped_column(types.Boolean, nullable=False, default=False)
 
     # Lifecycle timestamps
-    created_at: datetime.datetime = Column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

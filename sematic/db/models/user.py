@@ -4,7 +4,8 @@ import uuid
 from typing import Optional
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import types
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Sematic
 from sematic.db.models.base import Base
@@ -21,17 +22,23 @@ class User(Base, JSONEncodableMixin):
 
     __tablename__ = "users"
 
-    id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
-    email: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
-    first_name: Optional[str] = Column(types.String(), nullable=True)
-    last_name: Optional[str] = Column(types.String(), nullable=True)
-    avatar_url: Optional[str] = Column(types.String(), nullable=True)
-    api_key: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
+    id: Mapped[str] = mapped_column(
+        types.String(), primary_key=True, default=lambda: uuid.uuid4().hex
+    )
+    email: Mapped[str] = mapped_column(
+        types.String(), nullable=False, info={REDACTED_KEY: True}
+    )
+    first_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
+    api_key: Mapped[str] = mapped_column(
+        types.String(), nullable=False, info={REDACTED_KEY: True}
+    )
 
-    created_at: datetime.datetime = Column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
-    updated_at: datetime.datetime = Column(
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(),
         nullable=False,
         default=datetime.datetime.utcnow,

@@ -5,6 +5,8 @@ from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
 import sqlalchemy.exc
+from sqlalchemy import Integer
+from sqlalchemy import cast as sql_cast
 from sqlalchemy import func
 
 # Sematic
@@ -79,7 +81,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             existing_metric_ids = (
-                session.query(MetricLabel.metric_id)
+                session.query(MetricLabel.metric_id)  # type: ignore
                 .filter(MetricLabel.metric_id.in_(metric_labels.keys()))
                 .all()
             )
@@ -100,8 +102,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
     def get_metrics(self, labels: MetricsLabels) -> Tuple[str, ...]:
         with db().get_session() as session:
             metric_names = (
-                session.query(MetricLabel.metric_name)
-                .distinct(MetricLabel.metric_name)
+                session.query(MetricLabel.metric_name)  # type: ignore
+                .group_by(MetricLabel.metric_name)
                 .filter(*_make_predicates_from_labels(labels))
                 .all()
             )
@@ -117,7 +119,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         # Early check as later queries fail when there are no rows.
         try:
             with db().get_session() as session:
-                session.query(MetricLabel.metric_id).filter(
+                session.query(MetricLabel.metric_id).filter(  # type: ignore
                     MetricLabel.metric_name == filter.name
                 ).limit(1).one()
         except sqlalchemy.exc.NoResultFound:
@@ -156,12 +158,14 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         if isinstance(rollup, int):
             interval_seconds = max(interval_seconds, rollup)
             field_ = (
-                func.extract("epoch", MetricValue.metric_time)
-                / interval_seconds
+                sql_cast(
+                    func.extract("epoch", MetricValue.metric_time) / interval_seconds,
+                    Integer,
+                )
                 * interval_seconds
             )
             select_fields.append(field_)
-            group_by_clauses.append(field_)
+            group_by_clauses.append(field_)  # type: ignore
             extra_field_names.append("timestamp")
             order_by_field = field_  # type: ignore
 
@@ -170,30 +174,34 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             field_ = MetricLabel.metric_labels[gb.value].astext
 
             select_fields.append(field_)
-            group_by_clauses.append(field_)
+            group_by_clauses.append(field_)  # type: ignore
 
         try:
             with db().get_session() as session:
-                query = (
-                    session.query(*select_fields)
-                    .filter(*predicates)
-                    .order_by(MetricValue.metric_time)
+                query = session.query(*select_fields).filter(  # type: ignore
+                    *predicates
                 )
 
                 if len(group_by_clauses) > 0:
-                    query = query.group_by(*group_by_clauses)
+                    query = query.group_by(*group_by_clauses)  # type: ignore
 
                 if rollup == "auto":
                     field_ = func.extract("epoch", MetricValue.metric_time)
-                    record_count = query.add_columns(field_).group_by(field_).count()
+                    query = query.order_by(field_).add_columns(field_)  # type: ignore
+                    record_count = query.group_by(field_).count()  # type: ignore
 
                     if record_count > _MAX_SERIES_POINTS:
-                        field_ = field_ / interval_seconds * interval_seconds
+                        field_ = (
+                            sql_cast(field_ / interval_seconds, Integer)
+                            * interval_seconds
+                        )
                     order_by_field = field_  # type: ignore
 
-                    query = query.add_columns(field_).group_by(field_)
+                    query = query.add_columns(field_).group_by(field_)  # type: ignore
                     extra_field_names.append("timestamp")
-                records = query.order_by(order_by_field).all()
+                else:
+                    query = query.order_by(MetricValue.metric_time)  # type: ignore
+                records = query.order_by(order_by_field).all()  # type: ignore
         except sqlalchemy.exc.OperationalError as e:
             # User has old SQLite version that does not support querying JSONB fields.
             if str(e).startswith('(sqlite3.OperationalError) near ">>"'):
@@ -211,7 +219,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             if metric_type == MetricType.GAUGE.value:
                 metric_value = float(metric_sum) / (metric_count or 1)
 
-            output.series.append((metric_value, tuple(record[n_basic_fields:])))
+            output_labels = tuple(str(label) for label in record[n_basic_fields:])
+            output.series.append((metric_value, output_labels))
 
         return output
 
@@ -220,7 +229,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             metric_ids: Sequence[str] = (
-                session.query(MetricLabel.metric_id)
+                session.query(MetricLabel.metric_id)  # type: ignore
                 .filter(MetricLabel.metric_name == filter.name, *labels_predicates)
                 .all()
             )

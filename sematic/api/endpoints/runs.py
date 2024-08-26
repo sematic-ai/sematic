@@ -15,7 +15,7 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 import flask
 import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.elements import BooleanClauseList
+from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
 from sematic.abstract_future import FutureState
@@ -243,7 +243,7 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
             (scheme, netloc, path, urlencode(next_url_params), fragment)
         )
 
-    content = get_runs_payload(runs)
+    content = get_runs_payload(runs)  # type: ignore
     if parameters.fields == ["id"]:
         # TODO: it would be better to push this field subsetting
         # down to the DB query level, but for now we'll do it here.
@@ -267,7 +267,7 @@ def _make_cursor(key: str) -> str:
 
 def _generate_search_predicate(
     search_string: str,
-) -> BooleanClauseList:
+) -> ColumnElement[bool]:
     return sqlalchemy.or_(
         Run.name.ilike(f"%{search_string}%"),
         Run.function_path.ilike(f"%{search_string}%"),
@@ -318,7 +318,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     broadcast_graph_update(root_id=run.root_id, user=user)
 
     payload = dict(
-        content=get_run_payload(run),
+        content=get_run_payload(run),  # type: ignore
     )
     return flask.jsonify(payload)
 
@@ -543,7 +543,7 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     runs, artifacts, edges = get_graph_fn(run_id)
     payload = dict(
         run_id=run_id,
-        runs=get_runs_payload(runs),
+        runs=get_runs_payload(runs),  # type: ignore
         edges=[edge.to_json_encodable() for edge in edges],
         artifacts=[artifact.to_json_encodable() for artifact in artifacts],
     )

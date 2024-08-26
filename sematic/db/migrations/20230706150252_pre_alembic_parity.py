@@ -2,6 +2,9 @@
 # Standard Library
 import logging
 
+# Third-party
+from sqlalchemy import text
+
 # Sematic
 from sematic.db.db import db
 from sematic.db.migration_utils import back_up_db_file, reinstate_db_file_from_backup
@@ -13,27 +16,34 @@ def sqlite_up():
     back_up_db_file("0.31.2")
 
     with db().get_engine().begin() as conn:
-        conn.execute(
-            "UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;"
+        execute_text(
+            conn,
+            "UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;",
         )
-        conn.execute("UPDATE runs SET tags = '[]' WHERE tags IS NULL;")
-        conn.execute(
-            "UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;"
+        execute_text(conn, "UPDATE runs SET tags = '[]' WHERE tags IS NULL;")
+        execute_text(
+            conn,
+            "UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;",
         )
-        conn.execute(
-            "UPDATE jobs SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;"
+        execute_text(
+            conn,
+            "UPDATE jobs SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;",
         )
-        conn.execute(
-            "UPDATE jobs SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;"
+        execute_text(
+            conn,
+            "UPDATE jobs SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;",
         )
-        conn.execute(
-            "UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;"
+        execute_text(
+            conn,
+            "UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;",
         )
-        conn.execute(
-            "UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;"
+        execute_text(
+            conn,
+            "UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;",
         )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE runs_new (
                 id character(32) NOT NULL,
@@ -65,10 +75,11 @@ def sqlite_up():
                 FOREIGN KEY(root_id) REFERENCES runs (id),
                 FOREIGN KEY(user_id) REFERENCES users (id)
             );
-            """
+            """,
         )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO runs_new
                 SELECT
@@ -96,15 +107,18 @@ def sqlite_up():
                     cache_key,
                     user_id
                 FROM runs;
-            """
+            """,
         )
 
-        conn.execute("DROP TABLE runs;")
-        conn.execute("ALTER TABLE runs_new RENAME TO runs;")
-        conn.execute("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        conn.execute("CREATE INDEX ix_runs_function_path ON runs (function_path);")
+        execute_text(conn, "DROP TABLE runs;")
+        execute_text(conn, "ALTER TABLE runs_new RENAME TO runs;")
+        execute_text(conn, "CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
+        execute_text(
+            conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);"
+        )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE artifacts_new (
                 id character(40) NOT NULL,
@@ -115,9 +129,10 @@ def sqlite_up():
 
                 PRIMARY KEY (id)
             );
-            """
+            """,
         )
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO artifacts_new
                 SELECT
@@ -127,12 +142,13 @@ def sqlite_up():
                     updated_at,
                     type_serialization
                 FROM artifacts;
-            """
+            """,
         )
-        conn.execute("DROP TABLE artifacts;")
-        conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
+        execute_text(conn, "DROP TABLE artifacts;")
+        execute_text(conn, "ALTER TABLE artifacts_new RENAME TO artifacts;")
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE resolutions_new (
                 root_id TEXT NOT NULL,
@@ -152,10 +168,11 @@ def sqlite_up():
                 FOREIGN KEY (root_id) REFERENCES runs(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
-            """
+            """,
         )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO resolutions_new
                 SELECT
@@ -172,12 +189,13 @@ def sqlite_up():
                     run_command,
                     build_config
                 FROM resolutions;
-            """
+            """,
         )
-        conn.execute("DROP TABLE resolutions;")
-        conn.execute("ALTER TABLE resolutions_new RENAME TO resolutions;")
+        execute_text(conn, "DROP TABLE resolutions;")
+        execute_text(conn, "ALTER TABLE resolutions_new RENAME TO resolutions;")
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE jobs_new (
                 name TEXT NOT NULL,
@@ -196,10 +214,11 @@ def sqlite_up():
 
                 FOREIGN KEY(run_id) REFERENCES runs (id)
             );
-            """
+            """,
         )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO jobs_new
                 SELECT
@@ -215,13 +234,14 @@ def sqlite_up():
                     created_at,
                     updated_at
                 FROM jobs;
-            """
+            """,
         )
-        conn.execute("DROP TABLE jobs;")
-        conn.execute("ALTER TABLE jobs_new RENAME TO jobs;")
-        conn.execute("CREATE INDEX ix_jobs_run_id ON jobs (run_id);")
+        execute_text(conn, "DROP TABLE jobs;")
+        execute_text(conn, "ALTER TABLE jobs_new RENAME TO jobs;")
+        execute_text(conn, "CREATE INDEX ix_jobs_run_id ON jobs (run_id);")
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE notes_new (
                 id character(32) NOT NULL,
@@ -238,9 +258,10 @@ def sqlite_up():
                 FOREIGN KEY(root_id) REFERENCES runs (id),
                 FOREIGN KEY(user_id) REFERENCES users (id)
             );
-            """
+            """,
         )
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO notes_new
                 SELECT
@@ -252,12 +273,13 @@ def sqlite_up():
                     created_at,
                     updated_at
             FROM notes;
-            """
+            """,
         )
-        conn.execute("DROP TABLE notes;")
-        conn.execute("ALTER TABLE notes_new RENAME TO notes;")
+        execute_text(conn, "DROP TABLE notes;")
+        execute_text(conn, "ALTER TABLE notes_new RENAME TO notes;")
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE edges_new (
                 id character(32) NOT NULL,
@@ -277,9 +299,10 @@ def sqlite_up():
                 FOREIGN KEY(destination_run_id) REFERENCES runs (id),
                 FOREIGN KEY(source_run_id) REFERENCES runs (id)
             );
-            """
+            """,
         )
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO edges_new
             SELECT
@@ -293,16 +316,20 @@ def sqlite_up():
                 created_at,
                 updated_at
             FROM edges;
-            """
+            """,
         )
-        conn.execute("DROP TABLE edges;")
-        conn.execute("ALTER TABLE edges_new RENAME TO edges;")
-        conn.execute("CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);")
-        conn.execute(
-            "CREATE INDEX ix_edges_destination_run_id ON edges (destination_run_id);"
+        execute_text(conn, "DROP TABLE edges;")
+        execute_text(conn, "ALTER TABLE edges_new RENAME TO edges;")
+        execute_text(
+            conn, "CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);"
+        )
+        execute_text(
+            conn,
+            "CREATE INDEX ix_edges_destination_run_id ON edges (destination_run_id);",
         )
 
-        conn.execute(
+        execute_text(
+            conn,
             """
             CREATE TABLE metric_values_new (
                 metric_id TEXT NOT NULL,
@@ -312,9 +339,10 @@ def sqlite_up():
 
                 FOREIGN KEY(metric_id) REFERENCES metric_labels (metric_id)
             );
-            """
+            """,
         )
-        conn.execute(
+        execute_text(
+            conn,
             """
             INSERT INTO metric_values_new
             SELECT
@@ -323,15 +351,17 @@ def sqlite_up():
                 metric_time,
                 created_at
             FROM metric_values;
-            """
+            """,
         )
-        conn.execute("DROP TABLE metric_values;")
-        conn.execute("ALTER TABLE metric_values_new RENAME TO metric_values;")
-        conn.execute(
-            "CREATE INDEX metric_values_id_time_idx ON metric_values (metric_id, metric_time DESC);"
+        execute_text(conn, "DROP TABLE metric_values;")
+        execute_text(conn, "ALTER TABLE metric_values_new RENAME TO metric_values;")
+        execute_text(
+            conn,
+            "CREATE INDEX metric_values_id_time_idx ON metric_values (metric_id, metric_time DESC);",
         )
-        conn.execute(
-            "CREATE INDEX metric_values_time_idx ON metric_values (metric_time DESC);"
+        execute_text(
+            conn,
+            "CREATE INDEX metric_values_time_idx ON metric_values (metric_time DESC);",
         )
 
 
@@ -341,7 +371,8 @@ def sqlite_down():
 
 def postgres_up():
     with db().get_engine().begin() as conn:
-        conn.execute(
+        execute_text(
+            conn,
             """
             UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;
             UPDATE runs SET tags = '[]' WHERE tags IS NULL;
@@ -375,13 +406,14 @@ def postgres_up():
             ALTER INDEX jobs_run_id RENAME TO ix_jobs_run_id;
             ALTER INDEX runs_cache_key_index RENAME TO ix_runs_cache_key;
             ALTER INDEX runs_calculator_path RENAME TO ix_runs_function_path;
-            """
+            """,
         )
 
 
 def postgres_down():
     with db().get_engine().begin() as conn:
-        conn.execute(
+        execute_text(
+            conn,
             """
             ALTER TABLE artifacts ALTER COLUMN type_serialization DROP NOT NULL;
             ALTER TABLE jobs ALTER COLUMN created_at DROP NOT NULL;
@@ -407,8 +439,12 @@ def postgres_down():
             ALTER INDEX ix_jobs_run_id RENAME TO jobs_run_id;
             ALTER INDEX ix_runs_cache_key RENAME TO runs_cache_key_index;
             ALTER INDEX ix_runs_function_path RENAME TO runs_calculator_path;
-            """
+            """,
         )
+
+
+def execute_text(conn, statement):
+    conn.execute(text(statement))
 
 
 def up():

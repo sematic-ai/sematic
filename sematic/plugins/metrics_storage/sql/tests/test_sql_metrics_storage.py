@@ -9,7 +9,10 @@ import pytest
 from sematic.db.db import DB
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
-from sematic.metrics.tests.fixtures import metric_points  # noqa: F401
+from sematic.metrics.tests.fixtures import (  # noqa: F401
+    check_approximate_equality,
+    metric_points,
+)
 from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricSeries,
@@ -64,7 +67,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
             MetricSeries(
                 metric_name="foo",
                 metric_type=MetricType.GAUGE.name,
-                series=[(0, (1681171200,)), (1, (1681257600,))],
+                series=[(0, (str(1681171200),)), (1, (str(1681257600),))],
                 columns=["timestamp"],
             ),
         ),
@@ -112,7 +115,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
             MetricSeries(
                 metric_name="bar",
                 metric_type=MetricType.COUNT.name,
-                series=[(1, (1681171200, "foo")), (1, (1681257600, "foo"))],
+                series=[(1, (str(1681171200), "foo")), (1, (str(1681257600), "foo"))],
                 columns=["timestamp", "function_path"],
             ),
         ),
@@ -128,7 +131,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
             MetricSeries(
                 metric_name="bar",
                 metric_type=MetricType.COUNT.name,
-                series=[(1, (1681171200,)), (1, (1681257600,))],
+                series=[(1, (str(1681171200),)), (1, (str(1681257600),))],
                 columns=["timestamp"],
             ),
         ),
@@ -150,13 +153,17 @@ def test_get_aggregated_metrics(
         group_by=group_by,
         rollup=rollup,
     )
+    assert isinstance(metric_series, MetricSeries)
+    assert metric_series.metric_name == expected_series.metric_name
+    assert metric_series.metric_type == expected_series.metric_type
+    assert metric_series.columns == expected_series.columns
 
-    assert metric_series == expected_series
+    check_approximate_equality(metric_series.series, expected_series.series)
 
 
 @pytest.mark.parametrize(
     "rollup, expected_series_length, expected_series_first_value",
-    (("auto", 251, 3.0), (100, 11, 99.0), (20, 51, 19.0), (None, 1, 1000)),
+    [("auto", 251, 3.0), (100, 11, 99.0), (20, 51, 19.0), (None, 1, 1000)],
 )
 def test_get_aggregated_metrics_rollup(
     rollup,

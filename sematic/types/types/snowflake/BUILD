@@ -16,3 +16,4 @@ sematic_py_lib(
         ":snowflake_table",
     ]
 )
+
