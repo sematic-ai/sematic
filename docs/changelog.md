@@ -5,6 +5,9 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.39.0](https://pypi.org/project/sematic/0.39.0/)
+    * [improvement] BREAKING CHANGE: Upgrade SQLAlchemy to a >=2.0.0 version
+    * [improvement] Add support for python 3.11 and 3.12
 * [0.38.1](https://pypi.org/project/sematic/0.38.1/)
     * [feature] Allow specifiction of annotations and labels in `KubernetesResourceRequirements`
 * [0.38.0](https://pypi.org/project/sematic/0.38.0/)
