@@ -30,7 +30,7 @@ def up():
 
 
 def down():
-    with db().get_engine().connect() as conn:
+    with db().get_engine().begin() as conn:
         # TODO #303: standardize NULL vs 'null'
         run_id_exception_json_pairs = conn.execute(
             text(
