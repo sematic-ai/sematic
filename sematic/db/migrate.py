@@ -51,7 +51,7 @@ def _is_migration_file(file_name: str) -> bool:
 
 
 def _get_current_versions() -> List[str]:
-    with db().get_engine().connect() as conn:
+    with db().get_engine().begin() as conn:
         conn.execute(
             text(
                 "CREATE TABLE IF NOT EXISTS "
