@@ -102,6 +102,7 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
     "groupName": _NeedsOverride,
     "rayStartParams": {"block": "true"},
     "template": {
+        "metadata": {"labels": _NeedsOverride, "annotations": _NeedsOverride},
         "spec": {
             "containers": [
                 {
@@ -137,7 +138,7 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
             "serviceAccountName": _NeedsOverride,
             "nodeSelector": _NeedsOverride,
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
-        }
+        },
     },
 }
 
@@ -176,7 +177,7 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
             "template": {
-                "metadata": {"labels": _NeedsOverride},
+                "metadata": {"labels": _NeedsOverride, "annotations": _NeedsOverride},
                 "spec": {
                     "containers": [
                         {
@@ -208,7 +209,6 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
                         }
                     ],
                     "tolerations": _NeedsOverride,
-                    "annotations": _NeedsOverride,
                     "serviceAccount": _NeedsOverride,
                     "serviceAccountName": _NeedsOverride,
                     "nodeSelector": _NeedsOverride,
@@ -309,10 +309,10 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             StandardKuberaySettingsVar.RAY_BUSYBOX_PULL_OVERRIDE,
             _DEFAULT_BUSYBOX_PULL,
         )
-        group_manifest["template"]["spec"]["metadata"]["labels"] = cls._get_tags(
+        group_manifest["template"]["metadata"]["labels"] = cls._get_tags(
             worker_group.worker_nodes, is_label=True
         )
-        group_manifest["template"]["spec"]["metadata"]["annotations"] = cls._get_tags(
+        group_manifest["template"]["metadata"]["annotations"] = cls._get_tags(
             worker_group.worker_nodes, is_label=False
         )
 
@@ -365,7 +365,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             (True, False): StandardKuberaySettingsVar.RAY_GPU_ANNOTATIONS,
             (True, True): StandardKuberaySettingsVar.RAY_GPU_LABELS,
         }[(requires_gpu, is_label)]
-        tags = get_json_server_setting(settings_var, {})
+        tags = get_json_server_setting(settings_var, {})  # type: ignore
         if tags is None:
             tags = {}
         return tags
@@ -396,12 +396,12 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"][
             "serviceAccountName"
         ] = _get_service_account()
-        head_group_template["template"]["spec"]["metadata"]["labels"] = cls._get_tags(
+        head_group_template["template"]["metadata"]["labels"] = cls._get_tags(
             node_config, is_label=True
         )
-        head_group_template["template"]["spec"]["metadata"][
-            "annotations"
-        ] = cls._get_tags(node_config, is_label=False)
+        head_group_template["template"]["metadata"]["annotations"] = cls._get_tags(
+            node_config, is_label=False
+        )
 
         return head_group_template
 
