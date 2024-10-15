@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 import pytest
 
 # Sematic
-from sematic.types.casting import safe_cast
+from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,
@@ -42,6 +42,37 @@ def test_tuple(value, type_, expected_value, expected_error):
 
     assert error == expected_error
     assert cast_value == expected_value
+
+
+@pytest.mark.parametrize(
+    "from_type, to_type, expected_error",
+    (
+        (Tuple[float, int], Tuple[float, int], None),
+        (Tuple[float, int], Tuple[float, float], None),
+        (Tuple[int, str], Tuple[float, str], None),
+        (Tuple[int, str], int, "Cannot cast typing.Tuple[int, str] to int"),
+        (
+            Tuple[int, str],
+            Tuple[int, str, int],
+            "Can't cast typing.Tuple[int, str] to typing.Tuple[int, str, int]: "
+            "they have different arities (2 vs 3)",
+        ),
+        (
+            Tuple[int, str],
+            Tuple[int, int],
+            "Can't cast typing.Tuple[int, str] to typing.Tuple[int, int]:: "
+            "Cannot cast <class 'str'> to int",
+        ),
+    ),
+)
+def test_can_cast_tuple(from_type, to_type, expected_error):
+    can_cast, error = can_cast_type(from_type, to_type)
+    if expected_error is None:
+        assert error is None
+        assert can_cast
+    else:
+        assert not can_cast
+    assert error == expected_error
 
 
 def test_summary():
