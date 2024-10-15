@@ -63,6 +63,10 @@ data:
 {{ end }}
 {{ if .Values.ray.enabled }}
   RAY_GPU_NODE_SELECTOR: {{ toJson .Values.ray.gpu_node_selector | quote }}
+  RAY_GPU_ANNOTATIONS: {{ toJson .Values.ray.gpu_annotations | quote }}
+  RAY_GPU_LABELS: {{ toJson .Values.ray.gpu_labels | quote }}
+  RAY_NON_GPU_ANNOTATIONS: {{ toJson .Values.ray.non_gpu_annotations | quote }}
+  RAY_NON_GPU_LABELS: {{ toJson .Values.ray.non_gpu_labels | quote }}
   RAY_NON_GPU_NODE_SELECTOR: {{ toJson .Values.ray.non_gpu_node_selector | quote }}
   RAY_GPU_TOLERATIONS: {{ toJson .Values.ray.gpu_tolerations | quote }}
   RAY_NON_GPU_TOLERATIONS: {{ toJson .Values.ray.non_gpu_tolerations | quote }}

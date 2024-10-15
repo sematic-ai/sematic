@@ -107,7 +107,7 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
             "template": {
-                "metadata": {"labels": {}},
+                "metadata": {"labels": {}, "annotations": {}},
                 "spec": {
                     "containers": [
                         {
@@ -152,6 +152,7 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
     "groupName": "worker-group-0",
     "rayStartParams": {"block": "true"},
     "template": {
+        "metadata": {"labels": {}, "annotations": {}},
         "spec": {
             "containers": [
                 {
@@ -187,7 +188,7 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
             "serviceAccountName": "default",
             "nodeSelector": {},
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
-        }
+        },
     },
 }
 
@@ -304,6 +305,12 @@ def test_head_node_gpus():
     gpu_node_selector = {
         "nvidia.com/gpu": "true",
     }
+    gpu_annotations = {
+        "annotation.com": "foo",
+    }
+    gpu_labels = {
+        "label": "bar",
+    }
     non_gpu_tolerations = [
         dict(
             key="foo",
@@ -324,6 +331,10 @@ def test_head_node_gpus():
             StandardKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
                 gpu_node_selector
             ),
+            StandardKuberaySettingsVar.RAY_GPU_ANNOTATIONS.value: json.dumps(
+                gpu_annotations
+            ),
+            StandardKuberaySettingsVar.RAY_GPU_LABELS.value: json.dumps(gpu_labels),
             StandardKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS.value: json.dumps(
                 non_gpu_tolerations
             ),
@@ -355,6 +366,10 @@ def test_head_node_gpus():
     assert manifest["spec"]["headGroupSpec"]["template"]["spec"]["containers"][0][
         "resources"
     ]["requests"] == {"cpu": "2000m", "memory": "4096Mi"}
+    assert manifest["spec"]["headGroupSpec"]["template"]["metadata"] == {
+        "annotations": gpu_annotations,
+        "labels": gpu_labels,
+    }
     assert (
         manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["nodeSelector"]
         == non_gpu_node_selector
@@ -377,6 +392,12 @@ def test_worker_node_gpus():
     expected_node_selector = {
         "nvidia.com/gpu": "true",
     }
+    gpu_annotations = {
+        "annotation.com": "foo",
+    }
+    gpu_labels = {
+        "label": "bar",
+    }
     with environment_variables(
         {
             StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
@@ -389,6 +410,10 @@ def test_worker_node_gpus():
             StandardKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY.value: json.dumps(
                 "nvidia.com/gpu"
             ),
+            StandardKuberaySettingsVar.RAY_GPU_ANNOTATIONS.value: json.dumps(
+                gpu_annotations
+            ),
+            StandardKuberaySettingsVar.RAY_GPU_LABELS.value: json.dumps(gpu_labels),
         }
     ):
         manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
@@ -421,6 +446,10 @@ def test_worker_node_gpus():
     assert manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["containers"][0][
         "resources"
     ]["requests"] == {"cpu": "1000m", "nvidia.com/gpu": 2, "memory": "2048Mi"}
+    assert manifest["spec"]["workerGroupSpecs"][0]["template"]["metadata"] == {
+        "labels": gpu_labels,
+        "annotations": gpu_annotations,
+    }
 
 
 def test_custom_service_account():

@@ -5,7 +5,11 @@ from typing import Any, Dict, Tuple, Type, Union
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
-from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.config.server_settings import (
+    ServerSettingsVar,
+    get_json_server_setting,
+    get_server_setting,
+)
 from sematic.config.settings import get_plugin_setting
 from sematic.plugins.abstract_kuberay_wrapper import (
     AbstractKuberayWrapper,
@@ -36,6 +40,22 @@ class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
     RAY_NON_GPU_TOLERATIONS:
         The Kubernetes tolerations that will be used for Ray nodes
         that don't use GPUs. Value should be json encoded into a string.
+    RAY_GPU_LABELS:
+         The Kubernetes labels that will be used for Ray nodes that use
+         GPUs. Value should be a json encoded object conntaining the
+         keys and values for the labels.
+    RAY_NON_GPU_LABELS:
+         The Kubernetes labels that will be used for Ray nodes that don't
+         use GPUs. Value should be a json encoded object conntaining the
+         keys and values for the labels.
+    RAY_GPU_ANNOTATIONS:
+         The Kubernetes annotations that will be used for Ray nodes that use
+         GPUs. Value should be a json encoded object conntaining the
+         keys and values for the annotations.
+    RAY_NON_GPU_ANNOTATIONS:
+         The Kubernetes annotations that will be used for Ray nodes that don't
+         use GPUs. Value should be a json encoded object conntaining the
+         keys and values for the annotations.
     RAY_GPU_RESOURCE_REQUEST_KEY:
         The key that will be used in the Kubernetes resource requests/
         limits fields to indicate how many GPUs are required for Ray
@@ -59,6 +79,10 @@ class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
     RAY_GPU_RESOURCE_REQUEST_KEY = "RAY_GPU_RESOURCE_REQUEST_KEY"
     RAY_SUPPORTS_GPUS = "RAY_SUPPORTS_GPUS"
     RAY_BUSYBOX_PULL_OVERRIDE = "RAY_BUSYBOX_PULL_OVERRIDE"
+    RAY_GPU_LABELS = "RAY_GPU_LABELS"
+    RAY_NON_GPU_LABELS = "RAY_NON_GPU_LABELS"
+    RAY_GPU_ANNOTATIONS = "RAY_GPU_ANNOTATIONS"
+    RAY_NON_GPU_ANNOTATIONS = "RAY_NON_GPU_ANNOTATIONS"
 
 
 class _NeedsOverride:
@@ -78,6 +102,7 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
     "groupName": _NeedsOverride,
     "rayStartParams": {"block": "true"},
     "template": {
+        "metadata": {"labels": _NeedsOverride, "annotations": _NeedsOverride},
         "spec": {
             "containers": [
                 {
@@ -113,7 +138,7 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
             "serviceAccountName": _NeedsOverride,
             "nodeSelector": _NeedsOverride,
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
-        }
+        },
     },
 }
 
@@ -152,7 +177,7 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
             "template": {
-                "metadata": {"labels": {}},
+                "metadata": {"labels": _NeedsOverride, "annotations": _NeedsOverride},
                 "spec": {
                     "containers": [
                         {
@@ -284,6 +309,12 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             StandardKuberaySettingsVar.RAY_BUSYBOX_PULL_OVERRIDE,
             _DEFAULT_BUSYBOX_PULL,
         )
+        group_manifest["template"]["metadata"]["labels"] = cls._get_tags(
+            worker_group.worker_nodes, is_label=True
+        )
+        group_manifest["template"]["metadata"]["annotations"] = cls._get_tags(
+            worker_group.worker_nodes, is_label=False
+        )
 
         return group_manifest
 
@@ -326,6 +357,20 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             )
 
     @classmethod
+    def _get_tags(cls, node_config: RayNodeConfig, is_label: bool) -> Dict[str, str]:
+        requires_gpu = node_config.gpu_count > 0
+        settings_var = {
+            (False, False): StandardKuberaySettingsVar.RAY_NON_GPU_ANNOTATIONS,
+            (False, True): StandardKuberaySettingsVar.RAY_NON_GPU_LABELS,
+            (True, False): StandardKuberaySettingsVar.RAY_GPU_ANNOTATIONS,
+            (True, True): StandardKuberaySettingsVar.RAY_GPU_LABELS,
+        }[(requires_gpu, is_label)]
+        tags = get_json_server_setting(settings_var, {})  # type: ignore
+        if tags is None:
+            tags = {}
+        return tags
+
+    @classmethod
     def _make_head_group_spec(
         cls,
         image_uri: str,
@@ -351,6 +396,12 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"][
             "serviceAccountName"
         ] = _get_service_account()
+        head_group_template["template"]["metadata"]["labels"] = cls._get_tags(
+            node_config, is_label=True
+        )
+        head_group_template["template"]["metadata"]["annotations"] = cls._get_tags(
+            node_config, is_label=False
+        )
 
         return head_group_template
 

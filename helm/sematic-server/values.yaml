@@ -118,6 +118,10 @@ ray:
   supports_gpus: false
   gpu_node_selector: {}
   non_gpu_node_selector: {}
+  gpu_annotations: {}
+  non_gpu_annotations: {}
+  gpu_labels: {}
+  non_gpu_labels: {}
   gpu_tolerations: []
   non_gpu_tolerations: []
   gpu_resource_request_key: null
