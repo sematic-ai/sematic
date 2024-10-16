@@ -5,6 +5,9 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.40.0](https://pypi.org/project/sematic/0.40.0/)
+    * [feature] Allow custom labels and annotations for Ray integration
+    * [bugfix] Fix an issue with tuple type casting checks
 * [0.39.1](https://pypi.org/project/sematic/0.39.1/)
     * [bugfix] Fix DB migrations from clean installs after SQLAlchemy upgrade
 * [0.39.0](https://pypi.org/project/sematic/0.39.0/)
