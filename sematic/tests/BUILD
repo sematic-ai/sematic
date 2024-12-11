@@ -168,6 +168,7 @@ pytest_test(
 pytest_test(
     name = "test_graph",
     srcs = ["test_graph.py"],
+    py_versions = [PY3.PY3_9, PY3.PY3_10, PY3.PY3_11],
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
