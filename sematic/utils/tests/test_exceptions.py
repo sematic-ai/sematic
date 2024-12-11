@@ -32,23 +32,23 @@ def test_ancestors_from_exception():
     ancestors = sorted(ancestors)
     assert ancestors == [
         "builtins.Exception",
-        "sematic.utils.tests.test_exceptions.ParentError",
+        f"{ParentError.__module__}.ParentError",
     ]
 
     ancestors = ExceptionMetadata.ancestors_from_exception(GrandChildError)
     ancestors = sorted(ancestors)
     assert ancestors == [
         "builtins.Exception",
-        "sematic.utils.tests.test_exceptions.Child1Error",
-        "sematic.utils.tests.test_exceptions.Child2Error",
-        "sematic.utils.tests.test_exceptions.ParentError",
+        f"{Child1Error.__module__}.Child1Error",
+        f"{Child2Error.__module__}.Child2Error",
+        f"{ParentError.__module__}.ParentError",
     ]
 
     ancestors = ExceptionMetadata.ancestors_from_exception(Child1Error("hi"))
     ancestors = sorted(ancestors)
     assert ancestors == [
         "builtins.Exception",
-        "sematic.utils.tests.test_exceptions.ParentError",
+        f"{ParentError.__module__}.ParentError",
     ]
 
 

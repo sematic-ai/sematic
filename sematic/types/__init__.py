@@ -4,6 +4,7 @@ Sematic Types public API
 Only types with lightweight dependencies should
 be added here. Ideally only standard library.
 """
+
 # Sematic
 import sematic.types.types.bool  # noqa: F401
 import sematic.types.types.dataclass  # noqa: F401

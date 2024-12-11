@@ -186,7 +186,10 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                     query = query.group_by(*group_by_clauses)  # type: ignore
 
                 if rollup == "auto":
-                    field_ = func.extract("epoch", MetricValue.metric_time)
+                    field_ = func.extract(  # type: ignore
+                        "epoch",
+                        MetricValue.metric_time,
+                    )
                     query = query.order_by(field_).add_columns(field_)  # type: ignore
                     record_count = query.group_by(field_).count()  # type: ignore
 

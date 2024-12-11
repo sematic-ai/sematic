@@ -2,6 +2,7 @@
 This example illustrate the usage of RetrySettings to
 guarantee a function gets retried.
 """
+
 # Standard Library
 import logging
 import random

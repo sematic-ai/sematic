@@ -1,6 +1,7 @@
 """
 Utility for extracting details about the git workspace.
 """
+
 # Standard Library
 import inspect
 import logging

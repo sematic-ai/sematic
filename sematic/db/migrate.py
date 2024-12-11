@@ -6,6 +6,7 @@ $ sematic start
 The SQLite DB should be migrated to the latest version
 automatically.
 """
+
 # Standard Library
 import datetime
 import enum
@@ -210,7 +211,7 @@ def _migrate_up(env: str, verbose: bool, file: str):
     dump_schema(file)
 
 
-def migrate_up():
+def migrate_up() -> None:
     """
     Migrate the DB to the latest version.
     """

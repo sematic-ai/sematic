@@ -15,14 +15,12 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import (  # noqa: F401
-    make_auth_test,
-    mock_auth,
-    mock_plugin_settings,
-    mock_requests,
-    mock_socketio,
-    test_client,
-)
+from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_plugin_settings  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
@@ -37,19 +35,17 @@ from sematic.db.queries import (
     save_run,
     save_run_external_resource_links,
 )
-from sematic.db.tests.fixtures import (  # noqa: F401
-    allow_any_run_state_transition,
-    make_job,
-    make_resolution,
-    make_run,
-    persisted_external_resource,
-    persisted_resolution,
-    persisted_run,
-    persisted_user,
-    pg_mock,
-    run,
-    test_db,
-)
+from sematic.db.tests.fixtures import allow_any_run_state_transition  # noqa: F401
+from sematic.db.tests.fixtures import make_job  # noqa: F401
+from sematic.db.tests.fixtures import make_resolution  # noqa: F401
+from sematic.db.tests.fixtures import make_run  # noqa: F401
+from sematic.db.tests.fixtures import persisted_external_resource  # noqa: F401
+from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
+from sematic.db.tests.fixtures import persisted_run  # noqa: F401
+from sematic.db.tests.fixtures import persisted_user  # noqa: F401
+from sematic.db.tests.fixtures import pg_mock  # noqa: F401
+from sematic.db.tests.fixtures import run  # noqa: F401
+from sematic.db.tests.fixtures import test_db  # noqa: F401; noqa: F401
 from sematic.function import func
 from sematic.log_reader import LogLineResult
 from sematic.metrics.run_count_metric import RunCountMetric
@@ -658,11 +654,14 @@ def test_schedule_run(
         persisted_resolution.status = ResolutionStatus.RUNNING
         save_resolution(persisted_resolution)
 
-        with mock.patch(
-            "sematic.api.endpoints.runs.broadcast_graph_update"
-        ) as mock_broadcast_graph_update, mock.patch(
-            "sematic.api.endpoints.runs.broadcast_job_update"
-        ) as mock_broadcast_job_update:
+        with (
+            mock.patch(
+                "sematic.api.endpoints.runs.broadcast_graph_update"
+            ) as mock_broadcast_graph_update,
+            mock.patch(
+                "sematic.api.endpoints.runs.broadcast_job_update"
+            ) as mock_broadcast_job_update,
+        ):
             response = test_client.post(f"/api/v1/runs/{persisted_run.id}/schedule")
 
             mock_broadcast_graph_update.assert_called_once()
@@ -783,9 +782,10 @@ def test_update_future_states(
         save_run(persisted_run)
 
         mock_k8s.refresh_job.side_effect = lambda job: job
-        with mock.patch(
-            "sematic.api.endpoints.runs.broadcast_graph_update"
-        ), mock.patch("sematic.api.endpoints.runs.broadcast_job_update"):
+        with (
+            mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"),
+            mock.patch("sematic.api.endpoints.runs.broadcast_job_update"),
+        ):
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )
@@ -839,11 +839,14 @@ def test_update_run_disappeared(
         job.details = details
         mock_k8s.refresh_job.side_effect = lambda j: job
 
-        with mock.patch(
-            "sematic.api.endpoints.runs.broadcast_graph_update"
-        ) as mock_broadcast_graph_update, mock.patch(
-            "sematic.api.endpoints.runs.broadcast_job_update"
-        ) as mock_broadcast_job_update:
+        with (
+            mock.patch(
+                "sematic.api.endpoints.runs.broadcast_graph_update"
+            ) as mock_broadcast_graph_update,
+            mock.patch(
+                "sematic.api.endpoints.runs.broadcast_job_update"
+            ) as mock_broadcast_job_update,
+        ):
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )
@@ -910,9 +913,10 @@ def test_update_run_k8_pod_error(
         job.update_status(details.get_status(time.time()))
         mock_k8s.refresh_job.side_effect = lambda j: job
 
-        with mock.patch(
-            "sematic.api.endpoints.runs.broadcast_graph_update"
-        ), mock.patch("sematic.api.endpoints.runs.broadcast_job_update"):
+        with (
+            mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"),
+            mock.patch("sematic.api.endpoints.runs.broadcast_job_update"),
+        ):
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )

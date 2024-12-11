@@ -29,7 +29,7 @@ class Runner(abc.ABC):
         """
         pass
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def activate_resource_for_run(
         cls, resource: AbstractExternalResource, run_id: str, root_id: str
     ) -> AbstractExternalResource:
@@ -59,7 +59,7 @@ class Runner(abc.ABC):
         """
         pass
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def deactivate_resource(cls, resource_id: str) -> AbstractExternalResource:
         """Deactivate the resource with the given id.
 

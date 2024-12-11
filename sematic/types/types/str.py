@@ -1,6 +1,7 @@
 """
 Casting and serialization logic for `str`.
 """
+
 # Standard Library
 import inspect
 import typing

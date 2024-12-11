@@ -160,9 +160,11 @@ def make_auth_test(endpoint: str, method: str = "GET"):
 
 @pytest.fixture
 def mock_socketio():
-    with mock.patch("socketio.Client.connect"), mock.patch(
-        "sematic.api.endpoints.events._call_broadcast_endpoint"
-    ), mock.patch("sematic.api_client._notify_event"):
+    with (
+        mock.patch("socketio.Client.connect"),
+        mock.patch("sematic.api.endpoints.events._call_broadcast_endpoint"),
+        mock.patch("sematic.api_client._notify_event"),
+    ):
         yield
 
 

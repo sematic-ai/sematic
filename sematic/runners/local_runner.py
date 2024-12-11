@@ -104,9 +104,9 @@ class LocalRunner(SilentRunner):
         # A cache of already created artifacts to avoid making them over again.
         # The key is run ID, the value is a dictionary where the key is input
         # name, or None for output and the value is the artifact.
-        self._artifacts_by_run_id: Dict[
-            str, Dict[Optional[str], Artifact]
-        ] = defaultdict(dict)
+        self._artifacts_by_run_id: Dict[str, Dict[Optional[str], Artifact]] = (
+            defaultdict(dict)
+        )
 
         # Buffers for persistence
         self._buffer_edges: Dict[str, Edge] = {}
@@ -234,9 +234,9 @@ class LocalRunner(SilentRunner):
             future.resolved_kwargs = self._get_concrete_kwargs(future)
 
             if future.state == FutureState.RESOLVED:
-                self._artifacts_by_run_id[future.id][
-                    None
-                ] = future_graph.output_artifacts[future.id]
+                self._artifacts_by_run_id[future.id][None] = (
+                    future_graph.output_artifacts[future.id]
+                )
 
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
                 for name, artifact in future_graph.input_artifacts[future.id].items():

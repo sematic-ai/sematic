@@ -7,12 +7,10 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_auth,
-    mock_requests,
-    mock_socketio,
-    test_client,
-)
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource

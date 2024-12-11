@@ -1,6 +1,7 @@
 """
 Utility code for interacting with the `docker-py` client.
 """
+
 # Standard Library
 import logging
 import sys

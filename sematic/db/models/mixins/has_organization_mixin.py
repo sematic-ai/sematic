@@ -4,7 +4,7 @@ from typing import Optional
 # Third-party
 from sqlalchemy import ForeignKey, types
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column  # type: ignore
 
 
 class HasOrganizationMixin:

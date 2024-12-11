@@ -3,7 +3,7 @@ import datetime
 
 # Third-party
 from sqlalchemy import types
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column  # type: ignore
 
 # Sematic
 from sematic.db.models.base import Base

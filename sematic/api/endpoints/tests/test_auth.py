@@ -13,11 +13,8 @@ from google.auth.exceptions import GoogleAuthError
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_requests,
-    mock_server_settings,
-    test_client,
-)
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_server_settings, test_client  # noqa: F401
 from sematic.config.server_settings import ServerSettingsVar
 from sematic.db.models.user import User
 from sematic.db.queries import get_user

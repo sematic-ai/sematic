@@ -1,6 +1,7 @@
 """
 The Slack Publisher plugin implementation.
 """
+
 # Standard Library
 import logging
 import re

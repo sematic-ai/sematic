@@ -2,6 +2,7 @@
 Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Function
 """
+
 # Standard Library
 # standard library
 from typing import get_args, get_origin

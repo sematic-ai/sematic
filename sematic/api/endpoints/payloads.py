@@ -1,4 +1,5 @@
 """Augment or modify the returned json for ORM models for returns from API calls."""
+
 # Standard Library
 import logging
 from typing import Any, Dict, List, Protocol, Sequence
@@ -15,11 +16,9 @@ logger = logging.getLogger(__name__)
 
 class _JSONEncodableWithUser(Protocol):
     @property
-    def user_id(self) -> declared_attr[String]:
-        ...
+    def user_id(self) -> declared_attr[String]: ...
 
-    def to_json_encodable(self) -> Dict[str, Any]:
-        ...
+    def to_json_encodable(self) -> Dict[str, Any]: ...
 
 
 def _get_payload_with_user(item: _JSONEncodableWithUser) -> Dict[str, Any]:

@@ -11,12 +11,10 @@ import pytest
 from sematic import api_client
 from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_auth,
-    mock_requests,
-    mock_socketio,
-    test_client,
-)
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.config.tests.fixtures import no_settings_file  # noqa: F401
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
@@ -29,11 +27,9 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.function import func
 from sematic.retry_settings import RetrySettings
 from sematic.runners.local_runner import LocalRunner
-from sematic.tests.fixtures import (  # noqa: F401
-    DIVERSE_VALUES_WITH_TYPES,
-    test_storage,
-    valid_client_version,
-)
+from sematic.tests.fixtures import DIVERSE_VALUES_WITH_TYPES  # noqa: F401
+from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.tests.fixtures import valid_client_version  # noqa: F401; noqa: F401
 from sematic.utils.exceptions import (
     CancellationError,
     ExceptionMetadata,

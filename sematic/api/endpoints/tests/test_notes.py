@@ -7,11 +7,9 @@ import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
-from sematic.api.tests.fixtures import (  # noqa: F401
-    make_auth_test,
-    mock_auth,
-    test_client,
-)
+from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
 from sematic.db.models.user import User  # noqa: F401

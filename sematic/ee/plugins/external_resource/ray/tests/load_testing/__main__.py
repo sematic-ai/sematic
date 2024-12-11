@@ -1,6 +1,7 @@
 """
 Entry point for the testing pipeline.
 """
+
 # Standard Library
 import argparse
 import logging
@@ -71,9 +72,9 @@ MNIST_WAIT_MINUTES_HELP = (
 )
 
 
-def _parse_args() -> Tuple[
-    argparse.Namespace, Optional[CollatzConfig], Optional[MnistConfig]
-]:
+def _parse_args() -> (
+    Tuple[argparse.Namespace, Optional[CollatzConfig], Optional[MnistConfig]]
+):
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(prog=BAZEL_COMMAND, description=DESCRIPTION)
 

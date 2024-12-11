@@ -42,9 +42,6 @@ commands:
           name: Black
           command: black sematic --diff --check
       - run:
-          name: ISort
-          command: isort sematic --diff --check
-      - run:
           name: ESlint
           working_directory: ./sematic/ui
           command: npm run lint

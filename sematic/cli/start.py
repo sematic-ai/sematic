@@ -1,6 +1,7 @@
 """
 Module containing logic for the `start` CLI command.
 """
+
 # Standard Library
 import os
 import webbrowser

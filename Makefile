@@ -23,12 +23,18 @@ pre-commit:
 	python3 -m flake8
 	python3 -m mypy sematic
 	python3 -m black sematic --check
-	python3 -m isort sematic --diff --check
 	pushd sematic/ui && npm run lint && popd
 
 fix:
-	isort sematic
 	black sematic
+
+.PHONY: py-prep
+py-prep:
+	uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
+	rm -rf ".venv" || echo "No virtualenv yet"
+	uv venv --python 3.12
+	uv sync --extra examples
+	uv tool install --force ruff==0.6.1
 
 .PHONY: update-schema
 update-schema:

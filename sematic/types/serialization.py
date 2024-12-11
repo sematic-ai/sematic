@@ -1,6 +1,7 @@
 """
 This module contains the public API for artifact serialization.
 """
+
 # Standard Library
 import abc
 import base64
@@ -173,7 +174,7 @@ def type_from_json_encodable(json_encodable: typing.Any) -> typing.Any:
             for arg in parameters["args"]
         ]
 
-        args = args[0] if len(args) == 1 else tuple(args)
+        args = args[0] if len(args) == 1 else tuple(args)  # type: ignore
 
         return base.__getitem__(args)
 

@@ -1,5 +1,6 @@
 # Standard Library
 import hashlib
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List
 
@@ -92,33 +93,36 @@ class ListOfNormalClassField:
             A,
             B,
             False,
-            "Cannot cast <class 'sematic.types.types.tests.test_dataclass.A'> to <class 'sematic.types.types.tests.test_dataclass.B'>: missing fields: {'b'}",  # noqa: E501
+            r"Cannot cast .*test_dataclass.A'.* to .*test_dataclass.B'.*: missing fields: {'b'}",  # noqa: E501
         ),
         (
             A,
             C,
             False,
-            "Cannot cast <class 'sematic.types.types.tests.test_dataclass.A'> to <class 'sematic.types.types.tests.test_dataclass.C'>: field 'a' cannot cast: <class 'int'> cannot cast to str",  # noqa: E501
+            r"Cannot cast .*test_dataclass.A'.* to .*test_dataclass.C'.*: field 'a' cannot cast: .*'int'.* cannot cast to str",  # noqa: E501
         ),
         (
             C,
             A,
             False,
-            "Cannot cast <class 'sematic.types.types.tests.test_dataclass.C'> to <class 'sematic.types.types.tests.test_dataclass.A'>: field 'a' cannot cast: Cannot cast <class 'str'> to int",  # noqa: E501
+            r"Cannot cast .*test_dataclass.C'.* to .*test_dataclass.A'.*: field 'a' cannot cast: Cannot cast .*'str'.* to int",  # noqa: E501
         ),
         (D, A, True, None),
         (
             A,
             D,
             False,
-            "Cannot cast <class 'sematic.types.types.tests.test_dataclass.A'> to <class 'sematic.types.types.tests.test_dataclass.D'>: missing fields: {'d'}",  # noqa: E501
+            r"Cannot cast .*test_dataclass.A'.* to .*test_dataclass.D'.*: missing fields: {'d'}",  # noqa: E501
         ),
     ),
 )
 def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
     can_cast, error = can_cast_type(from_type, to_type)
     assert can_cast is expected_can_cast
-    assert error == expected_error
+    if expected_error is None:
+        assert error is None
+    else:
+        assert re.match(expected_error, error)
 
 
 @pytest.mark.parametrize(
@@ -135,7 +139,7 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             B,
             None,
             None,
-            "Cannot cast A(a=1) to <class 'sematic.types.types.tests.test_dataclass.B'>: Field 'b' is missing",  # noqa: E501
+            r"Cannot cast A\(a=1\) to .*test_dataclass.B.*: Field 'b' is missing",  # noqa: E501
         ),
         (C(a="1"), A, A, A(a=1), None),
         (
@@ -143,9 +147,9 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             A,
             None,
             None,
-            "Cannot cast field 'a' of C(a='abc') to "
-            "<class 'sematic.types.types.tests.test_dataclass.A'>: "
-            "Cannot cast 'abc' to <class 'int'>",  # noqa: E501
+            r"Cannot cast field 'a' of C.a='abc'. to .*"
+            r"test_dataclass.A.*: "
+            r"Cannot cast 'abc' to .*int.*",  # noqa: E501
         ),
         (
             MyFrozenDataclass("some value"),
@@ -159,11 +163,11 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             BadDictField,
             BadDictField,
             None,
-            "Cannot cast field 'bad_dict_field' of "
-            "BadDictField(bad_dict_field={'foo': 'bar'}) to "
-            "<class 'sematic.types.types.tests.test_dataclass.BadDictField'>:"
-            " Type 'dict' is not a valid Sematic type: dict must be parametrized "
-            "(dict[...] instead of dict).",
+            r"Cannot cast field 'bad_dict_field' of "
+            r"BadDictField\(bad_dict_field={'foo': 'bar'}\) to .*"
+            r"test_dataclass.BadDictField.*:"
+            r" Type 'dict' is not a valid Sematic type: dict must be parametrized "
+            r".*dict\[\.\.\.\] instead of dict.*",
         ),
     ),
 )
@@ -173,16 +177,20 @@ def test_safe_cast(value, type_, expected_type, expected_value, expected_error):
         assert isinstance(cast_value, expected_type)
         assert cast_value == expected_value
 
-    assert error == expected_error
+    if expected_error is None:
+        assert error is None
+    else:
+        assert re.match(expected_error, error)
 
 
 def test_type_to_json_encodable():
-    assert type_to_json_encodable(A) == {
+    result = type_to_json_encodable(A)
+    assert result == {
         "type": (
             "dataclass",
             "A",
             {
-                "import_path": "sematic.types.types.tests.test_dataclass",
+                "import_path": A.__module__,
                 "fields": {"a": {"type": ("builtin", "int", {})}},
             },
         ),
@@ -199,7 +207,7 @@ def test_type_to_json_encodable_subclass():
         "type": (
             "class",
             "DD",
-            {"import_path": "sematic.types.types.tests.test_dataclass"},
+            {"import_path": DD.__module__},
         ),
         "registry": {
             "DD": [
@@ -207,7 +215,7 @@ def test_type_to_json_encodable_subclass():
                     "dataclass",
                     "D",
                     {
-                        "import_path": "sematic.types.types.tests.test_dataclass",
+                        "import_path": DD.__module__,
                         "fields": {
                             "a": {"type": ("builtin", "int", {})},
                             "d": {"type": ("builtin", "float", {})},
@@ -220,7 +228,7 @@ def test_type_to_json_encodable_subclass():
                     "dataclass",
                     "A",
                     {
-                        "import_path": "sematic.types.types.tests.test_dataclass",
+                        "import_path": D.__module__,
                         "fields": {"a": {"type": ("builtin", "int", {})}},
                     },
                 )

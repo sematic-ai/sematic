@@ -1,4 +1,5 @@
 """Test launch script that cooperates."""
+
 # Standard Library
 import os
 import sys

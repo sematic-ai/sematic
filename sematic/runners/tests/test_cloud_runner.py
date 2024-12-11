@@ -8,12 +8,10 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_auth,
-    mock_requests,
-    mock_socketio,
-    test_client,
-)
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
@@ -29,10 +27,10 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.function import func
 from sematic.graph import RerunMode
+from sematic.resolvers.resource_requirements import ResourceRequirements  # noqa: F401
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
-    ResourceRequirements,
-)
+)  # noqa: F401
 from sematic.runners.cloud_runner import CloudRunner
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.env import environment_variables

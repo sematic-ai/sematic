@@ -1,6 +1,7 @@
 """
 Sematic Public API
 """
+
 # Standard Library
 import os  # noqa: E402
 import platform  # noqa: E402
@@ -38,10 +39,10 @@ from sematic.function import func  # noqa: F401,E402
 from sematic.future_context import SematicContext, context  # noqa: F401,E402
 from sematic.plugins.external_resource.timed_message import (  # noqa: F401,E402
     TimedMessage,
-)
+)  # noqa: F401
 from sematic.plugins.kuberay_wrapper.standard import (  # noqa: F401,E402
     StandardKuberayWrapper,
-)
+)  # noqa: F401,E402
 from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
 from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
@@ -62,8 +63,6 @@ from sematic.runner import Runner  # noqa: F401,E402
 from sematic.runners.cloud_runner import CloudRunner  # noqa: F401,E402
 from sematic.runners.local_runner import LocalRunner, RerunMode  # noqa: F401,E402
 from sematic.runners.silent_runner import SilentRunner  # noqa: F401,E402
-from sematic.utils.exceptions import (  # noqa: F401,E402
-    KubernetesError,
-    PipelineRunError,
-)
+from sematic.utils.exceptions import KubernetesError  # noqa: F401,E402
+from sematic.utils.exceptions import PipelineRunError  # noqa: F401,E402
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

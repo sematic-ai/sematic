@@ -1,6 +1,7 @@
 """
 Module holding common DB queries.
 """
+
 # Standard Library
 import logging
 from collections import defaultdict

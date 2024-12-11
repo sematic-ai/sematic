@@ -337,8 +337,8 @@ def _load_settings(file_path: str) -> Settings:
             )
             settings.profiles[profile_name] = profile_settings
 
-        profile_settings.scopes = _normalize_enum_keys(
-            profile_settings.scopes, PluginScope
+        profile_settings.scopes = _normalize_enum_keys(  # type: ignore
+            profile_settings.scopes, PluginScope  # type: ignore
         )
 
         # We are mutating the dictionary as we iterate, so we iterate on keys.
@@ -372,7 +372,7 @@ def _load_settings(file_path: str) -> Settings:
                     )
 
             profile_settings.settings[plugin_path] = _normalize_enum_keys(
-                plugin_settings, plugin_settings_vars
+                plugin_settings, plugin_settings_vars  # type: ignore
             )
 
     return settings

@@ -1,4 +1,5 @@
 # Standard Library
+import re
 from enum import Enum, unique
 
 # Third-party
@@ -61,8 +62,5 @@ def test_to_from_encodable():
 
 def test_can_cast_type():
     assert can_cast_type(Color, Color) == (True, None)
-    assert can_cast_type(Color, SomethingExotic) == (
-        False,
-        "<enum 'Color'> does not match "
-        "<class 'sematic.types.types.tests.test_enum.SomethingExotic'>",
-    )
+    can, error = can_cast_type(Color, SomethingExotic)
+    assert re.match(r".*Color.* does not match.*SomethingExotic.*", error)

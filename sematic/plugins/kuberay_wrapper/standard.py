@@ -289,12 +289,12 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         group_manifest["maxReplicas"] = worker_group.max_workers
         group_manifest["groupName"] = f"worker-group-{group_index}"
         group_manifest["template"]["spec"]["containers"][0]["image"] = image_uri
-        group_manifest["template"]["spec"]["containers"][0]["resources"][
-            "limits"
-        ] = cls._limits_for_node(worker_group.worker_nodes)
-        group_manifest["template"]["spec"]["containers"][0]["resources"][
-            "requests"
-        ] = cls._requests_for_node(worker_group.worker_nodes)
+        group_manifest["template"]["spec"]["containers"][0]["resources"]["limits"] = (
+            cls._limits_for_node(worker_group.worker_nodes)
+        )
+        group_manifest["template"]["spec"]["containers"][0]["resources"]["requests"] = (
+            cls._requests_for_node(worker_group.worker_nodes)
+        )
         group_manifest["template"]["spec"]["nodeSelector"] = cls._get_node_selector(
             worker_group.worker_nodes
         )
@@ -384,9 +384,9 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"]["containers"][0]["resources"][
             "requests"
         ] = cls._requests_for_node(node_config)
-        head_group_template["template"]["spec"][
-            "nodeSelector"
-        ] = cls._get_node_selector(node_config)
+        head_group_template["template"]["spec"]["nodeSelector"] = (
+            cls._get_node_selector(node_config)
+        )
         head_group_template["template"]["spec"]["tolerations"] = cls._get_tolerations(
             node_config
         )
