@@ -67,7 +67,6 @@ examples = [
   "torchvision>=0.14.1",
   "pytorch-lightning>=1.6.5",
   "ray-lightning>=0.3.0",
-  # "torchmetrics==0.11.1",
   "plotly==5.13.0",
   "pandas>=1.5.3",
   "seaborn>=0.12.2",
@@ -76,11 +75,11 @@ examples = [
   "scikit-learn>=1.2.1",
   "numpy>=1.24.0",
   "xgboost>=1.7.3",
-  # "accelerate",
-  # "datasets>=2.12.0",
-  # "huggingface-hub",
-  # "peft",
-  # "transformers",
+  "accelerate==0.19.0",
+  "datasets>=2.12.0",
+  "huggingface-hub>=0.14.1",
+  "peft>=0.3.0",
+  "transformers>=4.29.2",
   "gradio>=3.35.2",
   "trafilatura>=1.6.0",
   "cohere>=4.9.0",
@@ -146,12 +145,3 @@ ignore_missing_imports = true
 
 [tool.uv.sources]
 sematic = { workspace = true }
-
-# [tool.pytest.ini_options]
-# addopts = [
-#   "--ignore=sematic/tests/test_3_8_interpreter.py",
-#   "--ignore=sematic/tests/test_3_9_interpreter.py",
-#   "--ignore=sematic/tests/test_3_10_interpreter.py",
-#   "--ignore=sematic/tests/test_3_11_interpreter.py",
-#   "--ignore=sematic/tests/test_3_12_interpreter.py",
-# ]

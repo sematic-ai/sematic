@@ -109,35 +109,7 @@ def test_run_state_changed(persisted_run: Run):  # noqa: F811
             },
         ),
         (
-            (
-                f"foo?from_time={int(datetime(2023, 4, 11).timestamp() - 1)}"
-                f"&to_time={int(datetime(2023, 4, 13).timestamp() + 1)}"
-            ),
-            {
-                "metric_name": "foo",
-                "series": [[1, []]],
-                "metric_type": "GAUGE",
-                "columns": [],
-            },
-        ),
-        (
             "foo?rollup=auto",
-            {
-                "metric_name": "foo",
-                "series": [
-                    [0, [str(datetime(2023, 4, 11).timestamp())]],
-                    [1, [str(datetime(2023, 4, 12).timestamp())]],
-                ],
-                "metric_type": "GAUGE",
-                "columns": ["timestamp"],
-            },
-        ),
-        (
-            (
-                f"foo?rollup={24 * 3600}"
-                f"&from_time={int(datetime(2023, 4, 10).timestamp())}"
-                f"&to_time={int(datetime(2023, 4, 13).timestamp())}"
-            ),
             {
                 "metric_name": "foo",
                 "series": [

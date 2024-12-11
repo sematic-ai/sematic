@@ -34,7 +34,7 @@ py-prep:
 	rm -rf ".venv" || echo "No virtualenv yet"
 	uv venv --python 3.12
 	uv sync --extra examples
-	uv tool install --force ruff==0.6.1
+	uv tool install --force ruff==0.8.2
 
 .PHONY: py-sync
 py-sync:
