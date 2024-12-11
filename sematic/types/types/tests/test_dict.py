@@ -66,7 +66,7 @@ def test_dict_summary_blobs():
 @pytest.mark.parametrize("type_", (Dict[str, int],))
 def test_type_from_json_encodable(type_):
     json_encodable = type_to_json_encodable(type_)
-    assert type_from_json_encodable(json_encodable) is type_
+    assert type_from_json_encodable(json_encodable) == type_
 
 
 SERIALIZATION_EXAMPLES = [

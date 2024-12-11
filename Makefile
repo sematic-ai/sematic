@@ -36,6 +36,10 @@ py-prep:
 	uv sync --extra examples
 	uv tool install --force ruff==0.6.1
 
+.PHONY: py-sync
+py-sync:
+	uv sync --extra examples  --extra ray
+
 .PHONY: update-schema
 update-schema:
 	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite

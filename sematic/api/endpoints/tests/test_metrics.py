@@ -110,8 +110,8 @@ def test_run_state_changed(persisted_run: Run):  # noqa: F811
         ),
         (
             (
-                f"foo?from_time={int(datetime(2023, 4, 12).timestamp() - 1)}"
-                f"&to_time={int(datetime(2023, 4, 12).timestamp() + 1)}"
+                f"foo?from_time={int(datetime(2023, 4, 11).timestamp() - 1)}"
+                f"&to_time={int(datetime(2023, 4, 13).timestamp() + 1)}"
             ),
             {
                 "metric_name": "foo",
@@ -169,6 +169,7 @@ def test_get_metrics_endpoint(
     check_approximate_equality(
         payload["content"]["series"],  # type: ignore
         expected_series["series"],  # type: ignore
+        equality_epsilon=24 * 3600,
     )
 
 

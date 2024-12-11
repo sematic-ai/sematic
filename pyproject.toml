@@ -45,8 +45,6 @@ dependencies = [
   "boto3>=1.26.82",
   "google-cloud-storage>=2.10.0",
   "types-google-cloud-ndb>=2.2.0.0",
-
-  # "Cython==0.29.33",  # need to include https://github.com/cython/cython/commit/b37607f46b165e81f7af2b4eec2ae7f76f7717df
 ]
 
 [build-system]
@@ -61,14 +59,14 @@ py-modules = [
 [project.optional-dependencies]
 examples = [
   # Examples
-  # "snowflake-connector-python==3.0.4",
+  "snowflake-connector-python==3.12.4",
   "pyOpenSSL>=23.0.0",
   "pyarrow>=12.0.0",
   "python-magic==0.4.27",
-  # "torch>=1.13.1",
-  # "torchvision==0.14.1",
-  # "pytorch-lightning==1.6.5",
-  # "ray-lightning==0.3.0",
+  "torch>=1.13.1",
+  "torchvision>=0.14.1",
+  "pytorch-lightning>=1.6.5",
+  "ray-lightning>=0.3.0",
   # "torchmetrics==0.11.1",
   "plotly==5.13.0",
   "pandas>=1.5.3",
@@ -116,6 +114,7 @@ dev-dependencies = [
   "pathspec==0.11.2",
   "mypy-extensions==1.0.0",
   "platformdirs==3.10.0",
+  "responses==0.18.0",
 ]
 
 [tool.ruff]
@@ -148,53 +147,11 @@ ignore_missing_imports = true
 [tool.uv.sources]
 sematic = { workspace = true }
 
-[tool.pytest.ini_options]
-addopts = [
-  "--ignore=sematic/api/endpoints/tests/test_artifacts.py",
-  "--ignore=sematic/api/endpoints/tests/test_auth.py",
-  "--ignore=sematic/api/endpoints/tests/test_external_resources.py",
-  "--ignore=sematic/api/endpoints/tests/test_meta.py",
-  "--ignore=sematic/api/endpoints/tests/test_metrics.py",
-  "--ignore=sematic/api/endpoints/tests/test_notes.py",
-  "--ignore=sematic/api/endpoints/tests/test_organizations.py",
-  "--ignore=sematic/api/endpoints/tests/test_resolutions.py",
-  "--ignore=sematic/api/endpoints/tests/test_runs.py",
-  "--ignore=sematic/api/endpoints/tests/test_storage.py",
-  "--ignore=sematic/api/endpoints/tests/test_users.py",
-  "--ignore=sematic/api/tests/test_server.py",
-  "--ignore=sematic/cli/tests/test_logs.py",
-  "--ignore=sematic/db/tests/test_queries.py",
-  "--ignore=sematic/ee/plugins/external_resource/ray/tests/test_checkpoint.py",
-  "--ignore=sematic/ee/plugins/external_resource/ray/tests/test_cluster.py",
-  "--ignore=sematic/examples/lightning_resnet/tests/test_pipeline.py",
-  "--ignore=sematic/plugins/storage/tests/test_gcs_storage.py",
-  "--ignore=sematic/plugins/storage/tests/test_local_storage.py",
-  "--ignore=sematic/plugins/storage/tests/test_memory_storage.py",
-  "--ignore=sematic/plugins/storage/tests/test_s3_storage.py",
-  "--ignore=sematic/resolvers/tests/test_worker.py",
-  "--ignore=sematic/runners/tests/test_cloud_runner.py",
-  "--ignore=sematic/runners/tests/test_local_runner.py",
-  "--ignore=sematic/scheduling/tests/test_kubernetes.py",
-  "--ignore=sematic/tests/test_api_client.py",
-  "--ignore=sematic/tests/test_graph.py",
-  "--ignore=sematic/tests/test_log_reader.py",
-  "--ignore=sematic/types/types/snowflake/tests/test_snowflake_table.py",
-  "--ignore=sematic/tests/test_3_8_interpreter.py",
-  "--ignore=sematic/tests/test_3_9_interpreter.py",
-  "--ignore=sematic/tests/test_3_10_interpreter.py",
-  "--ignore=sematic/tests/test_3_11_interpreter.py",
-  "--ignore=sematic/tests/test_3_12_interpreter.py",
-]
-
-# [tool.uv.workspace]
-# members = ["."]
-# exclude = [
-#   "bazel",
-#   "developer-docs",
-#   "docker",
-#   "docs",
-#   "helm",
-#   "node_modules",
-#   "requirements",
-#   "tools",
+# [tool.pytest.ini_options]
+# addopts = [
+#   "--ignore=sematic/tests/test_3_8_interpreter.py",
+#   "--ignore=sematic/tests/test_3_9_interpreter.py",
+#   "--ignore=sematic/tests/test_3_10_interpreter.py",
+#   "--ignore=sematic/tests/test_3_11_interpreter.py",
+#   "--ignore=sematic/tests/test_3_12_interpreter.py",
 # ]
