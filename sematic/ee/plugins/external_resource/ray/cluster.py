@@ -499,11 +499,13 @@ class RayCluster(AbstractExternalResource):
         logger.info(f"Ray cluster {self.id} has {n_workers} workers")
         return (
             has_enough_workers,
-            None
-            if has_enough_workers
-            else (
-                f"RayCluster has {n_workers} available workers "
-                f"(counting the head), but requires at least {min_workers}."
+            (
+                None
+                if has_enough_workers
+                else (
+                    f"RayCluster has {n_workers} available workers "
+                    f"(counting the head), but requires at least {min_workers}."
+                )
             ),
         )
 

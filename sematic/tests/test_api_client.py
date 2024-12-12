@@ -14,7 +14,7 @@ from sematic.api.tests.fixtures import mock_auth  # noqa: F401
 from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_requests as mock_requests_fixture,
-)
+)  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     _notify_event,
@@ -27,18 +27,16 @@ from sematic.api_client import (
 from sematic.config.config import get_config
 from sematic.db.db import DB
 from sematic.db.queries import save_run
-from sematic.db.tests.fixtures import (  # noqa: F401
-    make_run,
-    persisted_artifact,
-    pg_mock,
-    test_db,
-    test_storage,
-)
+from sematic.db.tests.fixtures import make_run  # noqa: F401
+from sematic.db.tests.fixtures import persisted_artifact  # noqa: F401
+from sematic.db.tests.fixtures import pg_mock  # noqa: F401
+from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.db.tests.fixtures import test_storage  # noqa: F401; noqa: F401
 from sematic.metrics.metric_point import MetricPoint
 from sematic.metrics.tests.fixtures import metric_points  # noqa: F401
-from sematic.plugins.metrics_storage.sql.models.metric_value import (  # noqa: F401
+from sematic.plugins.metrics_storage.sql.models.metric_value import (
     MetricValue,
-)
+)  # noqa: F401
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 

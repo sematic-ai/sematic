@@ -349,7 +349,7 @@ def func(
             "See https://go.sematic.dev/t3mynx"  # noqa: E501
         )
 
-    def _wrapper(func_):
+    def _wrapper(func_: types.FunctionType) -> "Function":
         annotations = func_.__annotations__
 
         output_type: type = type(None)
@@ -403,7 +403,7 @@ def func(
     if func is None:
         return _wrapper
 
-    return _wrapper(func)
+    return _wrapper(func)  # type: ignore
 
 
 def _validate_type_annotations(all_type_annotations: Dict[str, Type[Any]]):

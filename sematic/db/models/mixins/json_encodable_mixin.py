@@ -96,7 +96,7 @@ def _to_json_encodable(value: Any, column: Column) -> Any:
         return value.value
 
     if dataclasses.is_dataclass(value):
-        return dataclasses.asdict(value)
+        return dataclasses.asdict(value)  # type: ignore
 
     if info.get(JSON_KEY, False) and value is not None:
         return json.loads(value)

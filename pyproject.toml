@@ -1,17 +1,147 @@
-[tool.pyright]
-exclude = [
-  "bazel-out",
-  "bazel-bin",
-  "bazel-sematic",
-  "bazel-testlogs",
-  "docs",
-  "build",
+[project]
+name = "sematic"
+description = "Sematic ML orchestration tool"
+version = "0.41.0"
+requires-python = ">=3.9, <=3.12"
+dependencies = [
+  # System
+  "ipython==8.2.0",
+  "setuptools==58.1.0",
+
+  # DB
+  "SQLAlchemy>=2.0",
+  "psycopg2-binary>=2.9.5",
+
+  # Code
+  "pyyaml>=6.0.1",
+
+  # Git integration
+  "git-python>=1.0.3",
+
+  # Build system
+  "docker>=6.0.0",
+
+  # Client
+  "websocket-client>=1.5.1",
+  "python-socketio>=5.7.2",
+
+  # API server
+  "flask>=2.2.2",
+  "flask-cors>=3.0.10",
+  "cloudpickle>=2.2.1",
+  "requests>=2.28.2",
+  "werkzeug>=2.2.3",
+  "python-dateutil>=2.8.2",
+  "starlette>=0.25.0",
+  "google-auth>=2.16.0",
+  "uvicorn[standard]>=0.20.0",
+  "asgiref>=3.7.2",
+
+  # CLI
+  "click>=8.1.3",
+
+  # Cloud execution
+  "kubernetes>=25.3.0",
+  "boto3>=1.26.82",
+  "google-cloud-storage>=2.10.0",
+  "types-google-cloud-ndb>=2.2.0.0",
 ]
 
-[tool.isort]
-profile = "black"
-import_heading_stdlib="Standard Library"
-import_heading_firstparty="Sematic"
-import_heading_thirdparty="Third-party"
-known_third_party = ["flask", "psycopg2", "matplotlib", "cloudpickle"]
-multi_line_output = 3
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = [
+  "sematic",
+]
+
+[project.optional-dependencies]
+examples = [
+  # Examples
+  "snowflake-connector-python==3.12.4",
+  "pyOpenSSL>=23.0.0",
+  "pyarrow>=12.0.0",
+  "python-magic==0.4.27",
+  "torch>=1.13.1",
+  "torchvision>=0.14.1",
+  "pytorch-lightning>=1.6.5",
+  "ray-lightning>=0.3.0",
+  "plotly==5.13.0",
+  "pandas>=1.5.3",
+  "seaborn>=0.12.2",
+  "matplotlib>=3.7.0",
+  "statsmodels>=0.13.5",
+  "scikit-learn>=1.2.1",
+  "numpy>=1.24.0",
+  "xgboost>=1.7.3",
+  "accelerate==0.19.0",
+  "datasets>=2.12.0",
+  "huggingface-hub>=0.14.1",
+  "peft>=0.3.0",
+  "transformers>=4.29.2",
+  "gradio>=3.35.2",
+  "trafilatura>=1.6.0",
+  "cohere>=4.9.0",
+  "openai>=0.27.8",
+]
+
+ray = [
+  # External Resource Plugins
+  ## Ray
+  # Note: just because we depend on ray[air] here does NOT
+  # mean our wheel depends on it, nor does it imply that users
+  # will/will not have ray[air]. This is only about what is present
+  # in Sematic's dev workspace.
+  "ray[default,air]>=2.3.0",
+]
+
+all = [
+  "ray[default,air]>=2.3.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+  "testing-postgresql>=1.3.0",
+  "debugpy>=1.6.6",
+  "pandas-stubs>=2.2.2",
+  "mypy==1.11.1",
+  "ruff-lsp==0.0.35",
+  "python-lsp-ruff>=2.2.2",
+  "python-lsp-server>=1.11.0",
+  "pytest==7.4.0",
+  "pathspec==0.11.2",
+  "mypy-extensions==1.0.0",
+  "platformdirs==3.10.0",
+  "responses==0.18.0",
+]
+
+[tool.ruff]
+line-length = 90
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sematic"]
+
+# Use a single line after each import block.
+lines-after-imports = 2
+
+[tool.pylsp.plugins.ruff]
+enabled = true
+
+[[tool.mypy.overrides]]
+module = "yaml.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "transformers.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "torch.*"
+ignore_missing_imports = true
+
+[tool.uv.sources]
+sematic = { workspace = true }

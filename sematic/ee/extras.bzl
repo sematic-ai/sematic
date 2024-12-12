@@ -21,7 +21,6 @@ EXTRAS = {
 
 EXAMPLE_MODULES = [
     "//sematic/examples/cifar_classifier:cifar_classifier_lib",
-    "//sematic/examples/lightning_resnet:lib",
     "//sematic/examples/testing_pipeline:testing_pipeline_lib",
 ]
 

@@ -7,11 +7,9 @@ from unittest.mock import patch
 import flask.testing
 
 # Sematic
-from sematic.api.tests.fixtures import (  # noqa: F401
-    make_auth_test,
-    mock_auth,
-    test_client,
-)
+from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
@@ -163,9 +161,10 @@ def test_clean(mock_auth, test_client):  # noqa: F811
         deallocation_seconds=0.0,
         max_active_seconds=30.0,
     )
-    with patch(f"{module}.get_external_resource_record") as mock_get_resource, patch(
-        f"{module}.save_external_resource_record"
-    ) as mock_save:
+    with (
+        patch(f"{module}.get_external_resource_record") as mock_get_resource,
+        patch(f"{module}.save_external_resource_record") as mock_save,
+    ):
         resource1 = TimedMessage(**message_kwargs)
         record1 = ExternalResource.from_resource(resource1)
 

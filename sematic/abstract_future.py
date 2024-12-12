@@ -2,6 +2,7 @@
 `AbstractFuture` is needed to resolve circular dependencies
 between `Future` and `Resolver`.
 """
+
 # Standard Library
 import abc
 import enum
@@ -393,12 +394,16 @@ def clone_future(future: AbstractFuture) -> AbstractFuture:
         kwargs=dict(future.kwargs),
         standalone=future.props.standalone,
         cache=future.props.cache,
-        resource_requirements=None
-        if future.props.resource_requirements is None
-        else future.props.resource_requirements.clone(),
-        retry_settings=None
-        if future.props.retry_settings is None
-        else replace(future.props.retry_settings),
+        resource_requirements=(
+            None
+            if future.props.resource_requirements is None
+            else future.props.resource_requirements.clone()
+        ),
+        retry_settings=(
+            None
+            if future.props.retry_settings is None
+            else replace(future.props.retry_settings)
+        ),
         base_image_tag=future.props.base_image_tag,
         timeout_mins=future.props.timeout_mins,
     )

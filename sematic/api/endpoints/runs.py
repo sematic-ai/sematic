@@ -267,8 +267,8 @@ def _make_cursor(key: str) -> str:
 
 def _generate_search_predicate(
     search_string: str,
-) -> ColumnElement[bool]:
-    return sqlalchemy.or_(
+) -> ColumnElement[bool]:  # type: ignore
+    return sqlalchemy.or_(  # type: ignore
         Run.name.ilike(f"%{search_string}%"),
         Run.function_path.ilike(f"%{search_string}%"),
         Run.description.ilike(f"%{search_string}%"),

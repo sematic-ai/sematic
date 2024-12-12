@@ -1,6 +1,7 @@
 """
 Module declaring the interface for metrics storage plug-ins.
 """
+
 # Standard Library
 import abc
 import enum

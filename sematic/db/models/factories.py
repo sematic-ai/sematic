@@ -1,6 +1,7 @@
 """
 Functions to generate models.
 """
+
 # Standard Library
 import datetime
 import enum

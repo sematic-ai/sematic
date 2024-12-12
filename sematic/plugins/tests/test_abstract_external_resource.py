@@ -43,7 +43,7 @@ def test_update():
     assert updated.status.message == updated_message
 
 
-def test_activate():
+def test_activate() -> None:
     @dataclass(frozen=True)
     class ValidImpl(AbstractExternalResource):
         is_local: bool = False
@@ -61,8 +61,8 @@ def test_activate():
 
     activating_local = ValidImpl().activate(True)
     activating_remote = ValidImpl().activate(False)
-    assert activating_local.is_local
-    assert not activating_remote.is_local
+    assert activating_local.is_local  # type: ignore
+    assert not activating_remote.is_local  # type: ignore
 
     @dataclass(frozen=True)
     class InvalidImpl(AbstractExternalResource):

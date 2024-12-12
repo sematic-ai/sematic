@@ -18,6 +18,7 @@ at this time). Users then specify in the `sematic.func` decorator what base
 image to use with the `base_image_tag` argument that should correspond to one of
 the keys in the mapping passed to `sematic_pipeline`.
 """
+
 # Standard Library
 import dataclasses
 import json
@@ -27,7 +28,7 @@ from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
 from sqlalchemy import ForeignKey, types
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.orm import Mapped, mapped_column, validates  # type: ignore
 
 # Sematic
 from sematic.db.models.base import Base

@@ -1,6 +1,7 @@
 """
 The native Docker Builder plugin configuration file management module.
 """
+
 # Standard Library
 import functools
 import json

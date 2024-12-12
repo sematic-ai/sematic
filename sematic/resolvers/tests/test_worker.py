@@ -13,12 +13,10 @@ import pytest
 # Sematic
 from sematic import api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_auth,
-    mock_requests,
-    mock_socketio,
-    test_client,
-)
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
 from sematic.config.tests.fixtures import mock_settings
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.edge import Edge

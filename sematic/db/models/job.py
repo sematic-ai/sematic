@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Sequence, Tuple, Union
 
 # Third-party
 from sqlalchemy import ForeignKey, types
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column  # type: ignore
 
 # Sematic
 from sematic.db.models.base import Base
@@ -78,9 +78,9 @@ class Job(Base, JSONEncodableMixin):
     detail_serialization: Mapped[Dict[str, Any]] = mapped_column(  # type: ignore
         types.JSON(), nullable=False
     )
-    status_history_serialization: Mapped[
-        List[Dict[str, Union[str, float]]]
-    ] = mapped_column(types.JSON(), nullable=False)
+    status_history_serialization: Mapped[List[Dict[str, Union[str, float]]]] = (
+        mapped_column(types.JSON(), nullable=False)
+    )
     created_at: Mapped[datetime.datetime] = mapped_column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )

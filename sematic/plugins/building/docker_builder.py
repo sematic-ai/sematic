@@ -1,6 +1,7 @@
 """
 The native Docker Builder plugin implementation.
 """
+
 # Standard Library
 import glob
 import logging

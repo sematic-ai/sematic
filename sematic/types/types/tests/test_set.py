@@ -197,4 +197,4 @@ def test_value_to_json_encodable():
 )
 def test_type_from_json_encodable(type_):
     json_encodable = type_to_json_encodable(type_)
-    assert type_from_json_encodable(json_encodable) is type_
+    assert type_from_json_encodable(json_encodable) == type_

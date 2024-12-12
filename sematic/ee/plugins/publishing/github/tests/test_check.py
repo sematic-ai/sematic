@@ -95,13 +95,15 @@ def commit_check_environment(test_db, allow_any_run_state_transition):  # noqa: 
     for resolution in [resolution_1a, resolution_1b, resolution_2a, resolution_2b]:
         save_resolution(resolution)
 
-    with patch(
-        "sematic.ee.plugins.publishing.github.check.requests"
-    ) as mock_requests, patch(
-        "sematic.ee.plugins.publishing.github.check.get_access_token"
-    ) as mock_get_access_token, patch(
-        "sematic.ee.plugins.publishing.github.check._details_url"
-    ) as mock_details_url:
+    with (
+        patch("sematic.ee.plugins.publishing.github.check.requests") as mock_requests,
+        patch(
+            "sematic.ee.plugins.publishing.github.check.get_access_token"
+        ) as mock_get_access_token,
+        patch(
+            "sematic.ee.plugins.publishing.github.check._details_url"
+        ) as mock_details_url,
+    ):
         mock_get_access_token.return_value = "fake-token"
         mock_details_url.side_effect = lambda sha: f"http://sematic.test/{sha}"
 

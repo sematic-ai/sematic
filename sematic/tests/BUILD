@@ -29,39 +29,6 @@ pytest_test(
     ],
 )
 
-# <add python version>: A new test will need to be added when a python version is added
-pytest_test(
-    name = "test_3_8_interpreter",
-    srcs = ["test_3_8_interpreter.py"],
-    pip_deps = ["requests"],
-    py_versions = [PY3.PY3_8],
-    deps = [],
-)
-
-pytest_test(
-    name = "test_3_9_interpreter",
-    srcs = ["test_3_9_interpreter.py"],
-    pip_deps = ["requests"],
-    py_versions = [PY3.PY3_9],
-    deps = [],
-)
-
-pytest_test(
-    name = "test_3_10_interpreter",
-    srcs = ["test_3_10_interpreter.py"],
-    pip_deps = ["requests"],
-    py_versions = [PY3.PY3_10],
-    deps = [],
-)
-
-pytest_test(
-    name = "test_3_11_interpreter",
-    srcs = ["test_3_11_interpreter.py"],
-    pip_deps = ["requests"],
-    py_versions = [PY3.PY3_11],
-    deps = [],
-)
-
 pytest_test(
     name = "test_3_10_function",
     srcs = ["test_3_10_function.py"],
@@ -168,6 +135,7 @@ pytest_test(
 pytest_test(
     name = "test_graph",
     srcs = ["test_graph.py"],
+    py_versions = [PY3.PY3_9, PY3.PY3_10, PY3.PY3_11],
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",

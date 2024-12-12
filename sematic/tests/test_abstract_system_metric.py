@@ -185,4 +185,11 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
             ),
         )
     ]
-    check_approximate_equality(series_container.series, expected)
+    check_approximate_equality(
+        series_container.series,
+        expected,
+        # This test is non-deterministic depending on what timezone it is run in and
+        # at what time of day.  Allow the timestamp to vary by a day to allow for that.
+        # TODO: make test independent of time of day/timezone.
+        equality_epsilon=DAY_SECONDS,
+    )

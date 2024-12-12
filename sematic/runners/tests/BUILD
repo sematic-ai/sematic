@@ -1,6 +1,7 @@
 pytest_test(
     name = "test_local_runner",
     srcs = ["test_local_runner.py"],
+    py_versions = [PY3.PY3_9, PY3.PY3_10, PY3.PY3_11],
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_function",
@@ -40,6 +41,7 @@ pytest_test(
 pytest_test(
     name = "test_cloud_runner",
     srcs = ["test_cloud_runner.py"],
+    py_versions = [PY3.PY3_9, PY3.PY3_10, PY3.PY3_11],
     deps = [
         "//sematic:api_client",
         "//sematic:function",

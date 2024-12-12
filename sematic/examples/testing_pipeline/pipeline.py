@@ -1,6 +1,7 @@
 """
 Flexible-structure pipeline meant to be used in testing.
 """
+
 # Standard Library
 import logging
 import os

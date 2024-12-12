@@ -4,6 +4,7 @@ Module defining AbstractFunction.
 This is needed to avoid circular dependencies between
 modules for Function and Future.
 """
+
 # Standard Library
 import abc
 import typing

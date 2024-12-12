@@ -20,13 +20,11 @@ from sematic.abstract_plugin import (
     PluginScope,
     PluginVersion,
 )
-from sematic.api.tests.fixtures import (  # noqa: F401
-    make_auth_test,
-    mock_auth,
-    mock_requests,
-    test_client,
-    with_auth,
-)
+from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401
+from sematic.api.tests.fixtures import with_auth  # noqa: F401; noqa: F401
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run

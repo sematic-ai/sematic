@@ -563,13 +563,13 @@ def _schedule_kubernetes_job(
     environment_vars = dict(environment_vars)
 
     if api_address_override is not None:
-        environment_vars[
-            UserSettingsVar.SEMATIC_API_ADDRESS.value
-        ] = api_address_override
+        environment_vars[UserSettingsVar.SEMATIC_API_ADDRESS.value] = (
+            api_address_override
+        )
     if socketio_address_override is not None:
-        environment_vars[
-            ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS.value
-        ] = socketio_address_override
+        environment_vars[ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS.value] = (
+            socketio_address_override
+        )
 
     # TODO: Remove this once logging is properly using storage settings.
     # As of this authorship, worker/driver jobs are not getting settings
@@ -1008,9 +1008,9 @@ def _host_path_volumes(
     return volume, volume_mount
 
 
-def _get_image_pull_secrets() -> Optional[
-    List[kubernetes.client.V1LocalObjectReference]
-]:
+def _get_image_pull_secrets() -> (
+    Optional[List[kubernetes.client.V1LocalObjectReference]]
+):
     """Get custom image pull secrets based on server configuration.
 
     Uses the WORKER_IMAGE_PULL_SECRETS configuration.

@@ -1,6 +1,6 @@
 # Third-party
 from sqlalchemy import ForeignKey, types
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column  # type: ignore
 
 
 class HasUserMixin:

@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 import sys
 
 
@@ -7,7 +8,9 @@ def test_import():
     Tests that importing `sematic.db.git` does not automatically import the git-python
     `git` module directly.
     """
-    assert "git" not in sys.modules.keys()
+    if "git" in sys.modules.keys():
+        logging.warning("This test should be run in its own interpreter")
+        return
     # Sematic
     import sematic.utils.git  # noqa: F401
 

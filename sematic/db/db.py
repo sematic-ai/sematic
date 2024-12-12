@@ -1,6 +1,7 @@
 """
 Module keeping the connection to the DB.
 """
+
 # Standard Library
 import typing
 from contextlib import contextmanager

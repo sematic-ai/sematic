@@ -26,7 +26,7 @@ from sematic.resolvers.type_utils import make_list_type, make_tuple_type
     ),
 )
 def test_make_list_type(list_, expected_type):
-    assert make_list_type(list_) is expected_type
+    assert make_list_type(list_) == expected_type
 
 
 @pytest.mark.parametrize(

@@ -54,7 +54,7 @@ class SearchRequestParameters:
     order: Callable[[Any], Any]
     cursor: Optional[str]
     group_by: Optional[sqlalchemy.Column]
-    filters: Optional[ColumnElement[bool]]
+    filters: Optional[ColumnElement[bool]]  # type: ignore
     fields: Optional[List[str]]
 
 
@@ -324,7 +324,7 @@ def _get_sql_predicates(
     filters: Filters,
     column_mapping: ColumnMapping,
     model: type,
-) -> ColumnElement[bool]:
+) -> ColumnElement[bool]:  # type: ignore
     """
     Basic support for AND and OR filter predicates.
 
@@ -353,7 +353,7 @@ def _get_sql_predicates(
         filters = cast(BooleanPredicate, filters)
         operand = cast(Literal["AND", "OR"], operand)
         operator = dict(AND=sqlalchemy.and_, OR=sqlalchemy.or_)[operand]
-        return operator(
+        return operator(  # type: ignore
             *[
                 _extract_predicate(filter_, column_mapping, model)
                 for filter_ in filters[operand]
@@ -361,7 +361,9 @@ def _get_sql_predicates(
         )
     else:
         filter_ = cast(ColumnPredicate, filters)
-        return sqlalchemy.and_(_extract_predicate(filter_, column_mapping, model))
+        return sqlalchemy.and_(  # type: ignore
+            _extract_predicate(filter_, column_mapping, model)
+        )
 
 
 def _extract_predicate(

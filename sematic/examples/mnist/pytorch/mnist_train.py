@@ -4,6 +4,7 @@ Sematic, using the CloudResolver.
 
 This is the same pipeline from the local example in __main__.py.
 """
+
 # Standard Library
 # MNIST example
 import argparse

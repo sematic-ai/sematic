@@ -1,6 +1,7 @@
 """
 The GitHub Publisher plugin implementation.
 """
+
 # Standard Library
 import logging
 from typing import Any, Type, cast

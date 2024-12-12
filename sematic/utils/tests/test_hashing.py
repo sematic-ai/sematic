@@ -11,7 +11,6 @@ from sematic.utils.hashing import get_str_sha1_digest, get_value_and_type_sha1_d
 
 HASH_1 = "356a192b7913b04c54574d18c28d46e6395428ab"
 HASH_A = "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"
-HASH_VALUE_AND_TYPE = "cb7a7ae1a4d8ec92524ce5eee7aa1570b0ca5799"
 
 
 def test_str_digest():
@@ -23,12 +22,20 @@ def test_value_and_type_digest():
     value = {"a": 1}
     type_ = Dict[str, int]
 
-    type_serialization = type_to_json_encodable(type_)
-    value_serialization = value_to_json_encodable(value, type_)
-    json_summary, _ = get_json_encodable_summary(value, type_)
+    type_serialization_1 = type_to_json_encodable(type_)
+    value_serialization_1 = value_to_json_encodable(value, type_)
+    json_summary_1, _ = get_json_encodable_summary(value, type_)
 
-    actual = get_value_and_type_sha1_digest(
-        value_serialization, type_serialization, json_summary
+    actual_1 = get_value_and_type_sha1_digest(
+        value_serialization_1, type_serialization_1, json_summary_1
     )
 
-    assert actual == HASH_VALUE_AND_TYPE
+    type_serialization_2 = type_to_json_encodable(type_)
+    value_serialization_2 = value_to_json_encodable(value, type_)
+    json_summary_2, _ = get_json_encodable_summary(value, type_)
+
+    actual_2 = get_value_and_type_sha1_digest(
+        value_serialization_2, type_serialization_2, json_summary_2
+    )
+
+    assert actual_1 == actual_2

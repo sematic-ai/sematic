@@ -1,6 +1,7 @@
 """
 typing logic for the `int` type.
 """
+
 # Standard Library
 import inspect
 import numbers

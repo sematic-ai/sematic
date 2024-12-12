@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 
 # Third-party
 from sqlalchemy import ForeignKey, types
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates  # type: ignore
 
 # Sematic
 from sematic.abstract_function import AbstractFunction
@@ -138,9 +138,9 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     nested_future_id: Mapped[Optional[str]] = mapped_column(
         types.String(), nullable=True
     )
-    exception_metadata_json: Mapped[
-        Optional[Dict[str, Union[str, List[str]]]]
-    ] = mapped_column(types.JSON(), nullable=True)
+    exception_metadata_json: Mapped[Optional[Dict[str, Union[str, List[str]]]]] = (
+        mapped_column(types.JSON(), nullable=True)
+    )
     external_exception_metadata_json: Mapped[
         Optional[Dict[str, Union[str, List[str]]]]
     ] = mapped_column(types.JSON(), nullable=True)
@@ -179,8 +179,12 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     )
 
     # Relationships
-    root_run: Mapped["Run"] = relationship("Run", remote_side=[id], lazy="select")
-    pipeline_run: Mapped[Resolution] = relationship(
+    root_run: Mapped["Run"] = relationship(  # type: ignore
+        "Run",
+        remote_side=[id],
+        lazy="select",
+    )
+    pipeline_run: Mapped[Resolution] = relationship(  # type: ignore
         "Resolution",
         foreign_keys=[root_id],
         viewonly=True,

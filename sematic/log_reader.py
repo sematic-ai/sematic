@@ -177,9 +177,9 @@ class Cursor:
     def nothing_found(cls, filter_strings: List[str], run_id: str, reverse: bool):
         return Cursor(
             source_log_key=None,
-            source_file_line_index=DEFAULT_END_INDEX
-            if reverse
-            else DEFAULT_START_INDEX,
+            source_file_line_index=(
+                DEFAULT_END_INDEX if reverse else DEFAULT_START_INDEX
+            ),
             filter_strings=filter_strings,
             run_id=run_id,
             traversal_had_lines=False,
@@ -404,11 +404,11 @@ def _load_non_inline_logs(
             can_continue_backward=False,
             lines=[],
             line_ids=[],
-            forward_cursor_token=Cursor.nothing_found(
-                filter_strings, run_id, reverse=False
-            ).to_token()
-            if still_running
-            else None,
+            forward_cursor_token=(
+                Cursor.nothing_found(filter_strings, run_id, reverse=False).to_token()
+                if still_running
+                else None
+            ),
             reverse_cursor_token=None,
             log_info_message="No log files found",
         )
@@ -468,11 +468,11 @@ def _load_inline_logs(
         return LogLineResult(
             can_continue_forward=still_running,
             can_continue_backward=False,
-            forward_cursor_token=Cursor.nothing_found(
-                filter_strings, run_id, reverse=False
-            ).to_token()
-            if still_running
-            else None,
+            forward_cursor_token=(
+                Cursor.nothing_found(filter_strings, run_id, reverse=False).to_token()
+                if still_running
+                else None
+            ),
             reverse_cursor_token=None,
             lines=[],
             line_ids=[],

@@ -1,5 +1,4 @@
 # Standard Library
-import os
 import re
 
 # Third-party
@@ -66,21 +65,6 @@ def test_helm_chart():
         f"match the version in 'versions.py' {CURRENT_VERSION}."
     )
     assert values_version == CURRENT_VERSION, message
-
-
-def test_bazel_wheel_version():
-    version_string = os.environ.get("BAZEL_WHEEL_VERSION")
-
-    assert (
-        len(version_string) is not None
-    ), "Could not find a release version in 'wheel_constants.bzl'."
-
-    bazel_wheel_version = string_version_to_tuple(version_string)
-    message = (
-        f"Version in 'wheel_constants.bzl' {bazel_wheel_version} doesn't "
-        f"match the version in 'versions.py' {CURRENT_VERSION}"
-    )
-    assert bazel_wheel_version == CURRENT_VERSION, message
 
 
 def test_pypi_badge():

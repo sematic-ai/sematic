@@ -421,10 +421,10 @@ class CloudRunner(LocalRunner):
 
         delay_between_updates = 1.0
         while True:
-            updated_states: Dict[
-                str, FutureState
-            ] = api_client.update_run_future_states(
-                list(scheduled_futures_by_id.keys())
+            updated_states: Dict[str, FutureState] = (
+                api_client.update_run_future_states(
+                    list(scheduled_futures_by_id.keys())
+                )
             )
             logger.info(
                 "Checking for updates on run ids: %s",
