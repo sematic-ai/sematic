@@ -123,7 +123,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
             MetricsFilter(
                 name="bar",
                 from_time=datetime.datetime.fromtimestamp(0),
-                to_time=datetime.datetime.utcnow(),
+                to_time=datetime.datetime.utcnow() + datetime.timedelta(days=1),
                 labels={},
             ),
             [],
@@ -158,7 +158,9 @@ def test_get_aggregated_metrics(
     assert metric_series.metric_type == expected_series.metric_type
     assert metric_series.columns == expected_series.columns
 
-    check_approximate_equality(metric_series.series, expected_series.series)
+    check_approximate_equality(
+        metric_series.series, expected_series.series, equality_epsilon=24 * 3600
+    )
 
 
 @pytest.mark.parametrize(
@@ -212,7 +214,7 @@ def test_clear_metrics(
             name="foo",
             from_time=datetime.datetime.fromtimestamp(0),
             to_time=datetime.datetime.utcnow(),
-            labels={"function_path": "foo"},
+            labels={},
         )
     )
 

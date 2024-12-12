@@ -182,8 +182,9 @@ jobs:
             username: $SEMATIC_DOCKERHUB_USER
             password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
-      - attach_workspace:
-          at: /home/circleci
+      - run:
+          name: Py-prep
+          command: make py-prep
       # Uncomment to profile CPU/Memory
       # - run:
       #    name: Profile CPU and memory (background)
@@ -275,7 +276,6 @@ workflows:
   sematic-test:
     jobs:
       - init
-      - uv-init
       - lint:
           requires:
             - init
@@ -285,9 +285,7 @@ workflows:
       - unit-tests:
           requires:
             - init
-      - uv-unit-tests:
-          requires:
-            - uv-init
+      - uv-unit-tests
       - installation:
           requires:
             - init
