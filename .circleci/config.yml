@@ -76,7 +76,7 @@ commands:
     steps:
       - run:
           name: Run Non-coverage Tests
-          command: source ./.venv/bin/activate && pytest
+          command: source ./.venv/bin/activate && .venv/bin/pytest
 
   installation-tests:
     description: Do a test of installing sematic via wheel

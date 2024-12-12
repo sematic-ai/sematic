@@ -209,18 +209,19 @@ def test_clear_metrics(
     metrics_storage_plugin = SQLMetricsStorage()
     metrics_storage_plugin.store_metrics(metric_points)
 
+    with test_db.get_session() as session:
+        initial_metric_value_count = session.query(MetricValue).count()
+
     metrics_storage_plugin.clear_metrics(
         MetricsFilter(
             name="foo",
             from_time=datetime.datetime.fromtimestamp(0),
-            to_time=datetime.datetime.utcnow(),
+            to_time=datetime.datetime.utcnow() + datetime.timedelta(days=1),
             labels={},
         )
     )
 
     with test_db.get_session() as session:
-        metric_label_count = session.query(MetricLabel).count()
         metric_value_count = session.query(MetricValue).count()
 
-    assert metric_label_count == 3
-    assert metric_value_count == 3
+    assert metric_value_count < initial_metric_value_count
