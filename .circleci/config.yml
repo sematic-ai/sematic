@@ -182,6 +182,7 @@ jobs:
             username: $SEMATIC_DOCKERHUB_USER
             password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
+      - checkout
       - run:
           name: Py-prep
           command: make py-prep
