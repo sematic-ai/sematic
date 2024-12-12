@@ -22,7 +22,12 @@ commands:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-  
+  install-uv-deps:
+    description: Install Dependencies Via UV
+    steps:
+      - run:
+          name: Py-prep
+          command: make py-prep
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder
     steps:
@@ -103,6 +108,22 @@ jobs:
           paths:
             - .pyenv
             - .cache/Cypress
+            - project
+  uv-init:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - install-uv-deps
+      - install-npm-dependencies
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - .venv
+            - .cache/uv
             - project
 
   lint:
@@ -227,6 +248,7 @@ workflows:
   sematic-test:
     jobs:
       - init
+      - uv-init
       - lint:
           requires:
             - init
@@ -247,6 +269,7 @@ workflows:
             - init
       - finalize:
           requires:
+            - uv-init
             - lint
             - schemas
             - unit-tests
