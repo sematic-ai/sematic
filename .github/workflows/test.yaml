@@ -15,3 +15,7 @@ jobs:
         run: |
           source .venv/bin/activate
           pytest
+      - name: Wheel
+        run: |
+          make ui
+          make wheel

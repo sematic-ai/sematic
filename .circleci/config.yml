@@ -22,12 +22,6 @@ commands:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-  install-uv-deps:
-    description: Install Dependencies Via UV
-    steps:
-      - run:
-          name: Py-prep
-          command: make py-prep
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder
     steps:
@@ -57,27 +51,6 @@ commands:
       - run:
           name: Check DB Schema
           command: make migrate_up_sqlite && make update-schema && git diff --exit-code
-
-  non-coverage-tests:
-    description: Do tests without tracking code coverage
-    steps:
-      # Pre-build Sematic so we can retry if there are errors due to downloading deps
-      - run:
-          name: Pre-build Sematic
-          command: |
-            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
-            retry 5 bazel build --experimental_repository_downloader_retries=5 //sematic/...
-      - run:
-          name: Run Non-coverage Tests
-          # This assumes pytest is installed via the install-package step above
-          command: PYTHONUNBUFFERED=1 bazel test --experimental_repository_downloader_retries=5 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
-  non-coverage-tests-uv:
-    description: Do tests without tracking code coverage
-    steps:
-      - run:
-          name: Run Non-coverage Tests
-          command: source ./.venv/bin/activate && .venv/bin/pytest
-
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
@@ -115,22 +88,6 @@ jobs:
             - .pyenv
             - .cache/Cypress
             - project
-  uv-init:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - install-uv-deps
-      - install-npm-dependencies
-      - persist_to_workspace:
-          root: /home/circleci
-          paths:
-            - .venv
-            - .cache/uv
-            - project
 
   lint:
     docker:
@@ -153,52 +110,6 @@ jobs:
       - attach_workspace:
           at: /home/circleci
       - validate-schemas
-      
-  unit-tests:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - attach_workspace:
-          at: /home/circleci
-      # Uncomment to profile CPU/Memory
-      # - run:
-      #    name: Profile CPU and memory (background)
-      #    command: |
-      #      while true; do
-      #        sleep 2
-      #        printf "\n\n$(date)\n"
-      #        top -b -c -n 1
-      #        echo "======"
-      #      done
-      #    background: true
-      - non-coverage-tests
-  uv-unit-tests:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - run:
-          name: Py-prep
-          command: make py-prep
-      # Uncomment to profile CPU/Memory
-      # - run:
-      #    name: Profile CPU and memory (background)
-      #    command: |
-      #      while true; do
-      #        sleep 2
-      #        printf "\n\n$(date)\n"
-      #        top -b -c -n 1
-      #        echo "======"
-      #      done
-      #    background: true
-      - non-coverage-tests-uv
-
   installation:
     docker:
       - image: $SEMATIC_CI_IMAGE
@@ -283,10 +194,6 @@ workflows:
       - schemas:
           requires:
             - init
-      - unit-tests:
-          requires:
-            - init
-      - uv-unit-tests
       - installation:
           requires:
             - init
@@ -298,9 +205,7 @@ workflows:
             - init
       - finalize:
           requires:
-            - uv-unit-tests
             - lint
             - schemas
-            - unit-tests
             - integration-test
             - fe-unit-tests

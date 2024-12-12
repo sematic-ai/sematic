@@ -14,6 +14,7 @@ dependencies = [
 
   # Code
   "pyyaml>=6.0.1",
+  "python-magic>=0.4.27",
 
   # Git integration
   "git-python>=1.0.3",
@@ -55,6 +56,17 @@ build-backend = "setuptools.build_meta"
 py-modules = [
   "sematic",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sematic*"]
+exclude = ["tests*", "*.tests*"]
+
+[tool.setuptools.package-data]
+sematic = ["sematic/ui/build/**/*"]
+
+[project.scripts]
+sematic = "sematic.cli.main:cli"
 
 [project.optional-dependencies]
 examples = [

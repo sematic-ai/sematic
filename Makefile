@@ -88,16 +88,34 @@ wheel : sematic/ui/build
 	rm README.nohtml
 	bazel build //sematic:wheel
 
+uv-wheel:
+	cat README.md | \
+		grep -v "<img" | \
+		grep -v "<p" | \
+		grep -v "/p>" | \
+		grep -v "<h2" | \
+		grep -v "/h2>" | \
+		grep -v "<h3" | \
+		grep -v "/h3>" | \
+		grep -v "<a" | \
+		grep -v "/a>" | \
+		grep -v "/img>" > README.nohtml
+	uvx m2r --overwrite README.nohtml
+	cp BUILD tmp.BUILD
+	rm -rf dist build src/*.egg-info
+	uvx pip wheel -w dist . && rm -rf build && mv tmp.BUILD BUILD
+	rm README.nohtml
+
 test-release:
-	python3 -m twine check bazel-bin/sematic/*.whl
-	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
+	uvx twine check ./dist/*sematic*.whl
+	uvx twine upload --repository testpypi ./dist/*sematic*.whl
 
 release:
-	python3 -m twine upload bazel-bin/sematic/*.whl
+	uvx twine upload ./dist/*sematic*.whl
 
 release-server:
 	rm -f docker/*.whl
-	cp bazel-bin/sematic/*.whl docker/
+	cp ./dist/*sematic*.whl docker/
 	cd docker; docker build --build-arg EXTRA=default -t sematic/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematic/sematic-server:${TAG}
 	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
