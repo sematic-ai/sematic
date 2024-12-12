@@ -1,0 +1,17 @@
+name: Python Test
+
+on:
+  push
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Py-prep
+        run: make py-prep
+      - name: Activate env
+        run: source .venv/bin/activate
+      - name: Test
+        run: pytest
