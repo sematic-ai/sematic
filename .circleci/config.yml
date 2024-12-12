@@ -71,6 +71,12 @@ commands:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test --experimental_repository_downloader_retries=5 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
+  non-coverage-tests-uv:
+    description: Do tests without tracking code coverage
+    steps:
+      - run:
+          name: Run Non-coverage Tests
+          command: source ./.venv/bin/activate && pytest
 
   installation-tests:
     description: Do a test of installing sematic via wheel
@@ -169,6 +175,27 @@ jobs:
       #      done
       #    background: true
       - non-coverage-tests
+  uv-unit-tests:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      # Uncomment to profile CPU/Memory
+      # - run:
+      #    name: Profile CPU and memory (background)
+      #    command: |
+      #      while true; do
+      #        sleep 2
+      #        printf "\n\n$(date)\n"
+      #        top -b -c -n 1
+      #        echo "======"
+      #      done
+      #    background: true
+      - non-coverage-tests-uv
 
   installation:
     docker:
@@ -258,6 +285,9 @@ workflows:
       - unit-tests:
           requires:
             - init
+      - uv-unit-tests:
+          requires:
+            - uv-init
       - installation:
           requires:
             - init
@@ -269,7 +299,7 @@ workflows:
             - init
       - finalize:
           requires:
-            - uv-init
+            - uv-unit-tests
             - lint
             - schemas
             - unit-tests
