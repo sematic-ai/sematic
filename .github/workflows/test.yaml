@@ -12,6 +12,6 @@ jobs:
       - name: Py-prep
         run: make py-prep
       - name: Activate env
-        run: source .venv/bin/activate
-      - name: Test
-        run: pytest
+        run: |
+          source .venv/bin/activate
+          pytest
