@@ -8,10 +8,10 @@ migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
 
 migrate_up_sqlite:
-	bazel run //sematic/db:migrate -- up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 migrate_down_sqlite:
-	bazel run //sematic/db:migrate -- down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
@@ -41,20 +41,10 @@ py-sync:
 
 .PHONY: update-schema
 update-schema:
-	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
-# this is not supported on Mac because some of the dependencies that need to be pulled
-# do not have a release version for Mac
 refresh-dependencies:
-ifeq ($(UNAME_S),Linux)
-	bazel run //requirements:requirements3_8.update
-	bazel run //requirements:requirements3_9.update
-	bazel run //requirements:requirements3_10.update
-	bazel run //requirements:requirements3_11.update
-else
-	echo "${RED}Refreshing dependencies should only be done from Linux${NO_COLOR}"
-	exit 1
-endif
+	uv lock
 
 .PHONY: ui
 ui: sematic/ui/node_modules/.build_timestamp

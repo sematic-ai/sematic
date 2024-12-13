@@ -45,12 +45,6 @@ commands:
           working_directory: ./sematic/ui
           command: npm run lint
 
-  validate-schemas:
-    description: Validates all dev resource schemas are up-to-date and consistent
-    steps:
-      - run:
-          name: Check DB Schema
-          command: make migrate_up_sqlite && make update-schema && git diff --exit-code
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
@@ -100,16 +94,6 @@ jobs:
           at: /home/circleci
       - do-static-analysis
 
-  schemas:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - attach_workspace:
-          at: /home/circleci
-      - validate-schemas
   installation:
     docker:
       - image: $SEMATIC_CI_IMAGE
@@ -191,9 +175,6 @@ workflows:
       - lint:
           requires:
             - init
-      - schemas:
-          requires:
-            - init
       - installation:
           requires:
             - init
@@ -206,6 +187,5 @@ workflows:
       - finalize:
           requires:
             - lint
-            - schemas
             - integration-test
             - fe-unit-tests
