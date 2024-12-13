@@ -33,7 +33,7 @@ py-prep:
 	uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
 	rm -rf ".venv" || echo "No virtualenv yet"
 	uv venv --python 3.12
-	uv sync --extra examples
+	uv sync --extra examples --extra ray
 
 .PHONY: py-sync
 py-sync:
