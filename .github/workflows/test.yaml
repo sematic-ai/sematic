@@ -38,8 +38,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: sematic-wheel
+          path: "./dist/sematic.whl"
       - uses: actions/download-artifact@v4
         with:
           name: sematic-wheel-test
+          path: "test_pip_install.sh"
       - name: Test and Install Wheel
-        run: "bash sematic/tests/integration/test_pip_install.sh"
+        run: "bash test_pip_install.sh"
