@@ -34,7 +34,6 @@ py-prep:
 	rm -rf ".venv" || echo "No virtualenv yet"
 	uv venv --python 3.12
 	uv sync --extra examples
-	uv tool install --force ruff==0.8.2
 
 .PHONY: py-sync
 py-sync:
@@ -100,7 +99,7 @@ uv-wheel:
 		grep -v "<a" | \
 		grep -v "/a>" | \
 		grep -v "/img>" > README.nohtml
-	uvx m2r --overwrite README.nohtml
+	# source .venv/bin/activate && python3 -m pandoc read --format=markdown README.nohtml
 	cp BUILD tmp.BUILD
 	rm -rf dist build src/*.egg-info
 	uvx pip wheel -w dist . && rm -rf build && mv tmp.BUILD BUILD

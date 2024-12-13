@@ -1,7 +1,7 @@
 [project]
 name = "sematic"
 description = "Sematic ML orchestration tool"
-version = "0.41.0"
+version = "0.39.2"
 requires-python = ">=3.9, <3.13"
 dependencies = [
   # System
@@ -47,6 +47,10 @@ dependencies = [
   "google-cloud-storage>=2.10.0",
   "types-google-cloud-ndb>=2.2.0.0",
 ]
+
+[project.readme]
+file = "README.nohtml"
+content-type = "text/markdown"
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]

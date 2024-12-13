@@ -1,3 +1,4 @@
+include README.nohtml
 exclude sematic/examples/lightning_resnet/*.jpg
 exclude sematic/examples/summarization_finetune/images/*.jpg
 exclude sematic/examples/hackernews_summarization/*.png
