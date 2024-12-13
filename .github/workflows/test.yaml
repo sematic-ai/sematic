@@ -21,3 +21,24 @@ jobs:
         run: |
           make ui
           make uv-wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sematic-wheel
+          path: "./dist/*sematic*.whl"
+          retention-days: 10
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sematic-wheel-test
+          path: "sematic/tests/integration/test_pip_install.sh"
+          retention-days: 1
+  test-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sematic-wheel
+      - uses: actions/download-artifact@v4
+        with:
+          name: sematic-wheel-test
+      - name: Test and Install Wheel
+        run: "bash sematic/tests/integration/test_pip_install.sh"

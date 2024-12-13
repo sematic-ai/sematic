@@ -16,7 +16,7 @@ pwd
 
 source ./$VENV_NAME/bin/activate
 
-WHEEL_PATH=$(ls bazel-bin/sematic/sematic-*.whl)
+WHEEL_PATH=$(ls ./dist/*sematic*.whl)
 
 if test -f "$WHEEL_PATH"; then
     echo "Wheel found at $WHEEL_PATH"
@@ -35,7 +35,7 @@ else
     echo "Wheel is $WHEEL_SIZE_MB Mb"
 fi
 
-pip install bazel-bin/sematic/sematic-*.whl
+pip install ./dist/*sematic*.whl
 python3 -c "import sematic; print(sematic.__version__)" || exit 1
 
 deactivate
