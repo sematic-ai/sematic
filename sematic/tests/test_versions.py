@@ -67,6 +67,21 @@ def test_helm_chart():
     assert values_version == CURRENT_VERSION, message
 
 
+def test_pyproject():
+    with open("pyproject.toml", "r") as fp:
+        matches = [re.match(r"version = \"([^\"]+)\"", line.strip()) for line in fp]
+
+    matches = [match for match in matches if match is not None]
+    assert len(matches) >= 1, "No version found in pyproject.toml"
+    version_str = matches[0][1]
+    pyproject_version = string_version_to_tuple(version_str)
+    message = (
+        f"Latest version in 'pyproject.toml' {pyproject_version} doesn't "
+        f"match the version in 'versions.py' {CURRENT_VERSION}."
+    )
+    assert pyproject_version == CURRENT_VERSION, message
+
+
 def test_pypi_badge():
     badge_version = None
     with open("README.md", "r") as fp:

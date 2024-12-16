@@ -16,7 +16,7 @@ jobs:
           source .venv/bin/activate
           pytest
       - name: Check Schemas
-        run: make migrate_up_sqlite && make update-schema && git diff --exit-code
+        run: git checkout . && make migrate_up_sqlite && make update-schema && git diff --exit-code
       - name: Wheel
         run: |
           make ui
