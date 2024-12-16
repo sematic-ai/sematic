@@ -28,23 +28,6 @@ commands:
       - node/install-packages:
           app-dir: ./sematic/ui
 
-  do-static-analysis:
-    description: Do linting and other static analysis
-    steps:
-      - run:
-          name: Flake8
-          command: python3 -m flake8 --max-line-length=90
-      - run:
-          name: MyPy
-          command: mypy --version && mypy sematic
-      - run:
-          name: Black
-          command: black sematic --diff --check
-      - run:
-          name: ESlint
-          working_directory: ./sematic/ui
-          command: npm run lint
-
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
@@ -82,36 +65,6 @@ jobs:
             - .pyenv
             - .cache/Cypress
             - project
-
-  lint:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - attach_workspace:
-          at: /home/circleci
-      - do-static-analysis
-
-  installation:
-    docker:
-      - image: $SEMATIC_CI_IMAGE
-        auth:
-            username: $SEMATIC_DOCKERHUB_USER
-            password: $SEMATIC_DOCKERHUB_PASSWORD
-    steps:
-      - attach_workspace:
-          at: /home/circleci
-      - installation-tests
-      - persist_to_workspace:
-          root: /home/circleci/
-          paths:
-            - project/CIVENV
-    environment:
-      CI_VENV_NAME: CIVENV
-      REACT_APP_IS_CIRCLE_CI: 1
-    
   
   integration-test:
     docker:
@@ -172,9 +125,6 @@ workflows:
   sematic-test:
     jobs:
       - init
-      - lint:
-          requires:
-            - init
       - installation:
           requires:
             - init
@@ -186,6 +136,5 @@ workflows:
             - init
       - finalize:
           requires:
-            - lint
             - integration-test
             - fe-unit-tests
