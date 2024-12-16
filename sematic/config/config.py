@@ -15,6 +15,7 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.versions import string_version_to_tuple, version_as_string
 
+
 logger = logging.getLogger(__name__)
 
 # Support for dropping columns added in 3.35.0
@@ -160,8 +161,7 @@ class Config:
                 f"{SEMATIC_SERVER_ADDRESS_ENV_VAR} is not set."
             )
         if server_address is not None and (
-            server_address.startswith("http://")
-            or server_address.startswith("https://")
+            server_address.startswith("http://") or server_address.startswith("https://")
         ):
             return server_address
         port = os.environ.get("PORT", 80)
@@ -208,9 +208,7 @@ _LOCAL_CONFIG = Config(
     server_address=os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, "127.0.0.1"),
     port=int(os.environ.get("PORT", 5001)),
     api_version=1,
-    db_url=os.environ.get(
-        "DATABASE_URL", f"sqlite:///{get_config_dir()}/{_SQLITE_FILE}"
-    ),
+    db_url=os.environ.get("DATABASE_URL", f"sqlite:///{get_config_dir()}/{_SQLITE_FILE}"),
     server_log_to_stdout=False,
 )
 

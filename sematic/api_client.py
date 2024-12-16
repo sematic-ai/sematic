@@ -35,6 +35,7 @@ from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
 from sematic.versions import CURRENT_VERSION, version_as_string
 
+
 logger = logging.getLogger(__name__)
 
 # set 6 retries for runner -> server API calls in other to weather network disruptions
@@ -593,9 +594,7 @@ def save_metric_points(metric_points: List[MetricPoint]) -> None:
         THe list of metric points to persist.
     """
     payload = dict(
-        metric_points=[
-            metric_point.to_json_encodable() for metric_point in metric_points
-        ]
+        metric_points=[metric_point.to_json_encodable() for metric_point in metric_points]
     )
 
     _post("/metrics", json_payload=payload)

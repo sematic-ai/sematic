@@ -1,6 +1,7 @@
 # Standard Library
 from typing import Any, List, Union
 
+
 try:
     # Python 3.9
     # Standard Library

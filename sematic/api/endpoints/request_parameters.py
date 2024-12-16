@@ -26,6 +26,7 @@ from sqlalchemy.sql.elements import ColumnElement
 # Sematic
 from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
 
+
 logger = logging.getLogger(__name__)
 
 # Default page size
@@ -200,9 +201,7 @@ def list_garbage_ids(
         )
 
     scheme, netloc, path, _, fragment = urlsplit(request_url)
-    current_page_url = urlunsplit(
-        (scheme, netloc, path, encoded_request_args, fragment)
-    )
+    current_page_url = urlunsplit((scheme, netloc, path, encoded_request_args, fragment))
 
     ids = queries[garbage_filter]()
 
@@ -271,9 +270,7 @@ def get_request_parameters(
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
 
     sql_predicates = (
-        _get_sql_predicates(filters, column_mapping, model)
-        if len(filters) > 0
-        else None
+        _get_sql_predicates(filters, column_mapping, model) if len(filters) > 0 else None
     )
 
     order = ORDER_BY_DIRECTIONS.get(args.get("order", default_order))
@@ -438,9 +435,7 @@ def _extract_relationship_predicate(filter: ColumnPredicate, model: type):
         relationship_attribute.property,
         sqlalchemy.orm.relationships.RelationshipProperty,
     ):
-        raise ValueError(
-            f"{relationship_name} is not a relationship property of {model}"
-        )
+        raise ValueError(f"{relationship_name} is not a relationship property of {model}")
 
     relationship_model = relationship_attribute.property.mapper.class_
 

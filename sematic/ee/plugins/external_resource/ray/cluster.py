@@ -29,6 +29,7 @@ from sematic.scheduling.kubernetes import load_kube_config
 from sematic.utils.exceptions import UnsupportedUsageError
 from sematic.utils.retry import retry
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -155,9 +156,7 @@ class RayCluster(AbstractExternalResource):
             # or simply disconnects from it for a remote one.
             ray.shutdown()
         except Exception:
-            logger.exception(
-                "While exiting Ray context, could not disconnect from Ray:"
-            )
+            logger.exception("While exiting Ray context, could not disconnect from Ray:")
         super().__exit__(exc_type, exc_value, exc_traceback)
 
     def _do_activate(self, is_local: bool) -> "RayCluster":
@@ -276,9 +275,7 @@ class RayCluster(AbstractExternalResource):
         return kubernetes.client.AppsV1Api(cls._k8s_client())
 
     @classmethod
-    def _get_kuberay_version(
-        cls, namespace: str
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def _get_kuberay_version(cls, namespace: str) -> Tuple[Optional[str], Optional[str]]:
         """Get the version of Kuberay that's currently present on the cluster.
 
         Parameters
@@ -409,9 +406,7 @@ class RayCluster(AbstractExternalResource):
         is_active, message = cluster._validate_ray()
         if is_active:
             if cluster._n_pods is None:
-                return cluster._with_status(
-                    ResourceState.ACTIVE, "Ray cluster is active"
-                )
+                return cluster._with_status(ResourceState.ACTIVE, "Ray cluster is active")
             else:
                 return cluster._with_status(
                     ResourceState.ACTIVE,
@@ -473,9 +468,7 @@ class RayCluster(AbstractExternalResource):
             )
 
     def _do_deactivate(self) -> "RayCluster":
-        return self._continue_deactivation(
-            "Deactivation requested via the Sematic API."
-        )
+        return self._continue_deactivation("Deactivation requested via the Sematic API.")
 
     def _validate_ray(self) -> Tuple[bool, Optional[str]]:
         """Confirm that the Ray cluster is up and appears healthy.

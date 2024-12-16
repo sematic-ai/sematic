@@ -10,6 +10,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
 )
 
+
 logger = logging.getLogger(__name__)
 
 

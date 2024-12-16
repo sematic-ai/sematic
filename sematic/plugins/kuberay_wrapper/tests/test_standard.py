@@ -19,6 +19,7 @@ from sematic.plugins.kuberay_wrapper.standard import (
 from sematic.utils.env import environment_variables
 from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
 
+
 _TEST_IMAGE_URI = "test_image_uri"
 _TEST_CLUSTER_NAME = "test_cluster_name"
 _TEST_KUBERAY_VERSION = "v0.4.0"
@@ -281,9 +282,7 @@ def test_gpus_not_supported():
                     replace(
                         _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[0],
                         worker_nodes=replace(
-                            _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[
-                                0
-                            ].worker_nodes,
+                            _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[0].worker_nodes,
                             gpu_count=1,
                         ),
                     )
@@ -425,9 +424,7 @@ def test_worker_node_gpus():
                     replace(
                         _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[0],
                         worker_nodes=replace(
-                            _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[
-                                0
-                            ].worker_nodes,
+                            _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[0].worker_nodes,
                             gpu_count=2,
                         ),
                     )
@@ -470,9 +467,7 @@ def test_custom_service_account():
         == custom_sa
     )
     assert (
-        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"][
-            "serviceAccountName"
-        ]
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["serviceAccountName"]
         == custom_sa
     )
     assert (

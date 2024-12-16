@@ -4,6 +4,7 @@
 import os
 import sys
 
+
 # we expect it to run as the main script
 if __name__ == "__main__":
     # we expect to have the SEMATIC_CONTAINER_IMAGE env var set, as that's what the

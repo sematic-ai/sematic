@@ -13,6 +13,7 @@ import platform
 import sys
 from itertools import chain
 
+
 try:
     import bazel_tools  # type: ignore # isort:skip # noqa: F401
 

@@ -17,6 +17,7 @@ from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 from sematic.utils.exceptions import DataIntegrityError
 
+
 _STARTED_AT = datetime.now() - timedelta(days=1)
 
 

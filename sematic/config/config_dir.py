@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 
+
 logger = logging.getLogger(__name__)
 
 _DEFAULT_CONFIG_DIR = ".sematic"

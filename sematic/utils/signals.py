@@ -4,6 +4,7 @@
 from types import FrameType as _FrameType
 from typing import Any, Callable, Optional
 
+
 FrameType = Optional[_FrameType]
 HandlerType = Optional[Callable[[int, FrameType], Any]]
 

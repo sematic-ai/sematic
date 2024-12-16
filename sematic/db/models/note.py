@@ -13,7 +13,6 @@ from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 
 
 class Note(HasUserMixin, Base, JSONEncodableMixin):
-
     __tablename__ = "notes"
 
     id: Mapped[str] = mapped_column(

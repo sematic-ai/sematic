@@ -20,13 +20,14 @@ install-dev-deps:
 	pip3 install -r requirements/ci-requirements.txt
 
 pre-commit:
-	python3 -m flake8
-	python3 -m mypy sematic
-	python3 -m black sematic --check
+	uvx ruff format --check
+	uvx ruff check --fix sematic
+	uv run mypy -p sematic --disable-error-code import-untyped
 	pushd sematic/ui && npm run lint && popd
 
 fix:
-	black sematic
+	uvx ruff format
+	uvx ruff check --fix --show-fixes sematic
 
 .PHONY: py-prep
 py-prep:
@@ -34,6 +35,8 @@ py-prep:
 	rm -rf ".venv" || echo "No virtualenv yet"
 	uv venv --python 3.12
 	uv sync --extra examples --extra ray
+	uv tool install --force ruff==0.8.3
+	uv pip install mypy==1.13.0
 
 .PHONY: py-sync
 py-sync:
@@ -73,8 +76,6 @@ wheel : sematic/ui/build
 		grep -v "<a" | \
 		grep -v "/a>" | \
 		grep -v "/img>" > README.nohtml
-	python3 -m m2r --overwrite README.nohtml
-	rm README.nohtml
 	bazel build //sematic:wheel
 
 uv-wheel:

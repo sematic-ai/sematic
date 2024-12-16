@@ -54,9 +54,7 @@ class LitResnet(LightningModule):
         self.num_samples_per_epoch = num_samples_per_epoch
         self.save_hyperparameters()
         self.model = create_model(num_classes)
-        self.accuracy = torchmetrics.Accuracy(
-            task="multiclass", num_classes=num_classes
-        )
+        self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.num_classes = num_classes
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -92,9 +90,7 @@ class LitResnet(LightningModule):
                 count_by_confusion_key[
                     (int(pred.cpu().numpy()), int(label.cpu().numpy()))
                 ] += 1
-            for key, val in self._create_confusion_metrics(
-                stage, count_by_confusion_key
-            ):
+            for key, val in self._create_confusion_metrics(stage, count_by_confusion_key):
                 self.log(key, val, reduce_fx="sum", sync_dist=True)
 
     def _create_confusion_metrics(
@@ -142,9 +138,7 @@ class LitResnet(LightningModule):
         for missing_label in missing_labels:
             # we know this label didn't show up, so the count for prediction 0
             # is definitely 0.
-            confusion_dicts.append(
-                {"prediction": 0, "label": missing_label, "count": 0}
-            )
+            confusion_dicts.append({"prediction": 0, "label": missing_label, "count": 0})
 
         return (
             pd.DataFrame(confusion_dicts)

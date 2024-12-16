@@ -263,9 +263,7 @@ def test_clone_resolution(resolution: Resolution):  # noqa: F811
 
 
 def test_initialize_future_from_run():
-    created_at = datetime(
-        year=2023, month=8, day=10, tzinfo=timezone(timedelta(hours=4))
-    )
+    created_at = datetime(year=2023, month=8, day=10, tzinfo=timezone(timedelta(hours=4)))
     run = Run(  # noqa: F811
         id="theid",
         original_run_id=None,

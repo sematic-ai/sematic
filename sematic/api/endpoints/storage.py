@@ -16,6 +16,7 @@ from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import StorageDestination, get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
 
+
 logger = logging.getLogger(__name__)
 
 

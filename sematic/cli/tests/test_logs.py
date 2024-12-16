@@ -58,7 +58,10 @@ def fill_log_dir(mock_storage, text_lines, prefix):  # noqa: F811
 
 
 def test_logs(
-    test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    mock_api_client,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     job = make_job(run_id=run.id)
@@ -158,7 +161,10 @@ def test_follow_logs(
 
 
 def test_empty_logs(
-    test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    mock_api_client,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     job = make_job(run_id=run.id)

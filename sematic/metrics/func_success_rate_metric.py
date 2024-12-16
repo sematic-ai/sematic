@@ -11,6 +11,7 @@ from sematic.abstract_system_metric import AbstractSystemMetric
 from sematic.db.models.run import Run
 from sematic.metrics.metric_point import MetricType
 
+
 INCLUDED_STATES = {FutureState.RESOLVED, FutureState.FAILED, FutureState.NESTED_FAILED}
 
 

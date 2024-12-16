@@ -29,6 +29,7 @@ from sematic.runners.local_runner import LocalRunner, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -421,10 +422,8 @@ class CloudRunner(LocalRunner):
 
         delay_between_updates = 1.0
         while True:
-            updated_states: Dict[str, FutureState] = (
-                api_client.update_run_future_states(
-                    list(scheduled_futures_by_id.keys())
-                )
+            updated_states: Dict[str, FutureState] = api_client.update_run_future_states(
+                list(scheduled_futures_by_id.keys())
             )
             logger.info(
                 "Checking for updates on run ids: %s",
@@ -486,7 +485,6 @@ class CloudRunner(LocalRunner):
     def _do_resource_activate(
         cls, resource: AbstractExternalResource
     ) -> AbstractExternalResource:
-
         # Raising the message here rather than from the server ensures the
         # user gets the full message and trace in their logs and dashboard.
         if resource.cloud_requires_standalone() and not context().private.is_standalone:

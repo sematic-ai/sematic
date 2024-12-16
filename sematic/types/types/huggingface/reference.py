@@ -3,14 +3,13 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Type, TypeVar
 
+
 _NOT_RESERVED_CHARS = r"[^/@:]+"
 _CAPTURE_OWNER = f"(?P<owner>{_NOT_RESERVED_CHARS})"
 _CAPTURE_REPO = f"(?P<repo>{_NOT_RESERVED_CHARS})"
 _CAPTURE_SUBSET = f"(?P<subset>{_NOT_RESERVED_CHARS})"
 _CAPTURE_COMMIT = f"(?P<commit>{_NOT_RESERVED_CHARS})"
-_REGEX = (
-    f"({_CAPTURE_OWNER}/)?{_CAPTURE_REPO}(:{_CAPTURE_SUBSET})?(@{_CAPTURE_COMMIT})?"
-)
+_REGEX = f"({_CAPTURE_OWNER}/)?{_CAPTURE_REPO}(:{_CAPTURE_SUBSET})?(@{_CAPTURE_COMMIT})?"
 _COMPILED_REGEX = re.compile(_REGEX)
 
 T = TypeVar("T")

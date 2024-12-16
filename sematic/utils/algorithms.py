@@ -2,6 +2,7 @@
 from collections import deque
 from typing import Callable, Dict, Hashable, List, Optional, TypeVar
 
+
 T = TypeVar("T")
 
 

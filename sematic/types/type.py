@@ -3,6 +3,7 @@ import abc
 import sys
 import typing
 
+
 if (sys.version_info.major, sys.version_info.minor) >= (3, 10):
     # Standard Library
     from types import UnionType  # type: ignore
@@ -48,7 +49,6 @@ def is_type(type_: type) -> bool:
 
 
 class NotASematicTypeError(TypeError):
-
     _NOT_A_SEMATIC_TYPE_ERROR = "{} is not a Sematic type. See https://docs."
 
     def __init__(self, type_: typing.Any):

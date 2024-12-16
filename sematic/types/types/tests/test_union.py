@@ -10,6 +10,7 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
+
 SERIALIZATION_EXAMPLES = [
     (1, Union[int, None]),
     (None, Union[int, None]),

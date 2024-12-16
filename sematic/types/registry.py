@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar, Uni
 from sematic.types.generic_type import GenericType
 from sematic.types.type import get_origin
 
+
 _SUPPORTED_TYPES_DOCS = (
     "https://docs.sematic.dev/type-support/type-support#what-types-are-supported"
 )
@@ -388,10 +389,7 @@ def _is_supported_registry_key(type_: RegistryKey) -> bool:
         subclasses_enum = False
     is_unparameterized_generic = type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
     return (
-        _is_type(type_)
-        or _is_abc(type_)
-        or is_unparameterized_generic
-        or subclasses_enum
+        _is_type(type_) or _is_abc(type_) or is_unparameterized_generic or subclasses_enum
     )
 
 

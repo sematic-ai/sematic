@@ -39,17 +39,13 @@ def _get_requirements(example_path: str) -> List[str]:
 
 def _run_example(example_path: str):
     try:
-        runpy.run_module(
-            _example_path_to_import_path(example_path), run_name="__main__"
-        )
+        runpy.run_module(_example_path_to_import_path(example_path), run_name="__main__")
         click.echo(
             "\nYou run has completed, view it at {}\n".format(get_config().server_url)
         )
     except ModuleNotFoundError as exception:
         click.echo("{}\n".format(exception))
-        click.echo(
-            "The following packages are needed to run {}:\n".format(example_path)
-        )
+        click.echo("The following packages are needed to run {}:\n".format(example_path))
         for requirement in _get_requirements(example_path):
             click.echo("\t{}".format(requirement))
         click.echo("To install them run:\n")

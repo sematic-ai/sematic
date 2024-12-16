@@ -22,6 +22,7 @@ from sematic.config.settings import get_plugin_setting
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 
+
 logger = logging.getLogger(__name__)
 
 _PLUGIN_VERSION = (0, 1, 0)

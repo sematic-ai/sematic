@@ -38,9 +38,7 @@ def test_has_instances_false():
         def can_cast_type(cls, _):
             pass
 
-    with pytest.raises(
-        RuntimeError, match="Type NoInstancesType cannot be instantiated"
-    ):
+    with pytest.raises(RuntimeError, match="Type NoInstancesType cannot be instantiated"):
         NoInstancesType()
 
 

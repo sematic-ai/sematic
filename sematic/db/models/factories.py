@@ -46,9 +46,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         future_state=future.state,
         name=future.props.name,
         function_path=make_func_path(future),
-        parent_id=(
-            future.parent_future.id if future.parent_future is not None else None
-        ),
+        parent_id=(future.parent_future.id if future.parent_future is not None else None),
         nested_future_id=(
             future.nested_future.id if future.nested_future is not None else None
         ),

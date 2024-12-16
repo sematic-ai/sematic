@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from io import FileIO
 from typing import Union, cast
 
+
 # code adapted from: https://stackoverflow.com/a/22434262/2540669
 
 
@@ -56,7 +57,6 @@ def redirect_to_file_descriptor(file_descriptor: int):
     os.set_inheritable(stderr_fd, True)
     # copy stdout_fd before it is overwritten
     with os.fdopen(os.dup(stdout_fd), "wb") as stdout_copied:
-
         # Make extra sure that child processes will be able to inherit
         # the ability to write to the redirected descriptors
         os.set_inheritable(stdout_copied.fileno(), True)
@@ -73,8 +73,11 @@ def redirect_to_file_descriptor(file_descriptor: int):
             os.dup2(file_descriptor, stderr_fd)
             os.set_inheritable(file_descriptor, True)
             try:
-                yield _fileno(stdout_copied), _fileno(  # type: ignore
-                    stderr_copied  # type: ignore
+                yield (
+                    _fileno(stdout_copied),  # type: ignore
+                    _fileno(  # type: ignore
+                        stderr_copied  # type: ignore
+                    ),
                 )  # allow code to be run with the redirected stdout
             finally:
                 # restore stdout & stderr to previous values

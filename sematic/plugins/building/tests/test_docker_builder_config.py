@@ -7,6 +7,7 @@ import pytest
 # Sematic
 from sematic.plugins.building import docker_builder_config
 
+
 # this is the relative path inside the bazel sandbox where the data files will be copied
 # they are repo-relative instead of build file-relative
 RESOURCE_PATH = os.path.join("sematic", "plugins", "building", "tests", "fixtures")

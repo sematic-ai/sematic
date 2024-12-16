@@ -11,6 +11,7 @@ from sematic.abstract_future import AbstractFuture
 from sematic.caching.caching import determine_cache_namespace, get_future_cache_key
 from sematic.runners.state_machine_runner import StateMachineRunner
 
+
 # these values were calculated by hand on paper to validate the algorithm
 # (they were all correct on the first try)
 MY_CACHE_KEY = "ec8eaec9ea3bd0315d5bd0839380ed2cab6bf526_my_namespace"

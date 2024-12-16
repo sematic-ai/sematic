@@ -7,6 +7,7 @@ from dataclasses import dataclass
 # Sematic
 from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +65,6 @@ class Image:
 
 @register_to_json_encodable_summary(Image)
 def image_to_summary(value: Image, _) -> SummaryOutput:
-
     if magic_import_error is not None:
         _log_magic_import_error(magic_import_error, fatal=True)
 

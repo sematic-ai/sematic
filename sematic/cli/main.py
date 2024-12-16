@@ -12,5 +12,6 @@ import sematic.cli.stop  # noqa: F401, E402
 import sematic.cli.version  # noqa: F401, E402
 from sematic.cli.cli import cli  # noqa: E402
 
+
 if __name__ == "__main__":
     cli()

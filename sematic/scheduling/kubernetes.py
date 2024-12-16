@@ -52,6 +52,7 @@ from sematic.scheduling.job_details import (
 )
 from sematic.utils.retry import retry
 
+
 logger = logging.getLogger(__name__)
 _kubeconfig_loaded = False
 
@@ -286,10 +287,7 @@ def refresh_job(job: Job) -> Job:
                         last_updated_epoch_seconds=time.time(),
                     )
                 )
-                if (
-                    time.time() - job.created_at.timestamp()
-                    > _JOB_START_TIMEOUT_SECONDS
-                ):
+                if time.time() - job.created_at.timestamp() > _JOB_START_TIMEOUT_SECONDS:
                     try:
                         # Cancel in case there's still something in K8s
                         # to clean, even though we got a 404 for the job
@@ -400,18 +398,14 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
                 pod.status.conditions,  # type: ignore
                 key=_v1_pod_condition_precedence_key,
             )
-            condition_modifier = (
-                "" if most_recent_condition.status == "True" else "NOT "
-            )
+            condition_modifier = "" if most_recent_condition.status == "True" else "NOT "
             most_recent_condition_message = _make_final_message(
                 f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
                 most_recent_condition.reason,
                 most_recent_condition.message,
             )
             most_recent_condition_name = (
-                f"{condition_modifier}{most_recent_condition.type}".replace(
-                    "NOT ", "Not"
-                )
+                f"{condition_modifier}{most_recent_condition.type}".replace("NOT ", "Not")
             )
 
             if most_recent_condition.type in POD_FAILURE_PHASES:
@@ -424,9 +418,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             has_infra_failure = pod.status.phase != "Pending"
         else:
             # there can be only one
-            most_recent_container_status = pod.status.container_statuses[
-                0
-            ]  # type: ignore
+            most_recent_container_status = pod.status.container_statuses[0]  # type: ignore
 
             container_exit_code = _get_container_exit_code_from_status(
                 most_recent_container_status
@@ -563,9 +555,7 @@ def _schedule_kubernetes_job(
     environment_vars = dict(environment_vars)
 
     if api_address_override is not None:
-        environment_vars[UserSettingsVar.SEMATIC_API_ADDRESS.value] = (
-            api_address_override
-        )
+        environment_vars[UserSettingsVar.SEMATIC_API_ADDRESS.value] = api_address_override
     if socketio_address_override is not None:
         environment_vars[ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS.value] = (
             socketio_address_override
@@ -978,9 +968,7 @@ def _host_path_volumes(
         label_value=host_path_mount.name, label_name="Host path volume name"
     )
 
-    if host_path_mount.node_path is None or not os.path.isabs(
-        host_path_mount.node_path
-    ):
+    if host_path_mount.node_path is None or not os.path.isabs(host_path_mount.node_path):
         raise ValueError(
             f"'hostPath' node path must be a valid absolute path. "
             f"Got: '{host_path_mount.node_path}'"
@@ -1008,9 +996,7 @@ def _host_path_volumes(
     return volume, volume_mount
 
 
-def _get_image_pull_secrets() -> (
-    Optional[List[kubernetes.client.V1LocalObjectReference]]
-):
+def _get_image_pull_secrets() -> Optional[List[kubernetes.client.V1LocalObjectReference]]:
     """Get custom image pull secrets based on server configuration.
 
     Uses the WORKER_IMAGE_PULL_SECRETS configuration.

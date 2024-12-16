@@ -16,6 +16,7 @@ from sematic.log_reader import (
     load_log_lines,
 )
 
+
 DEFAULT_LOG_LOAD_MAX_SIZE = 1000
 
 
@@ -59,7 +60,6 @@ def logs(run_id: str, follow: bool):
         has_more = loaded.can_continue_forward
 
         if len(loaded.lines) == 0:
-
             if not (had_any or has_more):
                 click.secho(loaded.log_info_message, fg="red")
                 sys.exit(1)

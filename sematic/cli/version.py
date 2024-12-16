@@ -11,6 +11,7 @@ from sematic.cli.cli import cli
 from sematic.config.config import switch_env
 from sematic.versions import CURRENT_VERSION_STR, version_as_string
 
+
 UNREACHABLE_SERVER_MESSAGE = (
     "The configured server is unreachable. Please see this documentation for help: "
     "https://docs.sematic.dev/onboarding/get-started#starting-the-web-dashboard"

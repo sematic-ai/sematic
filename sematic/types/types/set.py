@@ -18,6 +18,7 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
+
 MAX_SUMMARY_BYTES = 2**17  # 128 kB
 
 

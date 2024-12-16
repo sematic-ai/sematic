@@ -13,7 +13,6 @@ from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 
 
 class Edge(Base, JSONEncodableMixin):
-
     __tablename__ = "edges"
 
     id: Mapped[str] = mapped_column(
@@ -28,9 +27,7 @@ class Edge(Base, JSONEncodableMixin):
     destination_run_id: Mapped[Optional[str]] = mapped_column(
         types.String(), ForeignKey("runs.id"), nullable=True, index=True
     )
-    destination_name: Mapped[Optional[str]] = mapped_column(
-        types.String(), nullable=True
-    )
+    destination_name: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
 
     # Artifact
     artifact_id: Mapped[Optional[str]] = mapped_column(
@@ -70,9 +67,7 @@ class Edge(Base, JSONEncodableMixin):
 
     def __hash__(self) -> int:
         return hash(
-            ":".join(
-                map(str, [getattr(self, field) for field in self._EQUALITY_FIELDS])
-            )
+            ":".join(map(str, [getattr(self, field) for field in self._EQUALITY_FIELDS]))
         )
 
     def __repr__(self) -> str:

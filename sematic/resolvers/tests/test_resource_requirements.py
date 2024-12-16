@@ -77,14 +77,10 @@ def test_host_path_mounts_name_sanitization():
     mount = KubernetesHostPathMount(node_path="/tmp", pod_mount_path="/host_tmp")
     assert mount.name == "volume-host-tmp"
 
-    mount = KubernetesHostPathMount(
-        name="", node_path="/tmp", pod_mount_path="/host_tmp"
-    )
+    mount = KubernetesHostPathMount(name="", node_path="/tmp", pod_mount_path="/host_tmp")
     assert mount.name == "volume-host-tmp"
 
     path = "/0123456789012345678901234567890123456789012345678901234567890123456789"
     mount = KubernetesHostPathMount(node_path="/tmp", pod_mount_path=path)
     assert len(mount.name) == 64
-    assert (
-        mount.name[:58] == "volume-012345678901234567890123456789012345678901234567890"
-    )
+    assert mount.name[:58] == "volume-012345678901234567890123456789012345678901234567890"

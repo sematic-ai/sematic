@@ -11,6 +11,7 @@ from sqlalchemy.orm import declared_attr
 # Sematic
 from sematic.db.queries import get_user, get_users_by_id
 
+
 logger = logging.getLogger(__name__)
 
 

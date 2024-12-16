@@ -165,9 +165,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     secret_env_var = next(
         var for var in env_vars if var.name == next(iter(environment_secrets.values()))
     )
-    assert secret_env_var.value_from.secret_key_ref.key == next(
-        iter(environment_secrets)
-    )
+    assert secret_env_var.value_from.secret_key_ref.key == next(iter(environment_secrets))
 
     final_api_url_var = next(
         var.value for var in env_vars if var.name == "SEMATIC_API_ADDRESS"
@@ -629,7 +627,6 @@ def test_refresh_job_single_condition(
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
 @mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
 def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
-
     settings = {"SOME_SETTING": "SOME_VALUE"}
     resource_requests = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(),

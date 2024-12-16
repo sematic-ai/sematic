@@ -20,6 +20,7 @@ from sematic.utils.exceptions import (
 )
 from sematic.utils.timeout import timeout
 
+
 logger = logging.getLogger(__name__)
 
 

@@ -30,6 +30,7 @@ from sematic.types.types.image import Image  # noqa: F401
 from sematic.types.types.link import Link  # noqa: F401
 from sematic.types.types.prompt_response import PromptResponse  # noqa: F401
 
+
 # isort: off
 
 # Matplotlib

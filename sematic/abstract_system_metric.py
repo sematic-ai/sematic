@@ -24,6 +24,7 @@ from sematic.plugins.abstract_metrics_storage import (
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 from sematic.utils.exceptions import DataIntegrityError
 
+
 MeasuredValue = Tuple[datetime, float]
 
 _BACKFILL_PAGE_SIZE = 100

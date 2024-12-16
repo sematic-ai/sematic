@@ -17,6 +17,7 @@ from jinja2 import Template
 # Sematic
 import sematic
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ def fetch_hn(
 
 @sematic.func
 def split_stories(
-    stories: typing.List[typing.Dict[object, object]]
+    stories: typing.List[typing.Dict[object, object]],
 ) -> typing.Dict[str, typing.List[Story]]:
     """
     # Split stories into stories that have text and into those that don't

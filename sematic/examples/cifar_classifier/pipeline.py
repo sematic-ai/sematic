@@ -33,17 +33,13 @@ def train(config: TrainingConfig) -> TorchCheckpoint:
     ## Returns
     The last checkpoint produced during training
     """
-    cluster_config = SimpleRayCluster(
-        n_nodes=config.n_workers, node_config=config.worker
-    )
+    cluster_config = SimpleRayCluster(n_nodes=config.n_workers, node_config=config.worker)
     with RayCluster(config=cluster_config):
         return train_classifier(config)
 
 
 @sematic.func(standalone=True)
-def evaluate(
-    checkpoint: TorchCheckpoint, config: EvaluationConfig
-) -> EvaluationResults:
+def evaluate(checkpoint: TorchCheckpoint, config: EvaluationConfig) -> EvaluationResults:
     """# Run evaluation data on an image classification model
 
     ## Inputs
@@ -55,9 +51,7 @@ def evaluate(
     Some basic statistics on the evaluation, and a confusion matrix plot for the
     evaluation.
     """
-    cluster_config = SimpleRayCluster(
-        n_nodes=config.n_workers, node_config=config.worker
-    )
+    cluster_config = SimpleRayCluster(n_nodes=config.n_workers, node_config=config.worker)
     with RayCluster(config=cluster_config):
         return evaluate_classifier(checkpoint, config)
 

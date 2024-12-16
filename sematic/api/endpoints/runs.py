@@ -60,6 +60,7 @@ from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.exceptions import ExceptionMetadata, IllegalStateTransitionError
 from sematic.utils.retry import retry
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -127,9 +128,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     if len(garbage_filters) == 0:
         return _standard_list_runs(request_args)
 
-    logger.info(
-        "Searching for runs to garbage collect with filters: %s", garbage_filters
-    )
+    logger.info("Searching for runs to garbage collect with filters: %s", garbage_filters)
 
     if contained_extra_filters or len(garbage_filters) > 1:
         return jsonify_error(

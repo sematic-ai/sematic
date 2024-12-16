@@ -6,6 +6,7 @@ import logging
 from sematic import CloudRunner, LocalRunner
 from sematic.examples.add.pipeline import pipeline
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
     parser.add_argument("--cloud", action="store_true", default=False)

@@ -5,6 +5,7 @@ import logging
 from sematic.resolver import Resolver
 from sematic.runners.silent_runner import SilentRunner
 
+
 logger = logging.getLogger(__name__)
 
 

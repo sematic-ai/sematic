@@ -48,9 +48,7 @@ def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
     ## Output
     The best checkpoint produced during training
     """
-    cluster_config = SimpleRayCluster(
-        n_nodes=config.n_workers, node_config=config.worker
-    )
+    cluster_config = SimpleRayCluster(n_nodes=config.n_workers, node_config=config.worker)
 
     # You can also use the built-in pytorch lightning checkpointing
     # with s3 if you are willing to install some extra dependencies
@@ -91,9 +89,7 @@ def evaluate(
     ## Output
     Summary of some statistics resulting from the evaluation.
     """
-    cluster_config = SimpleRayCluster(
-        n_nodes=config.n_workers, node_config=config.worker
-    )
+    cluster_config = SimpleRayCluster(n_nodes=config.n_workers, node_config=config.worker)
     checkpointer = SematicCheckpointIO(s3_location=checkpoint.prefix)
 
     # we want the driver for the eval to run on the

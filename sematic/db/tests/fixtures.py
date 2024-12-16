@@ -14,9 +14,8 @@ import sematic.db.db as db
 from sematic.abstract_future import FutureState
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import make_artifact
+from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.factories import make_job as factory_make_job
-from sematic.db.models.factories import make_user
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
@@ -244,9 +243,7 @@ def persisted_run(run, test_db, allow_any_run_state_transition) -> Run:  # noqa:
 
 
 @pytest.fixture
-def persisted_run_w_user(
-    persisted_user, test_db, allow_any_run_state_transition
-) -> Run:  # noqa: F811
+def persisted_run_w_user(persisted_user, test_db, allow_any_run_state_transition) -> Run:  # noqa: F811
     # run's user_id is a foreign key to the users table,
     # so we need a persisted user to get a persisted run with a user.
     return save_run(make_run(user_id=persisted_user.id))

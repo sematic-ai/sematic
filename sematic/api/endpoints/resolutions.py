@@ -63,6 +63,7 @@ from sematic.scheduling.job_scheduler import (
 from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.exceptions import ExceptionMetadata
 
+
 logger = logging.getLogger(__name__)
 
 _GARBAGE_COLLECTION_QUERIES: Dict[str, Callable[[], List[str]]] = {
@@ -296,9 +297,7 @@ def schedule_resolution_endpoint(
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>/rerun", methods=["POST"])
 @authenticate
-def rerun_resolution_endpoint(
-    user: Optional[User], resolution_id: str
-) -> flask.Response:
+def rerun_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
     original_resolution = get_resolution(resolution_id)
 
     if original_resolution.container_image_uri is None:
@@ -617,9 +616,7 @@ def clean_orphaned_resolution_jobs_endpoint(
 
 @sematic_api.route("/api/v1/resolutions/<root_id>/clean", methods=["POST"])
 @authenticate
-def clean_stale_resolution_endpoint(
-    user: Optional[User], root_id: str
-) -> flask.Response:
+def clean_stale_resolution_endpoint(user: Optional[User], root_id: str) -> flask.Response:
     resolution = get_resolution(root_id)
     root_run = get_run(root_id)
     logger.info(

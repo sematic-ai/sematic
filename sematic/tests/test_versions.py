@@ -12,6 +12,7 @@ from sematic.versions import (
     version_as_string,
 )
 
+
 CHANGELOG_MATCH_PATTERN = r"\* \[(\d+\.\d+\.\d+.*)\]\(.+\)$"
 PYPI_BADGE_MATCH_PATTERN = (
     r"\!\[PyPI\]\(https://img.shields.io/pypi/v/sematic/"

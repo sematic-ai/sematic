@@ -23,6 +23,7 @@ from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user_by_api_key, get_user_by_email, save_user
 
+
 # Email address for pseudo-user for the cron job that periodically
 # makes requests to the API to clean up dangling resources.
 CLEANER_EMAIL_ADDRESS = "cleaner@serviceaccount"
@@ -37,9 +38,7 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = get_bool_server_setting(
-        ServerSettingsVar.SEMATIC_AUTHENTICATE, False
-    )
+    authenticate = get_bool_server_setting(ServerSettingsVar.SEMATIC_AUTHENTICATE, False)
 
     if authenticate:
         for var in (

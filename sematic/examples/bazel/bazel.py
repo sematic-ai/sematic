@@ -6,6 +6,7 @@ import logging
 import sematic
 from sematic.examples.bazel.pipeline import pipeline
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

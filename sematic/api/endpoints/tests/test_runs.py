@@ -15,12 +15,14 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_plugin_settings  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    make_auth_test,  # noqa: F401
+    mock_auth,  # noqa: F401
+    mock_plugin_settings,  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_socketio,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
@@ -35,17 +37,19 @@ from sematic.db.queries import (
     save_run,
     save_run_external_resource_links,
 )
-from sematic.db.tests.fixtures import allow_any_run_state_transition  # noqa: F401
-from sematic.db.tests.fixtures import make_job  # noqa: F401
-from sematic.db.tests.fixtures import make_resolution  # noqa: F401
-from sematic.db.tests.fixtures import make_run  # noqa: F401
-from sematic.db.tests.fixtures import persisted_external_resource  # noqa: F401
-from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
-from sematic.db.tests.fixtures import persisted_run  # noqa: F401
-from sematic.db.tests.fixtures import persisted_user  # noqa: F401
-from sematic.db.tests.fixtures import pg_mock  # noqa: F401
-from sematic.db.tests.fixtures import run  # noqa: F401
-from sematic.db.tests.fixtures import test_db  # noqa: F401; noqa: F401
+from sematic.db.tests.fixtures import (
+    allow_any_run_state_transition,  # noqa: F401
+    make_job,  # noqa: F401
+    make_resolution,  # noqa: F401
+    make_run,  # noqa: F401
+    persisted_external_resource,  # noqa: F401
+    persisted_resolution,  # noqa: F401
+    persisted_run,  # noqa: F401
+    persisted_user,  # noqa: F401
+    pg_mock,  # noqa: F401
+    run,  # noqa: F401
+    test_db,  # noqa: F401; noqa: F401
+)
 from sematic.function import func
 from sematic.log_reader import LogLineResult
 from sematic.metrics.run_count_metric import RunCountMetric
@@ -53,6 +57,7 @@ from sematic.runners.local_runner import LocalRunner
 from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
+
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")
@@ -93,7 +98,8 @@ def mock_get_run_ids_with_orphaned_jobs():
 
 
 def test_list_runs_empty(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     results = test_client.get("/api/v1/runs?limit=3")
 
@@ -141,7 +147,8 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
 
 
 def test_list_runs_group_by(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
 
@@ -159,7 +166,8 @@ def test_list_runs_group_by(
 
 
 def test_list_runs_fields(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
     run2 = make_run(name="def", function_path="abc")
@@ -202,7 +210,8 @@ def test_list_runs_fields(
 
 
 def test_list_runs_filters(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = make_run(), make_run()
     runs[0].parent_id = uuid.uuid4().hex
@@ -223,7 +232,8 @@ def test_list_runs_filters(
 
 
 def test_list_runs_filters_empty(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
     run2 = make_run(name="def", function_path="def")
@@ -242,7 +252,8 @@ def test_list_runs_filters_empty(
 
 
 def test_list_runs_and_filters(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
     run2 = make_run(name="def", function_path="abc")
@@ -263,7 +274,8 @@ def test_list_runs_and_filters(
 
 
 def test_list_runs_or_filters(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
     run2 = make_run(name="def", function_path="abc")
@@ -285,7 +297,8 @@ def test_list_runs_or_filters(
 
 
 def test_list_runs_relationship_filters(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
     run2 = make_run(name="def", function_path="ghi")
@@ -322,7 +335,8 @@ def test_list_runs_relationship_filters(
 
 
 def test_list_runs_relationship_filters_errors(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     # invalid field
     filters = {"non_exist_fld.kind": {"eq": ResolutionKind.KUBERNETES.value}}
@@ -368,7 +382,8 @@ def test_list_runs_relationship_filters_errors(
 
 
 def test_list_runs_limit(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     run1, run2, run3 = make_run(), make_run(), make_run()
 
@@ -386,7 +401,8 @@ def test_list_runs_limit(
 
 
 def test_list_runs_order_asc(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     now = datetime.datetime.utcnow()
     run1 = make_run(created_at=now + datetime.timedelta(seconds=1))
@@ -408,7 +424,8 @@ def test_list_runs_order_asc(
 
 
 def test_list_runs_order_desc(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     now = datetime.datetime.utcnow()
     run1 = make_run(created_at=now + datetime.timedelta(seconds=1))
@@ -430,7 +447,9 @@ def test_list_runs_order_desc(
 
 
 def test_list_runs_limit_400(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?limit=bad")
 
@@ -443,7 +462,9 @@ def test_list_runs_limit_400(
 
 
 def test_list_runs_order_400(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?order=bad")
 
@@ -458,7 +479,9 @@ def test_list_runs_order_400(
 
 
 def test_list_runs_cursor_400(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?cursor=///////")
 
@@ -471,7 +494,8 @@ def test_list_runs_cursor_400(
 
 
 def test_list_runs_search_id(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = make_run(), make_run(), make_run()
 
@@ -492,7 +516,8 @@ def test_list_runs_search_id(
 
 
 def test_list_runs_search_fields(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = (
         make_run(name="neutrino"),
@@ -523,7 +548,8 @@ def test_list_runs_search_fields(
 
 
 def test_list_runs_search_tag_filters(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = (
         make_run(tags=["food"]),
@@ -562,7 +588,8 @@ def test_list_runs_search_tag_filters(
 
 
 def test_list_runs_search_tags(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = (
         make_run(tags=["Donald", "Fauntleroy"]),
@@ -619,7 +646,9 @@ def test_list_runs_search_orphaned_jobs(
 
 
 def test_get_run_endpoint(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get(f"/api/v1/runs/{persisted_run.id}")
 
@@ -722,7 +751,9 @@ def test_clean_jobs(
 
 
 def test_clean_orphaned_runs(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     persisted_run.future_state = FutureState.SCHEDULED
     child_run_1 = make_run(future_state=FutureState.CREATED, root_id=persisted_run.id)

@@ -44,7 +44,9 @@ class MetricValue(Base):
     )
 
 
-Index(
-    "metric_values_id_time_idx", MetricValue.metric_id, MetricValue.metric_time.desc()
-),
+(
+    Index(
+        "metric_values_id_time_idx", MetricValue.metric_id, MetricValue.metric_time.desc()
+    ),
+)
 Index("metric_values_time_idx", MetricValue.metric_time.desc())

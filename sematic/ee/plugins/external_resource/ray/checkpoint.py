@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Literal, Tuple
 # Sematic
 from sematic.types.registry import register_to_json_encodable_summary
 
+
 try:
     # Third-party
     import torch
@@ -15,7 +16,7 @@ except Exception:
     # type is not available, so it just won't be registered.
     # Note that the type is not available in "bare ray", but
     # rather only in ray AIR.
-    TorchCheckpoint = None
+    TorchCheckpoint = None  # type: ignore
 
 
 def summarize_ray_torch_checkpoint(
@@ -23,7 +24,7 @@ def summarize_ray_torch_checkpoint(
 ) -> Tuple[Dict[Literal["repr"], str], Dict[str, Any]]:
     # why the "or" instead of get("model", {})? Because if the dict is
     # {"model": None} we would rather replace the None with {}.
-    parameters = list((value.to_dict().get("model") or {}).items())
+    parameters = list((value.to_dict().get("model") or {}).items())  # type: ignore
     parameter_summaries: List[str] = []
     if len(parameters) > 0:
         max_key_length = max(len(k) for k, _ in parameters)

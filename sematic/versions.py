@@ -3,6 +3,7 @@ import logging
 import re
 import typing
 
+
 logger = logging.getLogger(__name__)
 
 # Represents the version of the client, server, and all other parts of

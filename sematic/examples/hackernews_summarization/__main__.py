@@ -88,13 +88,9 @@ def main():
     if args.openai_api_key and args.cohere_api_key:
         raise ValueError("Please pass only one API key.")
     if args.openai_api_key:
-        llm_config = OpenAIConfig(
-            args.openai_api_key, args.openai_model, args.max_tokens
-        )
+        llm_config = OpenAIConfig(args.openai_api_key, args.openai_model, args.max_tokens)
     elif args.cohere_api_key:
-        llm_config = CohereConfig(
-            args.cohere_api_key, args.cohere_model, args.max_tokens
-        )
+        llm_config = CohereConfig(args.cohere_api_key, args.cohere_model, args.max_tokens)
 
     hn_config = HNFetchConfig(args.past_n_days, args.max_stories)
     query = args.query

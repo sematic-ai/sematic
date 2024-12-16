@@ -260,9 +260,7 @@ def create_confusion_matrix_plot(
     return Figure(data=data, layout=layout)
 
 
-def convert_batch_to_numpy(
-    batch: List[Tuple[Image.Image, int]]
-) -> Dict[str, np.ndarray]:
+def convert_batch_to_numpy(batch: List[Tuple[Image.Image, int]]) -> Dict[str, np.ndarray]:
     """Convert a batch PIL images and their labels to Ray's numpy batch format.
 
     Parameters
@@ -313,9 +311,7 @@ def to_confusion_matrix_data_frame(df: pd.DataFrame) -> pd.DataFrame:
     class, columns are indexed by the labeled class, and the values are the number
     of times the given prediction/label pair occurred.
     """
-    df["prediction"] = df["confusion_key"].map(
-        lambda key: int(key.split(":")[0].strip())
-    )
+    df["prediction"] = df["confusion_key"].map(lambda key: int(key.split(":")[0].strip()))
     df["label"] = df["confusion_key"].map(lambda key: int(key.split(":")[1].strip()))
     df = df.reset_index()
     del df["confusion_key"]

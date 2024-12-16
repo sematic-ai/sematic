@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Generator, Type
 
+
 try:
     # Third-party
     import pandas

@@ -8,6 +8,7 @@ import pandas
 # Sematic
 from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 
+
 _PAYLOAD_CUTOFF = 3000
 
 
@@ -23,9 +24,7 @@ def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> SummaryOutp
         truncated = True
 
     # We want to preserve the order of the columns
-    dtypes = [
-        (name, dtype.name) for name, dtype in zip(value.dtypes.index, value.dtypes)
-    ]
+    dtypes = [(name, dtype.name) for name, dtype in zip(value.dtypes.index, value.dtypes)]
 
     describe: List[Dict[str, Any]] = []
     try:

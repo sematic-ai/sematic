@@ -24,6 +24,7 @@ from sematic.ee.plugins.publishing.github.check import (
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
 
+
 logger = logging.getLogger(__name__)
 
 

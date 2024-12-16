@@ -24,6 +24,7 @@ from sematic.types.serialization import (
 )
 from sematic.utils.exceptions import MissingPluginError
 
+
 TypeSerialization = Dict[str, Any]
 
 

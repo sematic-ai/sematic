@@ -9,6 +9,7 @@ from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
 
+
 # To avoid creating a dependency of Future on Runner.
 # Recall that .resolve will be removed from future, at
 # which point there will be no need for such a dependency

@@ -219,7 +219,6 @@ class A:
 
 
 def test_to_binary_arbitrary():
-
     type_ = List[A]
 
     json_encodable = value_to_json_encodable([A(), A()], type_)

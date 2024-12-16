@@ -11,6 +11,7 @@ from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 
+
 EPSILON = 0.00001
 
 
@@ -52,7 +53,8 @@ def metric_points():
 
 @pytest.fixture
 def persisted_metric_points(
-    metric_points: List[MetricPoint], test_db: DB  # noqa: F811
+    metric_points: List[MetricPoint],
+    test_db: DB,  # noqa: F811
 ):
     metrics_storage_plugin = SQLMetricsStorage()
 

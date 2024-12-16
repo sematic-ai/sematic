@@ -32,6 +32,7 @@ from sematic.plugins.abstract_external_resource import ManagedBy, ResourceState
 from sematic.scheduling.job_details import JobKind, JobKindString, KubernetesJobState
 from sematic.utils.exceptions import IllegalStateTransitionError
 
+
 logger = logging.getLogger(__name__)
 
 

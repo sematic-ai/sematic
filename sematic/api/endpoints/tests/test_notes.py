@@ -7,9 +7,11 @@ import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
-from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    make_auth_test,  # noqa: F401
+    mock_auth,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
 from sematic.db.models.user import User  # noqa: F401
@@ -22,12 +24,14 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 
+
 test_list_note_auth = make_auth_test("/api/v1/notes")
 test_create_note_auth = make_auth_test("/api/v1/notes", method="POST")
 
 
 def test_list_notes_empty(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/notes")
 
@@ -35,7 +39,9 @@ def test_list_notes_empty(
 
 
 def test_create_note(
-    mock_auth, test_client: flask.testing.FlaskClient, persisted_run: Run  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
 ):
     note_payload = {
         "note": "And now for something completely different",
@@ -91,7 +97,6 @@ def test_delete_note(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     persisted_note: Note,  # noqa: F811
 ):
-
     response = test_client.delete("/api/v1/notes/{}".format(persisted_note.id))
 
     assert response.status_code == 200

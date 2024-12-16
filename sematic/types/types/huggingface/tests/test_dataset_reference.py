@@ -6,6 +6,7 @@ from sematic.types.types.huggingface.dataset_reference import (
     HuggingFaceDatasetReference,
 )
 
+
 sha = "1111111111111111111111111111111111111111"
 
 CONVERSION_CASES = [

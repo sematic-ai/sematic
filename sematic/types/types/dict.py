@@ -25,9 +25,7 @@ def _dict_safe_cast(value: Dict, type_: Type) -> Tuple[Optional[Dict], Optional[
     Casting logic for dictionaries.
     """
     if not isinstance(value, Mapping):
-        return None, "{} is not a mapping. Cannot cast to {}.".format(
-            repr(value), type_
-        )
+        return None, "{} is not a mapping. Cannot cast to {}.".format(repr(value), type_)
 
     type_args = get_args(type_)
     if type_args is None or type_args == ():

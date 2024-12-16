@@ -84,8 +84,6 @@ def get_storage_plugins(
     """
     storage_plugins = get_active_plugins(PluginScope.STORAGE, default=default)
 
-    storage_classes = [
-        cast(Type[AbstractStorage], plugin) for plugin in storage_plugins
-    ]
+    storage_classes = [cast(Type[AbstractStorage], plugin) for plugin in storage_plugins]
 
     return storage_classes

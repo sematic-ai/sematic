@@ -130,9 +130,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                     name=GrandChildError.__name__,
                     module=GrandChildError.__module__,
                     repr="GrandChildError",
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        GrandChildError
-                    ),
+                    ancestors=ExceptionMetadata.ancestors_from_exception(GrandChildError),
                 ),
             ),
             RetrySettings(exceptions=(ParentError,), retries=2),
@@ -234,9 +232,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                     name=KubernetesError.__name__,
                     module=KubernetesError.__module__,
                     repr="KubernetesError",
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        KubernetesError
-                    ),
+                    ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
                 ),
                 ExceptionMetadata(
                     name=Exception.__name__,
@@ -255,9 +251,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                     name=KubernetesError.__name__,
                     module=KubernetesError.__module__,
                     repr="KubernetesError",
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        KubernetesError
-                    ),
+                    ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
                 ),
                 ExceptionMetadata(
                     name=ValueError.__name__,
@@ -276,9 +270,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                     name=KubernetesError.__name__,
                     module=KubernetesError.__module__,
                     repr="KubernetesError",
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        KubernetesError
-                    ),
+                    ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
                 ),
                 ExceptionMetadata(
                     name=Exception.__name__,
@@ -297,9 +289,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                     name=KubernetesError.__name__,
                     module=KubernetesError.__module__,
                     repr="KubernetesError",
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        KubernetesError
-                    ),
+                    ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
                 ),
                 ExceptionMetadata(
                     name=Exception.__name__,

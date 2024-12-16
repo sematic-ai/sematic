@@ -4,6 +4,7 @@ import os
 # Sematic
 from sematic.config.config import EXAMPLES_DIR, get_config
 
+
 MIN_EXAMPLE_FILES = [
     "__main__.py",
     "__init__.py",

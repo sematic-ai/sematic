@@ -270,7 +270,5 @@ def mock_uploader(file_path, remote_prefix):
 def concat_uploads(uploads):
     all_upload_contents = []
     for upload in uploads:
-        all_upload_contents.extend(
-            upload[1:]
-        )  # 1st line of each upload is remote prefix
+        all_upload_contents.extend(upload[1:])  # 1st line of each upload is remote prefix
     return all_upload_contents

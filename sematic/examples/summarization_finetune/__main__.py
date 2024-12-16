@@ -1,4 +1,4 @@
-""" Launch script for the summarization model finetuning
+"""Launch script for the summarization model finetuning
 isort:skip_file
 """
 
@@ -8,13 +8,15 @@ import logging
 from dataclasses import dataclass, replace
 from typing import Optional
 
-# Third-party
-from sematic import torch_patch  # noqa: F401
 from huggingface_hub import login
 from peft import LoraConfig, PeftType
 
+# Third-party
 # Sematic
-from sematic import LocalRunner
+from sematic import (
+    LocalRunner,
+    torch_patch,  # noqa: F401
+)
 from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
     ModelSelection,
@@ -126,12 +128,14 @@ def parse_args() -> ParsedArgs:
         default=TRAINING_CONFIG.model_selection,
         help=(f"Select a model" f". Options:  {selection_options}."),
     )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        default=1,
-        help="The number of epochs to train on.",
-    ),
+    (
+        parser.add_argument(
+            "--epochs",
+            type=int,
+            default=1,
+            help="The number of epochs to train on.",
+        ),
+    )
     parser.add_argument(
         "--learning-rate",
         type=float,

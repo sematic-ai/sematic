@@ -23,6 +23,7 @@ from sematic.runners.cloud_runner import (
 )
 from sematic.scheduling.job_details import JobKind, JobKindString
 
+
 V2_LOG_PREFIX = "logs/v2"
 LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
 
@@ -76,9 +77,7 @@ def log_prefix(run_id: str, job_kind: JobKindString):
     # wait until after deprecating V1, so we don't have to support
     # *3* formats in this module at one time.
     log_kind = "worker" if job_kind == JobKind.run else "driver"
-    return LOG_PATH_FORMAT.format(
-        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=log_kind
-    )
+    return LOG_PATH_FORMAT.format(prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=log_kind)
 
 
 @dataclass
@@ -724,9 +723,7 @@ def get_log_lines_from_line_stream(
     # Reverse one should be AT the earliest included line.
     forward_cursor_file = latest_included_line_file
     forward_cursor_index: Optional[int] = (
-        latest_included_line_index + 1
-        if latest_included_line_index is not None
-        else None
+        latest_included_line_index + 1 if latest_included_line_index is not None else None
     )
     reverse_cursor_file = earliest_included_line_file
     reverse_cursor_index = earliest_included_line_index

@@ -8,6 +8,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
 )
 
+
 _fake_resource_history: List["FakeExternalResource"] = []
 _fake_resource_call_history: List[Tuple["FakeExternalResource", str]] = []
 

@@ -42,6 +42,7 @@ from sematic.scheduling.job_details import JobKind
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.versions import CURRENT_VERSION_STR
 
+
 # Argument to cause worker.py to emulate a normal python interpreter.
 # If used, all other args will be passed to the emulated interpreter.
 _EMULATE_INTERPRETER_ARG = "--emulate-interpreter"

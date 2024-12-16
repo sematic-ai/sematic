@@ -6,6 +6,7 @@ from typing import Any, Dict
 # Third-party
 import yaml
 
+
 THIS_MIGRATION_SCHEMA_VERSION = 1
 
 
@@ -33,9 +34,7 @@ def up():
     # Recover from 0.21.1 corrupted settings files
     if "dictitems" in user_loaded_yaml:
         user_loaded_yaml = dict(
-            default=user_loaded_yaml["dictitems"]
-            .get("default", {})
-            .get("dictitems", {})
+            default=user_loaded_yaml["dictitems"].get("default", {}).get("dictitems", {})
         )
 
     if "dictitems" in server_loaded_yaml:

@@ -14,6 +14,7 @@ from sematic.examples.cifar_classifier.train_eval import (
 )
 from sematic.types.types.aws.s3 import S3Location
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

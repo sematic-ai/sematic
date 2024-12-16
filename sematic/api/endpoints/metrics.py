@@ -30,6 +30,7 @@ from sematic.plugins.abstract_metrics_storage import (
 )
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,9 +60,7 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
     try:
         labels: Dict = json.loads(flask.request.args.get("labels", "{}"))
     except Exception as e:
-        return jsonify_error(
-            f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST
-        )
+        return jsonify_error(f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST)
 
     try:
         rollup = _get_rollup(flask.request.args)
@@ -124,9 +123,7 @@ def list_metrics_endpoint(user: Optional[User]) -> flask.Response:
     try:
         labels: Dict = json.loads(flask.request.args.get("labels", "{}"))
     except Exception as e:
-        return jsonify_error(
-            f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST
-        )
+        return jsonify_error(f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST)
 
     metrics_storage = SQLMetricsStorage()
 
@@ -151,9 +148,7 @@ _METRICS: Dict[MetricEvent, List[Type[AbstractSystemMetric]]] = {
 }
 
 
-def save_event_metrics(
-    event: MetricEvent, runs: List[Run], user: Optional[User] = None
-):
+def save_event_metrics(event: MetricEvent, runs: List[Run], user: Optional[User] = None):
     """
     Compute and store System Metrics associated with a particular metric event.
     """

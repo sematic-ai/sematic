@@ -3,4 +3,5 @@
 # Standard Library
 import sys
 
+
 sys.exit(42)

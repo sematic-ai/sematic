@@ -5,6 +5,7 @@ import logging
 from sematic.resolver import Resolver
 from sematic.runners.cloud_runner import CloudRunner
 
+
 logger = logging.getLogger(__name__)
 
 

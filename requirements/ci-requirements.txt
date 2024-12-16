@@ -1,10 +1,7 @@
 
 # Linters and such. Pin them so that different devs
 # don't get different results from using them.
-flake8==7.1.1
 mypy==1.13.0
-black==24.10.0
-isort==5.13.2
 
 pytest
 # Required for pip-compile on the CI worker
@@ -22,11 +19,3 @@ types-PyYAML
 snowflake-connector-python
 kubernetes-stubs
 boto3-stubs
-
-# To generate the wheel
-mistune==0.8.4
-docutils==0.18.1
-m2r
-
-# Required by the release process
-twine

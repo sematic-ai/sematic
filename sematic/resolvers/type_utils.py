@@ -1,6 +1,7 @@
 # Standard Library
 from typing import Any, List, Tuple, Type, Union
 
+
 try:
     # Python 3.9
     # Standard Library
@@ -24,9 +25,7 @@ def make_list_type(list_: List[Any]) -> Type[List]:
 
     for item in list_:
         item_type = (
-            item.function.output_type
-            if isinstance(item, AbstractFuture)
-            else type(item)
+            item.function.output_type if isinstance(item, AbstractFuture) else type(item)
         )
         if element_type is None:
             element_type = item_type

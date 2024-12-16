@@ -15,6 +15,7 @@ from sematic.db.models.git_info import GitInfo
 from sematic.db.models.user import User
 from sematic.ee.plugins.publishing.github.check import check_commit
 
+
 logger = getLogger(__name__)
 
 

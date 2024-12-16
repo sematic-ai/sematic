@@ -70,8 +70,7 @@ def plugin_settings():
 def test_get_plugin_setting(plugin_settings):
     assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "bar"
     assert (
-        get_plugin_setting(TestPlugin, SettingsVar.OTHER_SETTING, "default")
-        == "default"
+        get_plugin_setting(TestPlugin, SettingsVar.OTHER_SETTING, "default") == "default"
     )
     with pytest.raises(MissingSettingsError):
         get_plugin_setting(TestPlugin, SettingsVar.OTHER_SETTING)
@@ -136,9 +135,7 @@ def test_get_active_settings_user_missing(plugin_settings):
 
         assert active_settings.scopes == {}
         assert active_settings.settings == {
-            ServerSettings.get_path(): {
-                ServerSettingsVar.KUBERNETES_NAMESPACE: "foobar"
-            },
+            ServerSettings.get_path(): {ServerSettingsVar.KUBERNETES_NAMESPACE: "foobar"},
             UserSettings.get_path(): {},
         }
 

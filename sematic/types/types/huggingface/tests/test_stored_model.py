@@ -9,6 +9,7 @@ import pytest
 from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 from sematic.types.types.huggingface.stored_model import HuggingFaceStoredModel
 
+
 _MOCK_STORAGE = {}
 
 
@@ -80,9 +81,7 @@ def test_store_load_peft_hf_base(mock_storage):
     peft_model = PeftModel(state="bar", base_model=base_model)
     base_model_ref = HuggingFaceModelReference.from_string("foo-owner/bar-model")
     _MOCK_STORAGE[base_model_ref.repo_reference()] = base_model.state
-    stored_model = HuggingFaceStoredModel.store(
-        peft_model, storage_path, base_model_ref
-    )
+    stored_model = HuggingFaceStoredModel.store(peft_model, storage_path, base_model_ref)
     assert stored_model.base_model_reference == base_model_ref
     loaded = stored_model.load(device_map="auto")
     assert loaded == peft_model

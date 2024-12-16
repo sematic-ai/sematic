@@ -198,9 +198,7 @@ class PipelineRunError(Exception):
         super(PipelineRunError, self).__init__(self._msg)
 
     @staticmethod
-    def _make_metadata_msg(
-        msg_prefix: str, metadata: Optional[ExceptionMetadata]
-    ) -> str:
+    def _make_metadata_msg(msg_prefix: str, metadata: Optional[ExceptionMetadata]) -> str:
         if metadata is not None and metadata.repr is not None:
             return f"{msg_prefix}{metadata.repr}"
         return ""

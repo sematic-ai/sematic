@@ -4,10 +4,12 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_socketio,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.function import func
 from sematic.graph import Graph
@@ -70,9 +72,7 @@ def test_clone_futures(
         # Parent future should exist and be the correct one
         if original_run.parent_id is not None:
             parent_run = runs_by_id[original_run.parent_id]
-            assert (
-                cloned_graph.futures_by_run_id[parent_run.id] is future_.parent_future
-            )
+            assert cloned_graph.futures_by_run_id[parent_run.id] is future_.parent_future
 
         # Making sure all future kwargs are correct
         for input_edge in graph._edges_by_destination_id[original_run.id]:
@@ -86,9 +86,7 @@ def test_clone_futures(
                 value = api_client.get_artifact_value(artifact)
                 assert future_.kwargs[input_edge.destination_name] == value
             else:
-                upstream_future = cloned_graph.futures_by_run_id[
-                    input_edge.source_run_id
-                ]
+                upstream_future = cloned_graph.futures_by_run_id[input_edge.source_run_id]
                 assert future_.kwargs[input_edge.destination_name] is upstream_future
 
         # Making sure output values are correct
@@ -202,9 +200,7 @@ def test_clone_futures_reset(
     assert all(
         future_.state is FutureState.CREATED for future_ in first_add3_child_futures
     )
-    assert all(
-        future_.original_future_id is None for future_ in first_add3_child_futures
-    )
+    assert all(future_.original_future_id is None for future_ in first_add3_child_futures)
 
     top_level_add_futures = [
         future_
@@ -214,9 +210,7 @@ def test_clone_futures_reset(
     ]
 
     assert len(top_level_add_futures) == 3
-    assert all(
-        future_.state is FutureState.RESOLVED for future_ in top_level_add_futures
-    )
+    assert all(future_.state is FutureState.RESOLVED for future_ in top_level_add_futures)
 
     top_level_add_futures_ids = {
         id

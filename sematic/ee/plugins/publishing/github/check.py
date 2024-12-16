@@ -20,6 +20,7 @@ from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.utils.retry import retry
 
+
 logger = logging.getLogger(__name__)
 
 

@@ -32,8 +32,6 @@ def test_get_config_override_absolute():
 
 
 def test_get_config_override_bad_parent():
-    with environment_variables(
-        {_CONFIG_DIR_OVERRIDE_ENV_VAR: "/this-doesnt-exist/.foo"}
-    ):
+    with environment_variables({_CONFIG_DIR_OVERRIDE_ENV_VAR: "/this-doesnt-exist/.foo"}):
         with pytest.raises(ValueError, match=r"this-doesnt-exist"):
             get_config_dir()

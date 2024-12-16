@@ -12,7 +12,5 @@ def test_friendly_name():
     george = make_user(email="paul@beatles.co.uk", last_name="Harrison")
     assert george.get_friendly_name() == "Harrison"
 
-    ringo = make_user(
-        email="ringo@beatles.co.uk", first_name="Ringo", last_name="Starr"
-    )
+    ringo = make_user(email="ringo@beatles.co.uk", first_name="Ringo", last_name="Starr")
     assert ringo.get_friendly_name() == "Ringo Starr"

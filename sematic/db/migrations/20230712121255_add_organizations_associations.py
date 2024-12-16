@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sematic.db.db import db
 from sematic.db.migration_utils import back_up_db_file, reinstate_db_file_from_backup
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -137,9 +138,7 @@ def up_sqlite():
         execute_text(conn, "DROP TABLE runs;")
         execute_text(conn, "ALTER TABLE runs_new RENAME TO runs;")
         execute_text(conn, "CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        execute_text(
-            conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);"
-        )
+        execute_text(conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);")
 
         execute_text(
             conn,
@@ -174,7 +173,8 @@ def up_sqlite():
         execute_text(conn, "ALTER TABLE metric_labels_new RENAME TO metric_labels;")
         execute_text(
             conn,
-            "CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);",
+            "CREATE UNIQUE INDEX metric_labels_name_labels_idx "
+            "ON metric_labels(metric_name, metric_labels);",
         )
 
         execute_text(
@@ -221,10 +221,14 @@ def up_postgres():
         execute_text(
             conn,
             """
-            ALTER TABLE resolutions ADD COLUMN organization_id character(32) REFERENCES organizations(id);
-            ALTER TABLE runs ADD COLUMN organization_id character(32) REFERENCES organizations(id);
-            ALTER TABLE metric_labels ADD COLUMN organization_id character(32) REFERENCES organizations(id);
-            ALTER TABLE artifacts ADD COLUMN organization_id character(32) REFERENCES organizations(id);
+            ALTER TABLE resolutions ADD COLUMN organization_id character(32)
+              REFERENCES organizations(id);
+            ALTER TABLE runs ADD COLUMN organization_id character(32)
+              REFERENCES organizations(id);
+            ALTER TABLE metric_labels ADD COLUMN organization_id character(32)
+              REFERENCES organizations(id);
+            ALTER TABLE artifacts ADD COLUMN organization_id character(32)
+              REFERENCES organizations(id);
             """,
         )
 

@@ -33,6 +33,7 @@ from sematic.utils.exceptions import (
 from sematic.utils.signals import FrameType, HandlerType, call_signal_handler
 from sematic.utils.timeout import timeout
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -294,9 +295,7 @@ class StateMachineRunner(Runner, abc.ABC):
         # runs that used the same timeout duration and started simultaneously),
         # we fall back to comparing ids lexically to break the tie (future objects
         # are not comparable, so we use the id).
-        return min(
-            remaining_timeout_future_pairs, key=lambda pair: (pair[0], pair[1].id)
-        )
+        return min(remaining_timeout_future_pairs, key=lambda pair: (pair[0], pair[1].id))
 
     def _cancel_non_terminal_futures(self):
         for future in self._futures:
@@ -609,9 +608,7 @@ class StateMachineRunner(Runner, abc.ABC):
     def _do_resource_deactivate(
         cls, resource: AbstractExternalResource
     ) -> AbstractExternalResource:
-        raise NotImplementedError(
-            "Child classes must implement _do_resource_deactivate"
-        )
+        raise NotImplementedError("Child classes must implement _do_resource_deactivate")
 
     @classmethod
     def _do_resource_update(
