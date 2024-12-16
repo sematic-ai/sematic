@@ -1,4 +1,4 @@
-name: Python Test
+name: CI Validations
 
 on:
   push
@@ -51,3 +51,104 @@ jobs:
           path: "./"
       - name: Test and Install Wheel
         run: "bash test_pip_install.sh"
+
+  nodejs_init:
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:22.12.0
+      options: --user 0
+    outputs:
+      projectFolder: ${{ steps.envvar.outputs.PROJECT_FOLDER }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: npm install
+        run: npm install
+        working-directory: ./sematic/ui
+      - name: write env vars
+        id: envvar
+        run: |
+          echo "PROJECT_FOLDER=$(pwd)" >> $GITHUB_ENV
+          echo "PROJECT_FOLDER=$(pwd)" >> "$GITHUB_OUTPUT"
+          echo "TEMP_DIR=$(mktemp -d)" >> $GITHUB_ENV
+      - name: Tar files
+        # This step is for perserving the file permissions (rwx)
+        run: |
+          tar -czf $TEMP_DIR/cypress.tar.gz $CYPRESS_CACHE_FOLDER
+          tar -czf $TEMP_DIR/code.tar.gz $PROJECT_FOLDER
+      - name: Persist
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-cache
+          path: |
+            ${{ env.TEMP_DIR }}
+
+  
+  nodejs-lint:
+    needs: [nodejs_init]
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:22.12.0
+      options: --user 0
+    steps:
+      - name: write env vars
+        run: echo "TEMP_DIR=$(mktemp -d)" >> $GITHUB_ENV
+      - uses: actions/download-artifact@v4
+        with:
+          name: nodejs-cache
+          path: ${{ env.TEMP_DIR }}
+      - name: Extract
+        run: |
+          mkdir -p $CYPRESS_CACHE_FOLDER
+          PROJECT_FOLDER=${{ needs.nodejs_init.outputs.projectFolder }}
+          mkdir -p $PROJECT_FOLDER
+          tar -xzf $TEMP_DIR/cypress.tar.gz -C /
+          tar -xzf $TEMP_DIR/code.tar.gz -C /
+      - name: lint
+        run: npm run lint
+        working-directory: sematic/ui
+  
+
+  nodejs-unit-test:
+    needs: [nodejs_init]
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:22.12.0
+      options: --user 0
+    steps:
+      - name: write env vars
+        run: echo "TEMP_DIR=$(mktemp -d)" >> $GITHUB_ENV
+      - uses: actions/download-artifact@v4
+        with:
+          name: nodejs-cache
+          path: ${{ env.TEMP_DIR }}
+      - name: Extract
+        run: |
+          mkdir -p $CYPRESS_CACHE_FOLDER
+          PROJECT_FOLDER=${{ needs.nodejs_init.outputs.projectFolder }}
+          mkdir -p $PROJECT_FOLDER
+          tar -xzf $TEMP_DIR/cypress.tar.gz -C /
+          tar -xzf $TEMP_DIR/code.tar.gz -C /
+      - name: cypress:component
+        run: npm run cypress:component
+        working-directory: sematic/ui
+      - name: Upload cypress video
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_video
+          path: |
+            sematic/ui/tests/cypress_video
+      - name: Upload cypress screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_screenshots
+          path: |
+            sematic/ui/tests/cypress_screenshots
+      - name: Upload cypress test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_results
+          path: |
+            sematic/ui/tests/cypress_results
+
+
