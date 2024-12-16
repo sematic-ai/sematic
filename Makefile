@@ -76,8 +76,6 @@ wheel : sematic/ui/build
 		grep -v "<a" | \
 		grep -v "/a>" | \
 		grep -v "/img>" > README.nohtml
-	python3 -m m2r --overwrite README.nohtml
-	rm README.nohtml
 	bazel build //sematic:wheel
 
 uv-wheel:
