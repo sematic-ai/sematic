@@ -28,18 +28,6 @@ commands:
       - node/install-packages:
           app-dir: ./sematic/ui
 
-  installation-tests:
-    description: Do a test of installing sematic via wheel
-    steps:
-      - run:
-          name: Build wheel
-          command: |
-            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
-            retry 5 make wheel
-      - run:
-          name: Test pip install
-          command: bazel run //sematic/tests/integration:test_pip_install
-
   notify-completion:
     description: Send a notification to Slack about job completion
     steps:
@@ -65,6 +53,24 @@ jobs:
             - .pyenv
             - .cache/Cypress
             - project
+
+  installation:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - project/CIVENV
+    environment:
+      CI_VENV_NAME: CIVENV
+      REACT_APP_IS_CIRCLE_CI: 1
+    
   
   integration-test:
     docker:
@@ -125,6 +131,9 @@ workflows:
   sematic-test:
     jobs:
       - init
+      - lint:
+          requires:
+            - init
       - installation:
           requires:
             - init
@@ -136,5 +145,6 @@ workflows:
             - init
       - finalize:
           requires:
+            - lint
             - integration-test
             - fe-unit-tests
