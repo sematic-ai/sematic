@@ -11,6 +11,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Py-prep
         run: make py-prep
+      - name: Check Format
+        run: uvx ruff format --check
+      - name: Lint
+        run: uvx ruff check --fix sematic
+      - name: MyPy
+        run: uv run mypy -p sematic --disable-error-code import-untyped
       - name: Test
         run: |
           source .venv/bin/activate

@@ -19,11 +19,3 @@ types-PyYAML
 snowflake-connector-python
 kubernetes-stubs
 boto3-stubs
-
-# To generate the wheel
-mistune==0.8.4
-docutils==0.18.1
-m2r
-
-# Required by the release process
-twine
