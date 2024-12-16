@@ -38,7 +38,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: sematic-wheel
-          path: "./dist/sematic.whl"
+          path: "./dist"
       - uses: actions/download-artifact@v4
         with:
           name: sematic-wheel-test

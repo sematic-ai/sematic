@@ -10,6 +10,10 @@ else
     cd ~/project
 fi
 
+echo "Layout:"
+find .
+echo "-------------"
+
 virtualenv $VENV_NAME
 
 pwd
