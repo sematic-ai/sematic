@@ -36,6 +36,8 @@ else
 fi
 
 pip install ./dist/*sematic*.whl
+echo "Done with pip install!"
+sleep 10
 python3 -c "import sematic; print(sematic.__version__)" || exit 1
 
 deactivate
