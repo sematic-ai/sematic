@@ -87,9 +87,6 @@ jobs:
     environment:
       CI_VENV_NAME: CIVENV
       REACT_APP_IS_CIRCLE_CI: 1
-- run:
-  name: "Move wheel"
-  command: mkdir dist && mv bazel-bin/sematic/sematic-*.whl dist
     
   
   integration-test:
