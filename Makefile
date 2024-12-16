@@ -112,7 +112,4 @@ release-server:
 	docker push sematic/sematic-server-ee:${TAG}
 
 test:
-	bazel test //sematic/... --test_tag_filters=nocov --test_output=all
-
-coverage:
-	bazel coverage //sematic/... --combined_report=lcov --test_tag_filters=cov --test_output=all
+	source .venv/bin/activate && pytest

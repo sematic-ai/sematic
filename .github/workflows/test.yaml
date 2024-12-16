@@ -51,3 +51,35 @@ jobs:
           path: "./"
       - name: Test and Install Wheel
         run: "bash test_pip_install.sh"
+  integration-test:
+    needs: test-python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sematic-wheel
+          path: "./dist"
+      - name: Install Wheel
+        run: "pip install ./dist/*sematic*.whl"
+      - name: Run integration tests
+        run: |          
+          cd ./sematic/ui
+          sematic start
+          sematic run examples/add
+          npm run cypress:e2e
+          sematic stop
+          cd -
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cypress-video
+          path: "sematic/ui/tests/cypress_video"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: "sematic/ui/tests/cypress_screenshots"
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cypress-results
+          path: "sematic/ui/tests/cypress_results"
+          retention-days: 1
