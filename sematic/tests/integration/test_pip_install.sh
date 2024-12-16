@@ -35,7 +35,10 @@ else
     echo "Wheel is $WHEEL_SIZE_MB Mb"
 fi
 
-pip install -vvv ./dist/*sematic*.whl
+echo "Installing from: "
+ls -l ./dist/*sematic*.whl
+echo "------------------"
+pip install ./dist/*sematic*.whl
 echo "Done with pip install!"
 sleep 10
 python3 -c "import sematic; print(sematic.__version__)" || exit 1

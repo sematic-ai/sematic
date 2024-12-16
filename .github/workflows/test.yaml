@@ -24,7 +24,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: sematic-wheel
-          path: "./dist/"
+          path: "./dist/sematic-*.whl"
           retention-days: 10
       - uses: actions/upload-artifact@v4
         with:
