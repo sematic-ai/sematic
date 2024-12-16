@@ -19,13 +19,13 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
 
+
 logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
 @authenticate
 def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
-
     parameters = get_request_parameters(args=flask.request.args, model=Artifact)
     limit, order, sql_predicates = (
         parameters.limit,

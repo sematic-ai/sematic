@@ -115,9 +115,7 @@ def test_inline_and_resource_reqs():
 
         @func(
             standalone=False,
-            resource_requirements=ResourceRequirements(
-                KubernetesResourceRequirements()
-            ),
+            resource_requirements=ResourceRequirements(KubernetesResourceRequirements()),
         )
         def abc():
             pass
@@ -280,14 +278,16 @@ def test_convert_lists():
     assert isinstance(result.kwargs["v4"].kwargs["v1"].kwargs["v1"], Future)
 
     @func
-    def pipeline() -> List[
-        Union[
-            int,
-            str,
-            List[Union[int, str]],
-            List[Union[int, List[Union[int, str]]]],
+    def pipeline() -> (
+        List[
+            Union[
+                int,
+                str,
+                List[Union[int, str]],
+                List[Union[int, List[Union[int, str]]]],
+            ]
         ]
-    ]:
+    ):
         return [1, foo(), [2, bar()], 3, [4, [5, foo()]]]  # type: ignore
 
     assert SilentRunner().run(pipeline()) == [

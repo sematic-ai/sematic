@@ -18,6 +18,7 @@ from transformers import (
 )
 from transformers import TrainingArguments as HfTrainingArguments
 
+
 try:
     # Third-party
     from trl import SFTTrainer
@@ -241,9 +242,7 @@ class EvaluationResults:
 
 
 def load_model(model_reference: HuggingFaceModelReference):
-    model_props = _MODEL_PROPERTIES[
-        ModelSelection.from_model_reference(model_reference)
-    ]
+    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(model_reference)]
     auto_model_type = (
         AutoModelForSeq2SeqLM
         if model_props.model_type is ModelType.seq_to_seq
@@ -262,9 +261,7 @@ def load_model(model_reference: HuggingFaceModelReference):
 def load_tokenizer(
     model_reference: HuggingFaceModelReference,
 ) -> PreTrainedTokenizerBase:
-    model_props = _MODEL_PROPERTIES[
-        ModelSelection.from_model_reference(model_reference)
-    ]
+    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(model_reference)]
     tokenizer = AutoTokenizer.from_pretrained(
         model_reference.repo_reference(),
         device_map="auto",

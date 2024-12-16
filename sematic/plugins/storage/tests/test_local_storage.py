@@ -7,9 +7,11 @@ from urllib.parse import urlparse
 import flask.testing
 
 # Sematic
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_plugin_settings  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    mock_plugin_settings,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.config.config import get_config
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.db.tests.fixtures import test_db  # noqa: F401

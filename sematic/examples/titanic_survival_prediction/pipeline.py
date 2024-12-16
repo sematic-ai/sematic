@@ -30,9 +30,7 @@ def pipeline() -> List[Union[EvaluationOutput, EDAPlots]]:
     """
     df_X, df_y = load_data().set(name="Load Data", tags=["data loading"])
 
-    eda_plots = make_eda_plots(df_X, df_y).set(
-        name="EDA Analysis", tags=["eda analysis"]
-    )
+    eda_plots = make_eda_plots(df_X, df_y).set(name="EDA Analysis", tags=["eda analysis"])
 
     df_X = feature_engineering(df_X).set(
         name="Feature Engineering", tags=["feature engineering"]

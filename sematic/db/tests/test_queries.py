@@ -7,10 +7,12 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_socketio,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
@@ -47,9 +49,9 @@ from sematic.db.queries import (
     save_run_external_resource_links,
     save_user,
 )
-from sematic.db.tests.fixtures import make_job  # noqa: F811
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,  # noqa: F811
     make_resolution,
     make_run,
     persisted_artifact,
@@ -115,9 +117,7 @@ def test_get_resolution(test_db, persisted_resolution: Resolution):  # noqa: F81
         == persisted_resolution.container_image_uris
     )
     assert fetched_resolution.git_info == persisted_resolution.git_info
-    assert (
-        fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
-    )
+    assert fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
 
 
 def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
@@ -348,19 +348,16 @@ def test_run_resource_links(test_db):  # noqa: F811
 
 
 def test_get_stale_resolution_ids(
-    test_db, allow_any_run_state_transition  # noqa: F811
+    test_db,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     # Stale because run is dead and resolution isn't
     root_run_1 = make_run(future_state=FutureState.CANCELED)
-    resolution_1 = make_resolution(
-        root_id=root_run_1.id, status=ResolutionStatus.RUNNING
-    )
+    resolution_1 = make_resolution(root_id=root_run_1.id, status=ResolutionStatus.RUNNING)
 
     # not stale because resolution and run are alive
     root_run_2 = make_run(future_state=FutureState.SCHEDULED)
-    resolution_2 = make_resolution(
-        root_id=root_run_2.id, status=ResolutionStatus.RUNNING
-    )
+    resolution_2 = make_resolution(root_id=root_run_2.id, status=ResolutionStatus.RUNNING)
 
     # not stale because neither resolution nor run are alive
     root_run_3 = make_run(future_state=FutureState.CANCELED)
@@ -389,9 +386,7 @@ def test_get_orphaned_run_ids(test_db, allow_any_run_state_transition):  # noqa:
     # Not orphaned because everything is still alive
     root_run_2 = make_run(future_state=FutureState.SCHEDULED)
     child_run_2 = make_run(root_id=root_run_2.id, future_state=FutureState.RAN)
-    resolution_2 = make_resolution(
-        root_id=root_run_2.id, status=ResolutionStatus.RUNNING
-    )
+    resolution_2 = make_resolution(root_id=root_run_2.id, status=ResolutionStatus.RUNNING)
 
     # Root run is terminal and therefore not orphaned. Child run is alive but resolution
     # is not--therefore child is orphaned.
@@ -597,9 +592,7 @@ def test_get_resolution_ids_with_orphaned_jobs(test_db):  # noqa: F811
     save_run(root_run_2)
 
     resolution_1 = make_resolution(root_id=root_run_1.id)
-    resolution_2 = make_resolution(
-        root_id=root_run_2.id, status=ResolutionStatus.FAILED
-    )
+    resolution_2 = make_resolution(root_id=root_run_2.id, status=ResolutionStatus.FAILED)
     save_resolution(resolution_1)
     save_resolution(resolution_2)
 
@@ -713,17 +706,14 @@ def test_save_user(
 
 
 def test_get_active_resolution_ids(
-    test_db, allow_any_run_state_transition  # noqa: F811
+    test_db,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     root_run_1 = make_run(future_state=FutureState.SCHEDULED)
-    resolution_1 = make_resolution(
-        root_id=root_run_1.id, status=ResolutionStatus.RUNNING
-    )
+    resolution_1 = make_resolution(root_id=root_run_1.id, status=ResolutionStatus.RUNNING)
 
     root_run_2 = make_run(future_state=FutureState.CREATED)
-    resolution_2 = make_resolution(
-        root_id=root_run_2.id, status=ResolutionStatus.CREATED
-    )
+    resolution_2 = make_resolution(root_id=root_run_2.id, status=ResolutionStatus.CREATED)
 
     root_run_3 = make_run(future_state=FutureState.RESOLVED)
     resolution_3 = make_resolution(

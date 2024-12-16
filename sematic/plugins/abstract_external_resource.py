@@ -16,6 +16,7 @@ from sematic.utils.exceptions import (
     NotInSematicFuncError,
 )
 
+
 logger = logging.getLogger(__name__)
 
 

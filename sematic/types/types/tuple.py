@@ -20,9 +20,7 @@ from sematic.types.serialization import (
 
 
 @register_safe_cast(tuple)
-def _tuple_safe_cast(
-    value: Tuple, type_: Type
-) -> Tuple[Optional[Tuple], Optional[str]]:
+def _tuple_safe_cast(value: Tuple, type_: Type) -> Tuple[Optional[Tuple], Optional[str]]:
     """
     Casting logic for tuples.
 
@@ -83,9 +81,7 @@ def _tuple_to_json_encodable_summary(value: Tuple, type_: Type) -> SummaryOutput
     summary, blobs = [], {}
 
     for element, element_type in zip(value, type_.__args__):
-        element_summary, element_blobs = get_json_encodable_summary(
-            element, element_type
-        )
+        element_summary, element_blobs = get_json_encodable_summary(element, element_type)
         summary.append(element_summary)
         blobs.update(element_blobs)
 

@@ -7,6 +7,7 @@ import os  # noqa: E402
 import platform  # noqa: E402
 import sys  # noqa: E402
 
+
 # `urllib` invokes the underlying OS framework to get configured system proxies.
 # On MacOS, this call causes the OS to immediately kill the `gunicorn` WSGI worker because
 # it had not immediately performed `exec()` after `fork()`.
@@ -63,6 +64,8 @@ from sematic.runner import Runner  # noqa: F401,E402
 from sematic.runners.cloud_runner import CloudRunner  # noqa: F401,E402
 from sematic.runners.local_runner import LocalRunner, RerunMode  # noqa: F401,E402
 from sematic.runners.silent_runner import SilentRunner  # noqa: F401,E402
-from sematic.utils.exceptions import KubernetesError  # noqa: F401,E402
-from sematic.utils.exceptions import PipelineRunError  # noqa: F401,E402
+from sematic.utils.exceptions import (  # noqa: E402
+    KubernetesError,  # noqa: F401
+    PipelineRunError,  # noqa: F401
+)
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

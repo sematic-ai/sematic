@@ -25,6 +25,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -72,14 +73,9 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
     return flask.jsonify(payload)
 
 
-@sematic_api.route(
-    "/api/v1/external_resources/<resource_id>/activate", methods=["POST"]
-)
+@sematic_api.route("/api/v1/external_resources/<resource_id>/activate", methods=["POST"])
 @authenticate
-def activate_resource_endpoint(
-    user: Optional[User], resource_id: str
-) -> flask.Response:
-
+def activate_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
         return jsonify_error(
@@ -113,7 +109,6 @@ def activate_resource_endpoint(
 def deactivate_resource_endpoint(
     user: Optional[User], resource_id: str
 ) -> flask.Response:
-
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
         return jsonify_error(

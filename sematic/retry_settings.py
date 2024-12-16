@@ -6,6 +6,7 @@ from typing import Optional, Tuple, Type
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata
 
+
 logger = logging.getLogger(__name__)
 
 

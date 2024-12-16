@@ -11,6 +11,7 @@ from sematic import api_client
 from sematic.cli.cli import cli
 from sematic.config.config import switch_env
 
+
 logger = logging.getLogger(__name__)
 
 _COMMIT_STRUCTURE_HELP = "Structured as <repo owner>/<repo name>:<commit sha>"

@@ -27,9 +27,7 @@ def timeout(duration_seconds: Optional[int]):
 
     if duration_seconds != int(duration_seconds):
         # this is required by signal.alarm
-        raise ValueError(
-            f"Timeout duration must be an integer, got: {duration_seconds}"
-        )
+        raise ValueError(f"Timeout duration must be an integer, got: {duration_seconds}")
     if duration_seconds <= 0:
         raise ValueError(f"Timeout duration must be positive, got: {duration_seconds}")
 

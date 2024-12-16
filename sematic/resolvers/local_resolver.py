@@ -5,6 +5,7 @@ import logging
 from sematic.resolver import Resolver
 from sematic.runners.local_runner import LocalRunner
 
+
 logger = logging.getLogger(__name__)
 
 

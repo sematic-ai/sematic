@@ -29,6 +29,7 @@ from sematic.resolvers.resource_requirements import (
 from sematic.types import Image, S3Location
 from sematic.types.serialization import get_json_encodable_summary
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,7 @@ def add_with_ray(a: float, b: float) -> float:
     """
     logger.info("Executing: add_with_ray(a=%s, b=%s)", a, b)
     with RayCluster(
-        config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        )
+        config=SimpleRayCluster(n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2))
     ):
         result = ray.get([add_ray_task.remote(a, b)])[0]
     logger.info("Result from ray for %s + %s: %s", a, b, result)
@@ -89,9 +88,7 @@ def add_inline_using_resource(a: float, b: float) -> float:
     with TimedMessage(
         message="some message", allocation_seconds=2, deallocation_seconds=2
     ) as timed_message:
-        logger.info(
-            "Adding inline with timed_message='%s'", timed_message.read_message()
-        )
+        logger.info("Adding inline with timed_message='%s'", timed_message.read_message())
         time.sleep(5)
         return a + b
 
@@ -651,9 +648,7 @@ def testing_pipeline(
         k8_resource_requirements = KubernetesResourceRequirements(
             mount_expanded_shared_memory=True,
         )
-        resource_requirements = ResourceRequirements(
-            kubernetes=k8_resource_requirements
-        )
+        resource_requirements = ResourceRequirements(kubernetes=k8_resource_requirements)
 
         future = add_with_expanded_shared_memory(initial_future, 3)
         future.set(resource_requirements=resource_requirements)
@@ -672,9 +667,7 @@ def testing_pipeline(
         k8_resource_requirements = KubernetesResourceRequirements(
             host_path_mounts=k8_host_path_mounts
         )
-        resource_requirements = ResourceRequirements(
-            kubernetes=k8_resource_requirements
-        )
+        resource_requirements = ResourceRequirements(kubernetes=k8_resource_requirements)
 
         future = add_with_host_path_mounts(initial_future, 3, pod_mount_paths)
         future.set(resource_requirements=resource_requirements)

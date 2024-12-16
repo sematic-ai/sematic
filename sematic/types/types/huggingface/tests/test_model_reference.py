@@ -4,6 +4,7 @@ import pytest
 # Sematic
 from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 
+
 sha = "1111111111111111111111111111111111111111"
 
 CONVERSION_CASES = [

@@ -9,6 +9,7 @@ import flask
 # Sematic
 from sematic.config.config import get_config
 
+
 _LOG_FILE_ROTATION_SETTINGS = {
     "formatter": "standard",
     "class": "logging.handlers.RotatingFileHandler",
@@ -71,8 +72,7 @@ def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.
         "formatters": {
             "standard": {
                 "format": (
-                    "%(asctime)s %(request_id)s "
-                    "[%(levelname)s] %(name)s: %(message)s"
+                    "%(asctime)s %(request_id)s " "[%(levelname)s] %(name)s: %(message)s"
                 ),
             },
         },

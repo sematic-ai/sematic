@@ -47,6 +47,7 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,9 +150,7 @@ _ALLOWED_TRANSITIONS = {
     ResolutionStatus.CANCELED: {},
 }
 
-_TERMINAL_STATES = frozenset(
-    {state for state in ResolutionStatus if state.is_terminal()}
-)
+_TERMINAL_STATES = frozenset({state for state in ResolutionStatus if state.is_terminal()})
 _NON_TERMINAL_STATES = frozenset(
     {state for state in ResolutionStatus if not state.is_terminal()}
 )
@@ -243,9 +242,7 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
         types.String(), nullable=True
     )
     client_version: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
-    cache_namespace: Mapped[Optional[str]] = mapped_column(
-        types.String(), nullable=True
-    )
+    cache_namespace: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     run_command: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     build_config: Mapped[Optional[str]] = mapped_column(types.String(), nullable=True)
     resource_requirements_json: Mapped[Optional[str]] = mapped_column(

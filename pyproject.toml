@@ -150,6 +150,14 @@ lines-after-imports = 2
 enabled = true
 
 [[tool.mypy.overrides]]
+module = "boto3.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "botocore.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = "yaml.*"
 ignore_missing_imports = true
 
@@ -160,6 +168,9 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "torch.*"
 ignore_missing_imports = true
+
+[tool.mypy]
+exclude = ".*site-packages.*"
 
 [tool.uv.sources]
 sematic = { workspace = true }

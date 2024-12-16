@@ -16,6 +16,7 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate, authenticate_starlette
 from sematic.db.models.user import User
 
+
 logger = logging.getLogger(__name__)
 
 _sio_server = None

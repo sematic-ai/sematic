@@ -53,9 +53,7 @@ def set_settings_cli(var: str, value: str, plugin: Optional[str]) -> None:
     _set_plugin_settings_cli(var, value, plugin_class)
 
 
-def _set_plugin_settings_cli(
-    var: str, value: str, plugin: Type[AbstractPlugin]
-) -> None:
+def _set_plugin_settings_cli(var: str, value: str, plugin: Type[AbstractPlugin]) -> None:
     settings_vars = plugin.get_settings_vars()
 
     try:

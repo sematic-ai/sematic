@@ -56,7 +56,8 @@ def the_beatles(test_db: DB):  # noqa: F811
 
 
 def test_list_users(
-    the_beatles: List[User], test_client: flask.testing.FlaskClient  # noqa: F811
+    the_beatles: List[User],
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/users")
 

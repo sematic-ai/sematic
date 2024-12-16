@@ -6,6 +6,7 @@ import shutil
 # Sematic
 from sematic.config.config import get_config
 
+
 logger = logging.getLogger(__name__)
 
 SQLITE_SCHEMA = "sqlite://"

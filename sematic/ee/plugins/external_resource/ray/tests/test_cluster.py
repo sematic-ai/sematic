@@ -49,9 +49,7 @@ def add_with_ray(a, b):
 @func
 def add(a: int, b: int) -> int:
     with RayCluster(
-        config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        )
+        config=SimpleRayCluster(n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2))
     ):
         result = ray.get([add_with_ray.remote(a, b)], timeout=30)[0]
     return result
@@ -59,9 +57,7 @@ def add(a: int, b: int) -> int:
 
 def test_timeout():
     cluster = RayCluster(
-        config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        ),
+        config=SimpleRayCluster(n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)),
         activation_timeout_seconds=42,
     )
     assert cluster.get_activation_timeout_seconds() == 42
@@ -79,9 +75,7 @@ def test_get_kuberay_version():
     RayClusterClientsMocked.reset_mocks()
     fake_namespace = "fake_namespace"
     cluster = RayClusterClientsMocked(
-        config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        )
+        config=SimpleRayCluster(n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2))
     )
     mock_api = cluster._apps_api()
     mock_deployment_response = MagicMock(name="mock_deployment_response")
@@ -166,9 +160,7 @@ def test_request_cluster(mock_get_run_ids, mock_get_run):
     namespace = "test"
 
     original_cluster = RayClusterClientsMocked(
-        config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        ),
+        config=SimpleRayCluster(n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)),
         status=ResourceStatus(
             state=ResourceState.CREATED,
             message="fake message",
@@ -201,9 +193,7 @@ def test_update_from_activating():
 
     cluster_name = "cluster-name"
     cluster = RayClusterClientsMocked(
-        config=SimpleRayCluster(
-            n_nodes=3, node_config=RayNodeConfig(cpu=1, memory_gb=2)
-        ),
+        config=SimpleRayCluster(n_nodes=3, node_config=RayNodeConfig(cpu=1, memory_gb=2)),
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
             message="fake message",

@@ -19,6 +19,7 @@ from sematic.plugins.building.tests.test_docker_builder_config import (
 )
 from sematic.tests.utils import assert_logs_captured
 
+
 _BASE_IMAGE_URI = f"sematicai/sematic-worker-base:latest@{IMAGE_SHA}"
 _LOCAL_IMAGE_NAME = "fixtures:default_my_tag_suffix"
 _LOCAL_IMAGE_URI = f"{_LOCAL_IMAGE_NAME}@{IMAGE_SHA}"
@@ -102,9 +103,7 @@ def test_build_image_script_happy(
 ):
     # determine loading the image_script build config
     target = os.path.join(RESOURCE_PATH, "good_minimal.py")
-    expected_local_uri = docker_builder.ImageURI.from_uri(
-        f"fixtures:default@{IMAGE_SHA}"
-    )
+    expected_local_uri = docker_builder.ImageURI.from_uri(f"fixtures:default@{IMAGE_SHA}")
     mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
@@ -459,9 +458,7 @@ def test_push_image_skip(mock_image: mock.Mock, mock_docker_client: mock.Mock):
     mock_docker_client.images.push.assert_not_called()
 
 
-def test_push_image_tagging_failed(
-    mock_image: mock.Mock, mock_docker_client: mock.Mock
-):
+def test_push_image_tagging_failed(mock_image: mock.Mock, mock_docker_client: mock.Mock):
     image_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
     mock_image.tag.return_value = False
 

@@ -45,7 +45,6 @@ SELECT 1;
 @patch("sematic.db.migrate._get_migration_sql", return_value=VALID_SQL)
 @patch("sqlalchemy.engine.base.Connection.execute")
 def test_statement_parsing(mock_execute, _, test_db_empty):  # noqa: F811
-
     _run_sql_migration("abc", "abc", MigrationDirection.UP)
     # one call for the statement, one to mark the migration as done
     assert mock_execute.call_count == 2
@@ -81,7 +80,6 @@ def test_invalid_sql(_, test_db_empty):  # noqa: F811
 
 @patch("sematic.db.migrate._run_py_migration")
 def test_migrate(_, test_db_empty):  # noqa: F811
-
     with pytest.raises(OperationalError):
         with db().get_engine().begin() as conn:
             conn.execute(text("SELECT version FROM schema_migrations;"))

@@ -22,11 +22,11 @@ from sematic.examples.summarization_finetune.train_eval import (
     TrainingConfig,
     evaluate,
     export_model,
+    prepare_data,
 )
 from sematic.examples.summarization_finetune.train_eval import (
     load_tokenizer as do_load_tokenizer,
 )
-from sematic.examples.summarization_finetune.train_eval import prepare_data
 from sematic.examples.summarization_finetune.train_eval import train as do_train
 from sematic.types import HuggingFaceStoredModel as StoredModel
 from sematic.types import Link, PromptResponse
@@ -109,7 +109,6 @@ def eval(
     dataset_config: DatasetConfig,
     prompt_format: PromptFormat,
 ) -> EvaluationResults:
-
     return evaluate(
         model.load(device_map="auto", offload_folder="temp/offload"),
         eval_data,

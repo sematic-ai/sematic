@@ -12,6 +12,7 @@ from sematic.types.serialization import (
 )
 from sematic.utils.hashing import get_str_sha1_digest, get_value_and_type_sha1_digest
 
+
 CACHE_NAMESPACE_MAX_LENGTH = 50
 
 CacheNamespaceCallable = Callable[[AbstractFuture], str]

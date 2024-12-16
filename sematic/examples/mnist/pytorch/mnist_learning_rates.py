@@ -17,6 +17,7 @@ from sematic.examples.mnist.pytorch.pipeline import (
     scan_learning_rate,
 )
 
+
 logging.basicConfig(level=logging.INFO)
 
 

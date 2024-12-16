@@ -2,6 +2,7 @@
 from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 from sematic.types.serialization import value_to_json_encodable
 
+
 NoneType = type(None)
 
 

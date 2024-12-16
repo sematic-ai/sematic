@@ -29,9 +29,7 @@ class GenericMeta(TypeMeta):
     def get_parameters(cls) -> typing.OrderedDict[str, typing.Any]:
         raise NotImplementedError()
 
-    def make_type(
-        cls, parameters: typing.OrderedDict[str, typing.Any]
-    ) -> "GenericMeta":
+    def make_type(cls, parameters: typing.OrderedDict[str, typing.Any]) -> "GenericMeta":
         if not isinstance(parameters, collections.OrderedDict):
             raise TypeError(
                 (

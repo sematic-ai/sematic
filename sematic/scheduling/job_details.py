@@ -8,6 +8,7 @@ from typing import FrozenSet, List, Literal, Optional
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 
+
 logger = logging.getLogger(__name__)
 
 # ordered from highest to lowest precedence
@@ -557,8 +558,7 @@ class JobDetails:
                 "This can have many causes."
             )
         elif (
-            previous_pod_name is not None
-            and previous_pod_name != latest_summary.pod_name
+            previous_pod_name is not None and previous_pod_name != latest_summary.pod_name
         ):
             description += (
                 " The pod was restarted by Kubernetes without Sematic's "

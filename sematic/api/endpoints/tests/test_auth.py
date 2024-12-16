@@ -13,8 +13,11 @@ from google.auth.exceptions import GoogleAuthError
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_server_settings, test_client  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_server_settings,
+    test_client,
+)
 from sematic.config.server_settings import ServerSettingsVar
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
@@ -85,7 +88,8 @@ def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa
 
 
 def test_login_new_user_no_hd(
-    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+    idinfo,
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     idinfo["hd"] = None
     with mock_server_settings({ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123"}):
@@ -109,7 +113,8 @@ def test_login_new_user_no_hd(
 
 
 def test_login_existing_user(
-    persisted_user: User, test_client: flask.testing.FlaskClient  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     idinfo = {
         "hd": "example.com",
@@ -172,7 +177,8 @@ def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: 
 
 
 def test_login_valid_domain(
-    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+    idinfo,
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     with mock_server_settings(
         {
@@ -192,7 +198,8 @@ def test_login_valid_domain(
 
 
 def test_login_valid_domain_no_hd(
-    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+    idinfo,
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     idinfo["hd"] = None
     with mock_server_settings(
@@ -241,9 +248,7 @@ def test_authenticate_decorator(
         sematic_api.route("/test-{}".format(test_id))(authenticate(endpoint))
 
         headers = (
-            {"X-API-KEY": persisted_user.api_key}
-            if as_bool(authenticate_config)
-            else {}
+            {"X-API-KEY": persisted_user.api_key} if as_bool(authenticate_config) else {}
         )
 
         response = test_client.get(

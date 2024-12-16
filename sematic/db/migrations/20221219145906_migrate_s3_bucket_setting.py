@@ -5,6 +5,7 @@ import pathlib
 # Third-party
 import yaml
 
+
 _S3_PLUGIN_PATH = "sematic.plugins.storage.s3_storage.S3Storage"
 _SERVER_SETTINGS_PATH = "sematic.config.server_settings.ServerSettings"
 _AWS_S3_BUCKET_SETTING_KEY = "AWS_S3_BUCKET"
@@ -38,9 +39,9 @@ def up():
     if _S3_PLUGIN_PATH not in settings["default"]["settings"]:
         settings["default"]["settings"][_S3_PLUGIN_PATH] = {}
 
-    settings["default"]["settings"][_S3_PLUGIN_PATH][
-        _AWS_S3_BUCKET_SETTING_KEY
-    ] = s3_bucket_setting
+    settings["default"]["settings"][_S3_PLUGIN_PATH][_AWS_S3_BUCKET_SETTING_KEY] = (
+        s3_bucket_setting
+    )
 
     with open(settings_file_path, "w") as f:
         f.write(yaml.dump(settings, Dumper=yaml.Dumper))

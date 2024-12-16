@@ -62,9 +62,7 @@ def resolution(run):
         kind=ResolutionKind.KUBERNETES,
         container_image_uri="my.uri",
         container_image_uris={"default": "my.uri"},
-        git_info=GitInfo(
-            remote="remote", branch="branch", commit="commit", dirty=False
-        ),
+        git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
         client_version=CURRENT_VERSION_STR,
         run_command="sematic run my_pipeline.py",

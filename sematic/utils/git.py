@@ -11,6 +11,7 @@ from typing import Any, Optional
 # Sematic
 from sematic.db.models.git_info import GitInfo
 
+
 logger = logging.getLogger(__name__)
 
 

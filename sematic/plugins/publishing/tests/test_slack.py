@@ -23,6 +23,7 @@ from sematic.plugins.publishing.slack import SlackPublisher, SlackPublisherSetti
 from sematic.tests.utils import assert_logs_captured
 from sematic.utils.env import environment_variables
 
+
 _TEST_ENV_VARS = {
     ServerSettingsVar.SEMATIC_DASHBOARD_URL.value: "https://my.sematic",
     SlackPublisherSettingsVar.SLACK_WEBHOOK_TOKEN.value: "XX/YY/ZZ",

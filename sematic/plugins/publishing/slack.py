@@ -23,6 +23,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.queries import get_run
 from sematic.plugins.abstract_publisher import AbstractPublisher
 
+
 logger = logging.getLogger(__name__)
 
 _PLUGIN_VERSION = (0, 1, 0)
@@ -129,6 +130,4 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
             logger.info("Published resolution failure to Slack")
 
         except Exception:
-            logger.exception(
-                "Unable to publish the resolution failure message to Slack"
-            )
+            logger.exception("Unable to publish the resolution failure message to Slack")

@@ -13,6 +13,7 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics import PrecisionRecallCurve  # type: ignore
 
+
 # from sematic.ee.metrics import log_metric
 
 _N_POINTS_PR_CURVE = 2000
@@ -148,6 +149,7 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         accuracy=correct / len(test_loader.dataset),  # type: ignore
         pr_curve=fig,
         confusion_matrix=_confusion_matrix(
-            torch.cat(targets).cpu(), torch.cat(preds).cpu()  # type: ignore
+            torch.cat(targets).cpu(),  # type: ignore
+            torch.cat(preds).cpu(),  # type: ignore
         ),
     )

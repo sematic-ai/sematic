@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # Sematic
 from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin
 
+
 # This should be the manifest that can be passed to the
 # Kubernetes API for the RayCluster CRD here:
 # https://github.com/ray-project/kuberay/blob/master/helm-chart/kuberay-operator/crds/ray.io_rayclusters.yaml
@@ -152,9 +153,7 @@ class RayClusterConfig:
             )
 
     def requires_autoscale(self) -> bool:
-        return any(
-            group.max_workers > group.min_workers for group in self.scaling_groups
-        )
+        return any(group.max_workers > group.min_workers for group in self.scaling_groups)
 
 
 def SimpleRayCluster(

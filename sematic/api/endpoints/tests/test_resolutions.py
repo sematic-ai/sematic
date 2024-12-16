@@ -20,11 +20,13 @@ from sematic.abstract_plugin import (
     PluginScope,
     PluginVersion,
 )
-from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401
-from sematic.api.tests.fixtures import with_auth  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    make_auth_test,  # noqa: F401
+    mock_auth,  # noqa: F401
+    mock_requests,  # noqa: F401
+    test_client,  # noqa: F401
+    with_auth,  # noqa: F401; noqa: F401
+)
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
@@ -61,6 +63,7 @@ from sematic.plugins.abstract_publisher import AbstractPublisher
 from sematic.scheduling.job_details import JobKind, JobStatus, KubernetesJobState
 from sematic.scheduling.job_scheduler import StateNotSchedulable
 from sematic.utils.env import environment_variables
+
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
 test_put_resolution_auth = make_auth_test("/api/v1/resolutions/123", method="PUT")
@@ -315,7 +318,8 @@ def test_resolution_event_publishing(
 
 
 def test_get_resolution_404(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/resolutions/unknownid")
 
@@ -352,9 +356,7 @@ def test_schedule_resolution_endpoint_no_auth(
     assert isinstance(scheduled_resolution, Resolution)
     assert scheduled_resolution.root_id == persisted_resolution.root_id
     assert mock_schedule_resolution.call_args.kwargs["max_parallelism"] == 3
-    assert (
-        mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
-    )
+    assert mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
 
 
 @pytest.mark.skip("Stalling; needs investigation.")
@@ -364,7 +366,6 @@ def test_schedule_resolution_unschedulable(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_schedule_resolution: mock.MagicMock,
 ):
-
     mock_schedule_resolution.side_effect = StateNotSchedulable("fake error")
     response = test_client.post(
         "/api/v1/resolutions/{}/schedule".format(persisted_resolution.root_id),
@@ -449,7 +450,8 @@ def test_find_zombie_resolution(
         "/api/v1/resolutions?{}".format(urlencode(query_params)),
     )
     resolution_ids = [
-        result["root_id"] for result in response.json["content"]  # type: ignore
+        result["root_id"]
+        for result in response.json["content"]  # type: ignore
     ]
     assert resolution_ids == []
 
@@ -473,7 +475,8 @@ def test_find_zombie_resolution(
         "/api/v1/resolutions?{}".format(urlencode(query_params)),
     )
     resolution_ids = [
-        result["root_id"] for result in response.json["content"]  # type: ignore
+        result["root_id"]
+        for result in response.json["content"]  # type: ignore
     ]
     assert resolution_ids == []
 
@@ -489,7 +492,8 @@ def test_find_zombie_resolution(
         "/api/v1/resolutions?{}".format(urlencode(query_params)),
     )
     resolution_ids = [
-        result["root_id"] for result in response.json["content"]  # type: ignore
+        result["root_id"]
+        for result in response.json["content"]  # type: ignore
     ]
     assert resolution_ids == [persisted_resolution.root_id]
 
@@ -589,9 +593,7 @@ def test_schedule_resolution_endpoint_auth(
     assert isinstance(scheduled_resolution, Resolution)
     assert scheduled_resolution.root_id == persisted_resolution.root_id
     assert mock_schedule_resolution.call_args.kwargs["max_parallelism"] == 3
-    assert (
-        mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
-    )
+    assert mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_resolution_cancel")
@@ -675,7 +677,6 @@ def test_rerun_resolution_unschedulable(
     mock_auth,  # noqa: F811
     mock_schedule_resolution: mock.MagicMock,
 ):
-
     mock_schedule_resolution.side_effect = StateNotSchedulable("fake error")
     response = test_client.post(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
@@ -945,7 +946,8 @@ def test_rerun_resolution_endpoint_artifact_override(
 
 
 def test_list_external_resources_empty(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     response = test_client.get("/api/v1/resolutions/abc123/external_resources")
 
@@ -973,9 +975,9 @@ def test_list_external_resource_ids(
 
 
 def _get_expected_env_vars(
-    resolution: Resolution, user: User  # noqa: F811
+    resolution: Resolution,  # noqa: F811
+    user: User,  # noqa: F811
 ) -> typing.Dict[str, str]:
-
     expected_env_vars = copy(resolution.settings_env_vars)
     expected_env_vars[str(UserSettingsVar.SEMATIC_API_KEY.value)] = user.api_key
     return expected_env_vars

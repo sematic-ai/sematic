@@ -28,6 +28,7 @@ from sqlalchemy.engine import Connection
 from sematic.config.config import get_config, switch_env
 from sematic.db.db import db
 
+
 _DEFAULT_SCHEMA_FILE = "sematic/db/schema.sql.sqlite"
 
 
@@ -103,9 +104,7 @@ class InvalidMigrationError(ValueError):
     pass
 
 
-def _run_sql_migration(
-    migration_file: str, version: str, direction: MigrationDirection
-):
+def _run_sql_migration(migration_file: str, version: str, direction: MigrationDirection):
     sql = _get_migration_sql(migration_file)
 
     if not all(marker in sql for marker in (_DOWN_MARKER, _UP_MARKER)):

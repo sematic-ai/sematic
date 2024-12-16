@@ -268,9 +268,7 @@ def test_activation_timeout_for_resource():
             )
         ):
             started_activate = time.time()
-            with FakeExternalResource(
-                slow_activate=True, activation_timeout_seconds=0.0
-            ):
+            with FakeExternalResource(slow_activate=True, activation_timeout_seconds=0.0):
                 raise AssertionError("Should not reach here")
     exited_with_block = time.time()
     resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
@@ -337,9 +335,7 @@ def test_deactivation_failures_for_resource():
     reason="This test takes a long time to execute, and is disabled by default",
 )
 def test_timeout():
-    result = SilentRunner().run(
-        timeout_pipeline(long_child=False, long_grandchild=False)
-    )
+    result = SilentRunner().run(timeout_pipeline(long_child=False, long_grandchild=False))
     assert result == 42.0
 
     future = timeout_pipeline(long_child=True, long_grandchild=False)

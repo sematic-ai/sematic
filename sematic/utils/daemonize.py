@@ -5,6 +5,7 @@ import os
 import sys
 from os import closerange
 
+
 REDIRECT_TO = getattr(os, "devnull", "/dev/null")
 
 

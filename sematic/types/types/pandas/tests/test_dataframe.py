@@ -37,9 +37,7 @@ def test_dataframe_datetime():
 
     artifact, _ = make_artifact(df, pandas.DataFrame)
 
-    assert json.loads(artifact.json_summary)["dataframe"] == {
-        "a": {"0": str(timestamp)}
-    }
+    assert json.loads(artifact.json_summary)["dataframe"] == {"a": {"0": str(timestamp)}}
 
 
 def test_type_from_json_encodable():

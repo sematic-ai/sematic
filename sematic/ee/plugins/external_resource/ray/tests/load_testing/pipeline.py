@@ -23,6 +23,7 @@ from sematic.ee.ray import AutoscalerConfig, RayCluster, RayNodeConfig, SimpleRa
 from sematic.examples.mnist.pytorch.train_eval import Net, train
 from sematic.function import func
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

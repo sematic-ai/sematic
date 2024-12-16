@@ -23,7 +23,6 @@ def stdout_spinner():
     finally:
         if spinner_process is not None:
             try:
-
                 spinner_process.terminate()
                 spinner_process.join(timeout=5)
                 if spinner_process.is_alive():

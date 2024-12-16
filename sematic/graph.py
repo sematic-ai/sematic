@@ -2,9 +2,8 @@
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, unique
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 from typing import OrderedDict as OrderedDictType
-from typing import Tuple
 
 # Sematic
 import sematic.api_client as api_client
@@ -15,6 +14,7 @@ from sematic.db.models.factories import initialize_future_from_run
 from sematic.db.models.run import Run
 from sematic.utils.algorithms import breadth_first_search, topological_sort
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
+
 
 RunID = str
 RunsByID = Dict[RunID, Run]
@@ -232,8 +232,7 @@ class Graph:
         resolved? Uses in-memory graph artifacts, does not fetch them from the DB.
         """
         return all(
-            edge.artifact_id is not None
-            for edge in self._edges_by_destination_id[run_id]
+            edge.artifact_id is not None for edge in self._edges_by_destination_id[run_id]
         )
 
     def _execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
@@ -254,9 +253,7 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [
-                edge.source_run_id for edge in self._edges_by_destination_id[run_id]
-            ]
+            run_id: [edge.source_run_id for edge in self._edges_by_destination_id[run_id]]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)
@@ -279,9 +276,7 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [
-                edge.destination_run_id for edge in self._edges_by_source_id[run_id]
-            ]
+            run_id: [edge.destination_run_id for edge in self._edges_by_source_id[run_id]]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)

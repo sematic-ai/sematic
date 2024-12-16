@@ -9,6 +9,7 @@ from sematic import api_client
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -55,7 +56,6 @@ class ServerResourceManager(AbstractResourceManager):
 
         def do_poll():
             while len(self._resource_ids_updating) != 0:
-
                 # freeze beforehand, since the original list may have elements
                 # removed as we iterate
                 to_update = list(self._resource_ids_updating)

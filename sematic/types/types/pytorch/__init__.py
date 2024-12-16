@@ -4,6 +4,7 @@ import logging
 # Sematic
 import sematic.torch_patch
 
+
 logger = logging.getLogger(__name__)
 
 try:

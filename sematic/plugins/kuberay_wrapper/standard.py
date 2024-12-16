@@ -252,9 +252,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
         manifest["spec"]["rayVersion"] = cluster_config.ray_version
-        manifest["spec"][
-            "enableInTreeAutoscaling"
-        ] = cluster_config.requires_autoscale()
+        manifest["spec"]["enableInTreeAutoscaling"] = cluster_config.requires_autoscale()
 
         autoscaler_config = AutoscalerConfig(
             cpu=0.5,
@@ -302,9 +300,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             worker_group.worker_nodes
         )
         group_manifest["template"]["spec"]["serviceAccount"] = _get_service_account()
-        group_manifest["template"]["spec"][
-            "serviceAccountName"
-        ] = _get_service_account()
+        group_manifest["template"]["spec"]["serviceAccountName"] = _get_service_account()
         group_manifest["template"]["spec"]["initContainers"][0]["image"] = _get_setting(
             StandardKuberaySettingsVar.RAY_BUSYBOX_PULL_OVERRIDE,
             _DEFAULT_BUSYBOX_PULL,
@@ -340,9 +336,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         requires_gpus = cluster_config.head_node.gpu_count != 0 or any(
             group.worker_nodes.gpu_count != 0 for group in cluster_config.scaling_groups
         )
-        supports_gpus = _get_setting(
-            StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False
-        )
+        supports_gpus = _get_setting(StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False)
         if requires_gpus and not supports_gpus:
             raise UnsupportedUsageError(
                 f"The Kuberay plugin {cls.__name__} is not configured "
@@ -384,18 +378,16 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"]["containers"][0]["resources"][
             "requests"
         ] = cls._requests_for_node(node_config)
-        head_group_template["template"]["spec"]["nodeSelector"] = (
-            cls._get_node_selector(node_config)
+        head_group_template["template"]["spec"]["nodeSelector"] = cls._get_node_selector(
+            node_config
         )
         head_group_template["template"]["spec"]["tolerations"] = cls._get_tolerations(
             node_config
         )
-        head_group_template["template"]["spec"][
-            "serviceAccount"
-        ] = _get_service_account()
-        head_group_template["template"]["spec"][
-            "serviceAccountName"
-        ] = _get_service_account()
+        head_group_template["template"]["spec"]["serviceAccount"] = _get_service_account()
+        head_group_template["template"]["spec"]["serviceAccountName"] = (
+            _get_service_account()
+        )
         head_group_template["template"]["metadata"]["labels"] = cls._get_tags(
             node_config, is_label=True
         )

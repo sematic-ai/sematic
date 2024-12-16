@@ -14,6 +14,7 @@ import sematic.config.server_settings as server_settings_module
 import sematic.config.settings as settings_module
 import sematic.config.user_settings as user_settings_module
 
+
 EXPECTED_DEFAULT_ACTIVE_SETTINGS = settings_module.ProfileSettings(
     scopes={},
     settings={

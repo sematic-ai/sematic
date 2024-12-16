@@ -19,6 +19,7 @@ from sematic.examples.mnist.pytorch.pipeline import (
     pipeline,
 )
 
+
 logging.basicConfig(level=logging.INFO)
 
 TRAIN_CONFIGS = [

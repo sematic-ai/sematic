@@ -5,9 +5,8 @@ from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
 import sqlalchemy.exc
-from sqlalchemy import Integer
+from sqlalchemy import Integer, func
 from sqlalchemy import cast as sql_cast
-from sqlalchemy import func
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -30,6 +29,7 @@ from sematic.plugins.abstract_metrics_storage import (
 from sematic.plugins.metrics_storage.sql.models.metric_label import MetricLabel
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
 from sematic.utils.hashing import get_str_sha1_digest
+
 
 logger = logging.getLogger(__name__)
 

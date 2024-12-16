@@ -33,6 +33,7 @@ from sematic.types.type import get_origin, is_type
 from sematic.utils.algorithms import breadth_first_search
 from sematic.utils.exceptions import CancellationError
 
+
 _EXTRA_FUTURE_DOCS_LINK = (
     "https://docs.sematic.dev/diving-deeper/future-algebra#unused-futures"
 )
@@ -524,9 +525,7 @@ def _make_list(type_: Type[OutputType], list_with_futures: Sequence[Any]) -> Out
     source_code = """
 def _make_list({inputs}):
     return [{inputs}]
-    """.format(
-        inputs=", ".join("v{}".format(i) for i in range(len(list_with_futures)))
-    )
+    """.format(inputs=", ".join("v{}".format(i) for i in range(len(list_with_futures))))
     scope: Dict[str, Any] = {"__name__": __name__}
     exec(source_code, scope)
     _make_list = scope["_make_list"]
@@ -589,9 +588,7 @@ def _make_tuple(
     source_code = """
 def _make_tuple({inputs}):
     return tuple([{inputs}])
-    """.format(
-        inputs=", ".join("v{}".format(i) for i in range(len(tuple_with_futures)))
-    )
+    """.format(inputs=", ".join("v{}".format(i) for i in range(len(tuple_with_futures))))
     scope: Dict[str, Any] = {"__name__": __name__}
     exec(source_code, scope)
     _make_tuple = scope["_make_tuple"]
@@ -665,9 +662,7 @@ def _get_dependency_ids(future: Future) -> List[str]:
 
     breadth_first_search(
         start=[future],
-        get_next=lambda f: [
-            arg for arg in f.kwargs.values() if isinstance(arg, Future)
-        ],
+        get_next=lambda f: [arg for arg in f.kwargs.values() if isinstance(arg, Future)],
         visit=record_dependency,
         key_func=lambda f: f.id,
     )

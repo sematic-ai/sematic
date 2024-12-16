@@ -5,6 +5,7 @@ from enum import Enum, unique
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
+
 KUBERNETES_SECRET_NAME = "sematic-func-secrets"
 
 

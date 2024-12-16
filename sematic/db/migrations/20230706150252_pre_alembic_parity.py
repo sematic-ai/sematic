@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sematic.db.db import db
 from sematic.db.migration_utils import back_up_db_file, reinstate_db_file_from_backup
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,28 +19,34 @@ def sqlite_up():
     with db().get_engine().begin() as conn:
         execute_text(
             conn,
-            "UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;",
+            "UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' "
+            "WHERE function_path IS NULL;",
         )
         execute_text(conn, "UPDATE runs SET tags = '[]' WHERE tags IS NULL;")
         execute_text(
             conn,
-            "UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;",
+            "UPDATE runs SET source_code = 'source code unavailable' "
+            "WHERE source_code IS NULL;",
         )
         execute_text(
             conn,
-            "UPDATE jobs SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;",
+            "UPDATE jobs SET created_at = datetime(0, 'unixepoch') "
+            "WHERE created_at IS NULL;",
         )
         execute_text(
             conn,
-            "UPDATE jobs SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;",
+            "UPDATE jobs SET updated_at = datetime(0, 'unixepoch') "
+            "WHERE updated_at IS NULL;",
         )
         execute_text(
             conn,
-            "UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;",
+            "UPDATE notes SET created_at = datetime(0, 'unixepoch') "
+            "WHERE created_at IS NULL;",
         )
         execute_text(
             conn,
-            "UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;",
+            "UPDATE notes SET updated_at = datetime(0, 'unixepoch') "
+            "WHERE updated_at IS NULL;",
         )
 
         execute_text(
@@ -113,9 +120,7 @@ def sqlite_up():
         execute_text(conn, "DROP TABLE runs;")
         execute_text(conn, "ALTER TABLE runs_new RENAME TO runs;")
         execute_text(conn, "CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        execute_text(
-            conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);"
-        )
+        execute_text(conn, "CREATE INDEX ix_runs_function_path ON runs (function_path);")
 
         execute_text(
             conn,
@@ -357,7 +362,8 @@ def sqlite_up():
         execute_text(conn, "ALTER TABLE metric_values_new RENAME TO metric_values;")
         execute_text(
             conn,
-            "CREATE INDEX metric_values_id_time_idx ON metric_values (metric_id, metric_time DESC);",
+            "CREATE INDEX metric_values_id_time_idx "
+            "ON metric_values (metric_id, metric_time DESC);",
         )
         execute_text(
             conn,
@@ -376,7 +382,8 @@ def postgres_up():
             """
             UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;
             UPDATE runs SET tags = '[]' WHERE tags IS NULL;
-            UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;
+            UPDATE runs SET source_code = 'source code unavailable'
+              WHERE source_code IS NULL;
             UPDATE jobs SET created_at = to_timestamp(0) WHERE created_at IS NULL;
             UPDATE jobs SET updated_at = to_timestamp(0) WHERE updated_at IS NULL;
             UPDATE notes SET created_at = to_timestamp(0) WHERE created_at IS NULL;
@@ -392,11 +399,15 @@ def postgres_up():
             ALTER TABLE runs ALTER COLUMN tags SET NOT NULL;
             ALTER TABLE runs ALTER COLUMN source_code SET NOT NULL;
 
-            ALTER TABLE edges ADD CONSTRAINT edges_destination_run_id_fkey FOREIGN KEY (destination_run_id) REFERENCES runs(id);
-            ALTER TABLE edges ADD CONSTRAINT edges_source_run_id_fkey FOREIGN KEY (source_run_id) REFERENCES runs(id);
+            ALTER TABLE edges ADD CONSTRAINT edges_destination_run_id_fkey FOREIGN KEY
+              (destination_run_id) REFERENCES runs(id);
+            ALTER TABLE edges ADD CONSTRAINT edges_source_run_id_fkey FOREIGN KEY
+              (source_run_id) REFERENCES runs(id);
 
-            ALTER TABLE metric_values ADD CONSTRAINT metric_values_metric_id_fkey FOREIGN KEY (metric_id) REFERENCES metric_labels(metric_id);
-            ALTER TABLE runs ADD CONSTRAINT runs_root_id_fkey FOREIGN KEY (root_id) REFERENCES runs(id);
+            ALTER TABLE metric_values ADD CONSTRAINT metric_values_metric_id_fkey
+              FOREIGN KEY (metric_id) REFERENCES metric_labels(metric_id);
+            ALTER TABLE runs ADD CONSTRAINT runs_root_id_fkey FOREIGN KEY (root_id)
+              REFERENCES runs(id);
 
             ALTER TABLE runs DROP COLUMN IF EXISTS exception;
             ALTER TABLE runs DROP COLUMN IF EXISTS external_jobs_json;

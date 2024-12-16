@@ -38,6 +38,7 @@ from sematic.runners.cloud_runner import (
 )
 from sematic.scheduling.job_details import JobKind
 
+
 _streamed_lines: List[str] = []
 _DUMMY_LOGS_FILE = "logs123.log"
 _DUMMY_RUN_ID = "abc123"
@@ -336,9 +337,7 @@ def test_load_non_inline_logs(
         filter_strings=[],
         reverse=False,
     )
-    assert (
-        not result.can_continue_forward
-    )  # run isn't running and there are no logfiles
+    assert not result.can_continue_forward  # run isn't running and there are no logfiles
     assert result.lines == []
     assert result.forward_cursor_token is None
     assert result.log_info_message == "No log files found"
@@ -418,7 +417,9 @@ def test_load_non_inline_logs(
 
 
 def test_line_stream_from_log_directory(
-    mock_storage, test_db, allow_any_run_state_transition  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -455,7 +456,9 @@ def test_line_stream_from_log_directory(
 
 
 def test_line_stream_from_log_directory_reverse(
-    mock_storage, test_db, allow_any_run_state_transition  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     break_at_line = 52
@@ -669,9 +672,7 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    _, line_ids = log_preparation_function(
-        run.id, text_lines, mock_storage, JobKind.run
-    )
+    _, line_ids = log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
 
     result = load_log_lines(
         run_id=run.id,
@@ -762,8 +763,10 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     (prepare_logs_v2,),
 )
 def test_load_log_lines_reverse(
-    mock_storage, test_db, log_preparation_function  # noqa: F811
-):  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    log_preparation_function,  # noqa: F811
+):
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
@@ -816,9 +819,7 @@ def test_load_log_lines_reverse(
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    _, line_ids = log_preparation_function(
-        run.id, text_lines, mock_storage, JobKind.run
-    )
+    _, line_ids = log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
 
     result = load_log_lines(
         run_id=run.id,
@@ -921,7 +922,9 @@ def test_load_log_lines_reverse(
     (prepare_logs_v2,),
 )
 def test_load_cloned_run_log_lines(
-    mock_storage, test_db, log_preparation_function  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    log_preparation_function,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
@@ -1067,7 +1070,9 @@ def test_load_cloned_run_log_lines(
 
 
 def test_continue_from_end_with_no_new_logs(
-    test_db, mock_storage, allow_any_run_state_transition  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.SCHEDULED)
     save_run(run)

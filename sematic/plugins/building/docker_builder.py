@@ -14,6 +14,7 @@ import time
 from dataclasses import asdict
 from typing import Any, Dict, Generator, Optional, Tuple
 
+
 # isort: off
 
 # Third-party
@@ -45,6 +46,7 @@ from sematic.plugins.building.docker_builder_config import (
 from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
 from sematic.utils.spinner import stdout_spinner
+
 
 logger = logging.getLogger(__name__)
 
@@ -189,9 +191,7 @@ def _build(target: str, no_cache: bool = False) -> Tuple[ImageURI, BuildConfig]:
     logger.debug("Loaded build configuration: %s", build_config)
 
     docker_client = _make_docker_client(build_config.docker)
-    logger.debug(
-        "Instantiated docker client for server: %s", docker_client.api.base_url
-    )
+    logger.debug("Instantiated docker client for server: %s", docker_client.api.base_url)
 
     image, image_uri = _build_image(
         target=target,
@@ -560,7 +560,6 @@ def _execute_build_script(target: str, image_script: str) -> ImageURI:
             stdout=subprocess.PIPE,
             text=True,
         ) as subproc:
-
             raw_uri, _ = subproc.communicate()
 
             if subproc.returncode != 0:

@@ -7,6 +7,7 @@ import typing
 from sematic.abstract_future import AbstractFuture
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 
+
 logger = logging.getLogger(__name__)
 
 

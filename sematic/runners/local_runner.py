@@ -37,6 +37,7 @@ from sematic.utils.git import get_git_info
 from sematic.utils.retry import retry_call
 from sematic.versions import CURRENT_VERSION_STR
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -104,8 +105,8 @@ class LocalRunner(SilentRunner):
         # A cache of already created artifacts to avoid making them over again.
         # The key is run ID, the value is a dictionary where the key is input
         # name, or None for output and the value is the artifact.
-        self._artifacts_by_run_id: Dict[str, Dict[Optional[str], Artifact]] = (
-            defaultdict(dict)
+        self._artifacts_by_run_id: Dict[str, Dict[Optional[str], Artifact]] = defaultdict(
+            dict
         )
 
         # Buffers for persistence
@@ -512,9 +513,7 @@ class LocalRunner(SilentRunner):
                 return super()._execute_future(future=future)
 
             original_run = run_results[0]
-            _, artifacts, edges = api_client.get_graph(
-                run_id=original_run.id, root=False
-            )
+            _, artifacts, edges = api_client.get_graph(run_id=original_run.id, root=False)
 
             # the above query returns all input and output artifacts, so we try to find
             # the artifact which belongs to the run's output value
@@ -662,9 +661,7 @@ class LocalRunner(SilentRunner):
         self._save_graph(runs_only=True, retry=False)
 
     def _notify_pipeline_update(self):
-        api_client.notify_pipeline_update(
-            self._runs[self._root_future.id].function_path
-        )
+        api_client.notify_pipeline_update(self._runs[self._root_future.id].function_path)
 
     def _pipeline_run_did_succeed(self) -> None:
         super()._pipeline_run_did_succeed()
@@ -688,9 +685,7 @@ class LocalRunner(SilentRunner):
             )
             pipeline_run_status = PipelineRunStatus.FAILED
         else:
-            reason = reason or (
-                "Marked as failed because the rest of the graph failed."
-            )
+            reason = reason or ("Marked as failed because the rest of the graph failed.")
             pipeline_run_status = PipelineRunStatus.FAILED
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)

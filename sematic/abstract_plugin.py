@@ -18,6 +18,7 @@ from typing import Tuple, Type, final
 # Sematic
 from sematic.utils.exceptions import MissingPluginError
 
+
 logger = logging.getLogger(__name__)
 
 

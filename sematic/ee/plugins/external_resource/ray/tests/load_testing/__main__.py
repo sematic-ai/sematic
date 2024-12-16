@@ -19,6 +19,7 @@ from sematic.ee.plugins.external_resource.ray.tests.load_testing.pipeline import
     load_test_ray,
 )
 
+
 logger = logging.getLogger(__name__)
 
 BAZEL_COMMAND = (
@@ -43,9 +44,7 @@ SILENT_HELP = (
     "Only one of --silent or --cloud are allowed."
 )
 COLLATZ_N_WORKERS_HELP = "Number of workers when doing the Collatz load test"
-COLLATZ_MAX_N_WORKERS_HELP = (
-    "Maximum number of workers when doing the Collatz load test"
-)
+COLLATZ_MAX_N_WORKERS_HELP = "Maximum number of workers when doing the Collatz load test"
 COLLATZ_N_TASKS_HELP = "Number of tasks to perform operations on for Collatz load test"
 COLLATZ_WAIT_MINUTES_HELP = (
     "Number of minutes to wait before stopping the Collatz load test"
@@ -67,9 +66,7 @@ MNIST_MAX_N_WORKERS_HELP = (
     "Max number of Ray workers (including head) to use in the cluster. Set to 0 "
     "(default) to disable MNIST load testing."
 )
-MNIST_WAIT_MINUTES_HELP = (
-    "Number of minutes to wait before stopping the Mnist load test."
-)
+MNIST_WAIT_MINUTES_HELP = "Number of minutes to wait before stopping the Mnist load test."
 
 
 def _parse_args() -> (

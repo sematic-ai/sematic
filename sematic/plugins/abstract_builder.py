@@ -12,6 +12,7 @@ from typing import Optional, Type, cast
 from sematic.abstract_plugin import AbstractPlugin, PluginScope
 from sematic.config.settings import get_active_plugins
 
+
 RUN_COMMAND_ENV_VAR = "SEMATIC_CLI_RUN_COMMAND"
 BUILD_CONFIG_ENV_VAR = "SEMATIC_IMAGE_BUILD_CONFIG"
 

@@ -128,9 +128,7 @@ class Job(Base, JSONEncodableMixin):
         )
 
     def _set_status_history(self, status_history: Sequence[JobStatus]):
-        self.status_history_serialization = [
-            asdict(status) for status in status_history
-        ]
+        self.status_history_serialization = [asdict(status) for status in status_history]
 
     # don't expose setter; we want this to be read-only for clients. update_status
     # should be used to update status_history.

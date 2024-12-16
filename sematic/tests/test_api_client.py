@@ -10,8 +10,10 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    test_client,  # noqa: F401
+)
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_requests as mock_requests_fixture,
 )  # noqa: F401
@@ -27,11 +29,13 @@ from sematic.api_client import (
 from sematic.config.config import get_config
 from sematic.db.db import DB
 from sematic.db.queries import save_run
-from sematic.db.tests.fixtures import make_run  # noqa: F401
-from sematic.db.tests.fixtures import persisted_artifact  # noqa: F401
-from sematic.db.tests.fixtures import pg_mock  # noqa: F401
-from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.db.tests.fixtures import test_storage  # noqa: F401; noqa: F401
+from sematic.db.tests.fixtures import (
+    make_run,  # noqa: F401
+    persisted_artifact,  # noqa: F401
+    pg_mock,  # noqa: F401
+    test_db,  # noqa: F401
+    test_storage,  # noqa: F401; noqa: F401
+)
 from sematic.metrics.metric_point import MetricPoint
 from sematic.metrics.tests.fixtures import metric_points  # noqa: F401
 from sematic.plugins.metrics_storage.sql.models.metric_value import (
@@ -87,9 +91,7 @@ def test_validate_server_compatibility(mock_requests):
     validate_server_compatibility(use_cached=False)
     mock_requests.get.assert_called_once()
     assert mock_requests.get.call_args[0][0] == f"{get_config().api_url}/meta/versions"
-    assert (
-        mock_requests.get.call_args[1]["headers"]["Content-Type"] == "application/json"
-    )
+    assert mock_requests.get.call_args[1]["headers"]["Content-Type"] == "application/json"
     assert mock_requests.get.call_args[1]["headers"]["X-REQUEST-ID"] is not None
 
 
@@ -149,7 +151,8 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
 
 
 def test_get_artifact_value_by_id(
-    mock_requests_fixture, persisted_artifact  # noqa: F811
+    mock_requests_fixture,  # noqa: F811
+    persisted_artifact,  # noqa: F811
 ):
     value = get_artifact_value_by_id(persisted_artifact.id)
 
@@ -259,6 +262,4 @@ def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
     mock_get_run.side_effect = get_long_run
 
     with pytest.raises(TimeoutError):
-        block_on_run(
-            created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5
-        )
+        block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5)

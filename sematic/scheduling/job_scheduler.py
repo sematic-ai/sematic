@@ -14,6 +14,7 @@ from sematic.scheduling import kubernetes as k8s
 from sematic.scheduling.job_details import KubernetesJobState
 from sematic.versions import MIN_CLIENT_SERVER_SUPPORTS, string_version_to_tuple
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,9 +164,7 @@ def update_run_status(
 
         return FutureState.FAILED, jobs
 
-    raise ValueError(
-        f"Future is in a state not covered by update logic: {future_state}"
-    )
+    raise ValueError(f"Future is in a state not covered by update logic: {future_state}")
 
 
 def _assert_resolution_is_scheduleable(resolution: Resolution):
@@ -249,9 +248,7 @@ def _refresh_job(job: Job) -> Job:
     return k8s.refresh_job(job)
 
 
-def _schedule_job(
-    run: Run, resolution: Resolution, existing_jobs: Sequence[Job]
-) -> Job:
+def _schedule_job(run: Run, resolution: Resolution, existing_jobs: Sequence[Job]) -> Job:
     """Reach out to external compute to start the execution of the run"""
     # k8s is the only thing we can submit jobs to at the moment.
 

@@ -16,6 +16,7 @@ from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.utils.signals import call_signal_handler
 from sematic.utils.stdout import redirect_to_file_descriptor
 
+
 """
 An overview of how logging works:
 - stdout and stderr are redirected to a pipe from the Sematic worker process
@@ -121,9 +122,7 @@ def _flush_to_file(
 
     # Use w+ mode; should overwrite whatever was in the prior delta file
     with open(file_path, "w+") as fp:
-        while (
-            timeout_seconds is None or time.time() - started_reading < timeout_seconds
-        ):
+        while timeout_seconds is None or time.time() - started_reading < timeout_seconds:
             line = read_handle.readline()
             if _TERMINATION_CHAR in line:
                 # trigger final upload
@@ -207,9 +206,7 @@ def _do_upload(file_path: str, remote_prefix: str):
         The prefix for the remote file. The full remote path will be
         this concatenated with `/<epoch timestamp>.log`.
     """
-    file_has_contents = (
-        os.path.exists(file_path) and os.stat(file_path)[stat.ST_SIZE] > 0
-    )
+    file_has_contents = os.path.exists(file_path) and os.stat(file_path)[stat.ST_SIZE] > 0
 
     if not file_has_contents:
         return

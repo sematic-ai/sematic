@@ -9,6 +9,7 @@ from sematic.types.serialization import (
 )
 from sematic.utils.hashing import get_str_sha1_digest, get_value_and_type_sha1_digest
 
+
 HASH_1 = "356a192b7913b04c54574d18c28d46e6395428ab"
 HASH_A = "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"
 

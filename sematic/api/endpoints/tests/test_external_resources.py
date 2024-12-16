@@ -7,9 +7,11 @@ from unittest.mock import patch
 import flask.testing
 
 # Sematic
-from sematic.api.tests.fixtures import make_auth_test  # noqa: F401
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    make_auth_test,  # noqa: F401
+    mock_auth,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
@@ -25,6 +27,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceStatus,
 )
 from sematic.plugins.external_resource.timed_message import TimedMessage
+
 
 test_get_external_resource_auth = make_auth_test(
     "/api/v1/external_resources/abc123", method="GET"

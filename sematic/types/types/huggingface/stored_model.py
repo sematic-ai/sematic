@@ -7,6 +7,7 @@ from typing import Any, Optional, Type
 # Sematic
 from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 
+
 # Path suffixes to use for storage if the model is a peft model
 _BASE_MODEL_SUFFIX = "base"
 _PEFT_MODEL_SUFFIX = "peft"

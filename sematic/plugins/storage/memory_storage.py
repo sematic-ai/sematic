@@ -17,6 +17,7 @@ from sematic.plugins.abstract_storage import (
     StorageDestination,
 )
 
+
 _PLUGIN_VERSION = (0, 1, 0)
 
 

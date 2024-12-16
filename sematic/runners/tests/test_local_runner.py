@@ -11,10 +11,12 @@ import pytest
 from sematic import api_client
 from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_socketio,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.config.tests.fixtures import no_settings_file  # noqa: F401
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
@@ -27,9 +29,11 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.function import func
 from sematic.retry_settings import RetrySettings
 from sematic.runners.local_runner import LocalRunner
-from sematic.tests.fixtures import DIVERSE_VALUES_WITH_TYPES  # noqa: F401
-from sematic.tests.fixtures import test_storage  # noqa: F401
-from sematic.tests.fixtures import valid_client_version  # noqa: F401; noqa: F401
+from sematic.tests.fixtures import (
+    DIVERSE_VALUES_WITH_TYPES,  # noqa: F401
+    test_storage,  # noqa: F401
+    valid_client_version,  # noqa: F401; noqa: F401
+)
 from sematic.utils.exceptions import (
     CancellationError,
     ExceptionMetadata,
@@ -423,9 +427,7 @@ class CallbackTrackingRunner(LocalRunner):
 
     def _future_did_schedule(self, future):
         super()._future_did_schedule(future)
-        self._callback_invocations.append(
-            ("_future_did_schedule", future, future.state)
-        )
+        self._callback_invocations.append(("_future_did_schedule", future, future.state))
 
     def _future_did_run(self, future):
         super()._future_did_run(future)
@@ -447,9 +449,7 @@ class CallbackTrackingRunner(LocalRunner):
 
     def _future_did_terminate(self, future):
         super()._future_did_terminate(future)
-        self._callback_invocations.append(
-            ("_future_did_terminate", future, future.state)
-        )
+        self._callback_invocations.append(("_future_did_terminate", future, future.state))
 
     def callback_by_future_id(self, future_id) -> List[str]:
         return [

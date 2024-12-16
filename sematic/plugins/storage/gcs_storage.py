@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Iterable, List, Type
 
 # Third-party
-from google.cloud import storage as gcs
+from google.cloud import storage as gcs  # type: ignore
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -18,6 +18,7 @@ from sematic.config.settings import get_plugin_setting
 from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
+
 
 logger = logging.getLogger(__name__)
 

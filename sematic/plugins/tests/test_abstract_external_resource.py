@@ -142,9 +142,7 @@ def test_valid_transitions():
     assert ResourceState.DEACTIVATING.is_allowed_transition(ResourceState.DEACTIVATED)
     assert not ResourceState.DEACTIVATING.is_allowed_transition(ResourceState.ACTIVE)
 
-    assert not ResourceState.DEACTIVATED.is_allowed_transition(
-        ResourceState.DEACTIVATING
-    )
+    assert not ResourceState.DEACTIVATED.is_allowed_transition(ResourceState.DEACTIVATING)
 
 
 def test_use_in_func():

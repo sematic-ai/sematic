@@ -19,6 +19,7 @@ from sematic.abstract_plugin import (
 from sematic.config.config_dir import get_config_dir
 from sematic.versions import SETTINGS_SCHEMA_VERSION
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,7 +150,9 @@ def get_plugins_with_interface(
             raise ValueError(f"{plugin} is not a subclass of {interface}")
     plugins = get_active_plugins(scope, default=[])
     plugins = [
-        plugin for plugin in plugins if issubclass(plugin, interface)  # type: ignore
+        plugin
+        for plugin in plugins
+        if issubclass(plugin, interface)  # type: ignore
     ]
     if len(plugins) == 0:
         return cast(List[T], default)
@@ -242,14 +245,10 @@ def set_plugin_setting(
         plugin_settings = {}
 
     if _normalize_enum(plugin.get_settings_vars(), var) is None:
-        raise ValueError(
-            f"Unknown setting for plug-in {plugin.get_path()}: {var.value}"
-        )
+        raise ValueError(f"Unknown setting for plug-in {plugin.get_path()}: {var.value}")
 
     plugin_settings[var] = value
-    plugin_settings[_PLUGIN_VERSION_KEY] = ".".join(
-        str(v) for v in plugin.get_version()
-    )
+    plugin_settings[_PLUGIN_VERSION_KEY] = ".".join(str(v) for v in plugin.get_version())
 
     get_active_settings().settings[plugin.get_path()] = plugin_settings
 
@@ -338,7 +337,8 @@ def _load_settings(file_path: str) -> Settings:
             settings.profiles[profile_name] = profile_settings
 
         profile_settings.scopes = _normalize_enum_keys(  # type: ignore
-            profile_settings.scopes, PluginScope  # type: ignore
+            profile_settings.scopes,  # type: ignore
+            PluginScope,  # type: ignore
         )
 
         # We are mutating the dictionary as we iterate, so we iterate on keys.
@@ -372,7 +372,8 @@ def _load_settings(file_path: str) -> Settings:
                     )
 
             profile_settings.settings[plugin_path] = _normalize_enum_keys(
-                plugin_settings, plugin_settings_vars  # type: ignore
+                plugin_settings,  # type: ignore
+                plugin_settings_vars,  # type: ignore
             )
 
     return settings
@@ -393,9 +394,7 @@ def _normalize_enum_keys(
     normalized_dict: Dict[Union[EnumType, Literal["__version__"]], Any] = {}
 
     for key in list(dict_):
-        normalized_key = (
-            key if key == _PLUGIN_VERSION_KEY else _normalize_enum(vars, key)
-        )
+        normalized_key = key if key == _PLUGIN_VERSION_KEY else _normalize_enum(vars, key)
 
         if normalized_key is None:
             logger.warning("Unknown key: %s", key)

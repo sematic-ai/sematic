@@ -8,6 +8,7 @@ import sys
 import textwrap
 from typing import Any, Dict, Generator, List, Optional, TextIO
 
+
 logger = logging.getLogger(__name__)
 
 _ROLLING_PRINT_COLUMNS = 120
@@ -31,7 +32,6 @@ def rolling_print_status_updates(
     debugging = logger.isEnabledFor(logging.DEBUG)
 
     for status_update in status_updates:
-
         if "error" in status_update.keys():
             return status_update
 

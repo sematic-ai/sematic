@@ -8,28 +8,30 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.api.tests.fixtures import mock_auth  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests  # noqa: F401
-from sematic.api.tests.fixtures import mock_socketio  # noqa: F401
-from sematic.api.tests.fixtures import test_client  # noqa: F401; noqa: F401
+from sematic.api.tests.fixtures import (
+    mock_auth,  # noqa: F401
+    mock_requests,  # noqa: F401
+    mock_socketio,  # noqa: F401
+    test_client,  # noqa: F401; noqa: F401
+)
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
 from sematic.db.queries import get_run, save_graph, save_resolution, save_run
-from sematic.db.tests.fixtures import make_resolution  # noqa: F401
-from sematic.db.tests.fixtures import make_run  # noqa: F401
-from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
-from sematic.db.tests.fixtures import pg_mock  # noqa: F401
-from sematic.db.tests.fixtures import run  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_resolution,  # noqa: F401
+    make_run,  # noqa: F401
+    persisted_resolution,  # noqa: F401
+    pg_mock,  # noqa: F401
+    run,  # noqa: F401
     test_db,
 )
 from sematic.function import func
 from sematic.graph import RerunMode
-from sematic.resolvers.resource_requirements import ResourceRequirements  # noqa: F401
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
+    ResourceRequirements,  # noqa: F401
 )  # noqa: F401
 from sematic.runners.cloud_runner import CloudRunner
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
@@ -132,9 +134,7 @@ def test_simulate_cloud_exec(
             edge = driver_runner._get_output_edges(run.id)[0]
             artifact, payloads = make_artifact(3, int)
             edge.artifact_id = artifact.id
-            api_client.save_graph(
-                run.id, runs=[run], artifacts=[artifact], edges=[edge]
-            )
+            api_client.save_graph(run.id, runs=[run], artifacts=[artifact], edges=[edge])
             api_client.store_payloads(payloads)
             driver_runner._refresh_graph(run.id)
         return updates
@@ -167,15 +167,13 @@ def test_simulate_cloud_exec(
 
     driver_runner.set_graph(runs=runs, artifacts=artifacts, edges=edges)
     assert (
-        api_client.get_pipeline_run(future.id).status
-        == PipelineRunStatus.SCHEDULED.value
+        api_client.get_pipeline_run(future.id).status == PipelineRunStatus.SCHEDULED.value
     )
     output = driver_runner.run(future)
 
     assert output == 3
     assert (
-        api_client.get_pipeline_run(future.id).status
-        == PipelineRunStatus.COMPLETE.value
+        api_client.get_pipeline_run(future.id).status == PipelineRunStatus.COMPLETE.value
     )
     assert mock_get_images.call_count == 1
     assert driver_runner._get_tagged_image("cuda") == images["cuda"]

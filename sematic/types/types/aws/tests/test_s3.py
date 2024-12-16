@@ -59,9 +59,7 @@ def test_parent_directory(current_location, parent_directory):
     "current_location, sibling_file_location, sibling_dir_location",
     (("foo/bar", "foo/bat", "foo/bat/"), ("foo/bar/", "foo/bat", "foo/bat/")),
 )
-def test_sibling_location(
-    current_location, sibling_file_location, sibling_dir_location
-):
+def test_sibling_location(current_location, sibling_file_location, sibling_dir_location):
     location = S3Location(
         bucket=S3Bucket(name="bucket"),
         location=current_location,

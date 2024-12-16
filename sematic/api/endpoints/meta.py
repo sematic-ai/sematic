@@ -17,6 +17,7 @@ from sematic.db.db import db
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
+
 logger = getLogger(__name__)
 
 
