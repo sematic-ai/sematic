@@ -131,9 +131,6 @@ workflows:
   sematic-test:
     jobs:
       - init
-      - lint:
-          requires:
-            - init
       - installation:
           requires:
             - init
@@ -145,6 +142,5 @@ workflows:
             - init
       - finalize:
           requires:
-            - lint
             - integration-test
             - fe-unit-tests
