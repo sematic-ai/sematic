@@ -173,7 +173,7 @@ def up_sqlite():
         execute_text(conn, "ALTER TABLE metric_labels_new RENAME TO metric_labels;")
         execute_text(
             conn,
-            "CREATE UNIQUE INDEX metric_labels_name_labels_idx"
+            "CREATE UNIQUE INDEX metric_labels_name_labels_idx "
             "ON metric_labels(metric_name, metric_labels);",
         )
 
