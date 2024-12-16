@@ -10,13 +10,17 @@ else
     cd ~/project
 fi
 
+echo "Layout:"
+find .
+echo "-------------"
+
 virtualenv $VENV_NAME
 
 pwd
 
 source ./$VENV_NAME/bin/activate
 
-WHEEL_PATH=$(ls bazel-bin/sematic/sematic-*.whl)
+WHEEL_PATH=$(ls ./dist/*sematic*.whl)
 
 if test -f "$WHEEL_PATH"; then
     echo "Wheel found at $WHEEL_PATH"
@@ -35,7 +39,11 @@ else
     echo "Wheel is $WHEEL_SIZE_MB Mb"
 fi
 
-pip install bazel-bin/sematic/sematic-*.whl
+echo "Installing from: "
+ls -l ./dist/*sematic*.whl
+echo "------------------"
+pip install ./dist/*sematic*.whl
+echo "Done with pip install!"
 python3 -c "import sematic; print(sematic.__version__)" || exit 1
 
 deactivate

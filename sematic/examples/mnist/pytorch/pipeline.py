@@ -19,6 +19,7 @@ from sematic import (
     KubernetesResourceRequirements,
     KubernetesToleration,
     KubernetesTolerationEffect,
+    KubernetesTolerationOperator,
     ResourceRequirements,
 )
 from sematic.examples.mnist.pytorch.train_eval import Net, test, train
@@ -61,13 +62,17 @@ class PipelineConfig:
 # GPUs will vary depending on your Kubernetes setup.
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
-        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
-        requests={"cpu": "2", "memory": "4Gi"},
+        node_selector={
+            "cloud.google.com/gke-nodepool": "gpu-t4-1",
+            "cloud.google.com/gke-accelerator": "nvidia-tesla-t4",
+        },
+        requests={"cpu": "2", "memory": "4Gi", "nvidia.com/gpu": "1"},
         tolerations=[
             KubernetesToleration(
                 key="nvidia.com/gpu",
-                value="true",
                 effect=KubernetesTolerationEffect.NoSchedule,
+                operator=KubernetesTolerationOperator.Equal,
+                value="present",
             )
         ],
     )

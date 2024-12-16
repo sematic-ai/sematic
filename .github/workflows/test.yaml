@@ -1,0 +1,47 @@
+name: Python Test
+
+on:
+  push
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Py-prep
+        run: make py-prep
+      - name: Test
+        run: |
+          source .venv/bin/activate
+          pytest
+      - name: Check Schemas
+        run: git checkout . && make migrate_up_sqlite && make update-schema && git diff --exit-code
+      - name: Wheel
+        run: |
+          make ui
+          make uv-wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sematic-wheel
+          path: "./dist/sematic-*.whl"
+          retention-days: 10
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sematic-wheel-test
+          path: "sematic/tests/integration/test_pip_install.sh"
+          retention-days: 1
+  test-install:
+    needs: test-python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sematic-wheel
+          path: "./dist"
+      - uses: actions/download-artifact@v4
+        with:
+          name: sematic-wheel-test
+          path: "./"
+      - name: Test and Install Wheel
+        run: "bash test_pip_install.sh"

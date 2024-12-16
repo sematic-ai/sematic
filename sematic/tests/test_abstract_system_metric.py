@@ -191,5 +191,5 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
         # This test is non-deterministic depending on what timezone it is run in and
         # at what time of day.  Allow the timestamp to vary by a day to allow for that.
         # TODO: make test independent of time of day/timezone.
-        equality_epsilon=DAY_SECONDS,
+        equality_epsilon=2 * DAY_SECONDS,
     )

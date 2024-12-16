@@ -1,8 +1,10 @@
 [project]
 name = "sematic"
 description = "Sematic ML orchestration tool"
-version = "0.41.0"
-requires-python = ">=3.9, <=3.12"
+
+# The formatting of this line must be maintained for version testing.
+version = "0.40.0"
+requires-python = ">=3.9, <3.13"
 dependencies = [
   # System
   "ipython==8.2.0",
@@ -14,6 +16,7 @@ dependencies = [
 
   # Code
   "pyyaml>=6.0.1",
+  "python-magic>=0.4.27",
 
   # Git integration
   "git-python>=1.0.3",
@@ -47,6 +50,10 @@ dependencies = [
   "types-google-cloud-ndb>=2.2.0.0",
 ]
 
+[project.readme]
+file = "README.nohtml"
+content-type = "text/markdown"
+
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
@@ -55,6 +62,17 @@ build-backend = "setuptools.build_meta"
 py-modules = [
   "sematic",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sematic*"]
+exclude = ["tests*", "*.tests*"]
+
+[tool.setuptools.package-data]
+sematic = ["sematic/ui/build/**/*"]
+
+[project.scripts]
+sematic = "sematic.cli.main:cli"
 
 [project.optional-dependencies]
 examples = [

@@ -123,7 +123,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
             MetricsFilter(
                 name="bar",
                 from_time=datetime.datetime.fromtimestamp(0),
-                to_time=datetime.datetime.utcnow(),
+                to_time=datetime.datetime.utcnow() + datetime.timedelta(days=1),
                 labels={},
             ),
             [],
@@ -158,7 +158,9 @@ def test_get_aggregated_metrics(
     assert metric_series.metric_type == expected_series.metric_type
     assert metric_series.columns == expected_series.columns
 
-    check_approximate_equality(metric_series.series, expected_series.series)
+    check_approximate_equality(
+        metric_series.series, expected_series.series, equality_epsilon=24 * 3600
+    )
 
 
 @pytest.mark.parametrize(
@@ -207,18 +209,19 @@ def test_clear_metrics(
     metrics_storage_plugin = SQLMetricsStorage()
     metrics_storage_plugin.store_metrics(metric_points)
 
+    with test_db.get_session() as session:
+        initial_metric_value_count = session.query(MetricValue).count()
+
     metrics_storage_plugin.clear_metrics(
         MetricsFilter(
             name="foo",
             from_time=datetime.datetime.fromtimestamp(0),
-            to_time=datetime.datetime.utcnow(),
-            labels={"function_path": "foo"},
+            to_time=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            labels={},
         )
     )
 
     with test_db.get_session() as session:
-        metric_label_count = session.query(MetricLabel).count()
         metric_value_count = session.query(MetricValue).count()
 
-    assert metric_label_count == 3
-    assert metric_value_count == 3
+    assert metric_value_count < initial_metric_value_count

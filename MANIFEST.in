@@ -1,0 +1,13 @@
+include README.nohtml
+exclude sematic/examples/lightning_resnet/*.jpg
+exclude sematic/examples/summarization_finetune/images/*.jpg
+exclude sematic/examples/hackernews_summarization/*.png
+exclude sematic/examples/cifar_classifier/*.jpg
+recursive-include sematic/ui/build *
+recursive-exclude sematic/ui/packages *
+recursive-exclude sematic/examples *.jpg
+recursive-exclude sematic/examples *.png
+recursive-exclude sematic/ tests/*
+recursive-exclude sematic/ BUILD
+global-exclude *.tsx
+global-exclude *.ts

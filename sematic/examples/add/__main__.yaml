@@ -4,6 +4,6 @@ build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
 push:
-  registry: "558717131297.dkr.ecr.us-west-2.amazonaws.com" # update this to your own registry
-  repository: "sematic-dev" # update this to your own repository
+  registry: "us-central1-docker.pkg.dev/core-400321/main" # update this to your own registry
+  repository: airtrain-pipeline # update this to your own repository
   tag_suffix: "main_example"

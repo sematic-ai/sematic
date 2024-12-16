@@ -8,10 +8,10 @@ migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
 
 migrate_up_sqlite:
-	bazel run //sematic/db:migrate -- up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 migrate_down_sqlite:
-	bazel run //sematic/db:migrate -- down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
@@ -33,8 +33,7 @@ py-prep:
 	uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
 	rm -rf ".venv" || echo "No virtualenv yet"
 	uv venv --python 3.12
-	uv sync --extra examples
-	uv tool install --force ruff==0.8.2
+	uv sync --extra examples --extra ray
 
 .PHONY: py-sync
 py-sync:
@@ -42,20 +41,10 @@ py-sync:
 
 .PHONY: update-schema
 update-schema:
-	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	source .venv/bin/activate && python3 ./sematic/db/migrate.py dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
-# this is not supported on Mac because some of the dependencies that need to be pulled
-# do not have a release version for Mac
 refresh-dependencies:
-ifeq ($(UNAME_S),Linux)
-	bazel run //requirements:requirements3_8.update
-	bazel run //requirements:requirements3_9.update
-	bazel run //requirements:requirements3_10.update
-	bazel run //requirements:requirements3_11.update
-else
-	echo "${RED}Refreshing dependencies should only be done from Linux${NO_COLOR}"
-	exit 1
-endif
+	uv lock
 
 .PHONY: ui
 ui: sematic/ui/node_modules/.build_timestamp
@@ -88,16 +77,34 @@ wheel : sematic/ui/build
 	rm README.nohtml
 	bazel build //sematic:wheel
 
+uv-wheel:
+	cat README.md | \
+		grep -v "<img" | \
+		grep -v "<p" | \
+		grep -v "/p>" | \
+		grep -v "<h2" | \
+		grep -v "/h2>" | \
+		grep -v "<h3" | \
+		grep -v "/h3>" | \
+		grep -v "<a" | \
+		grep -v "/a>" | \
+		grep -v "/img>" > README.nohtml
+	# source .venv/bin/activate && python3 -m pandoc read --format=markdown README.nohtml
+	cp BUILD tmp.BUILD
+	rm -rf dist build src/*.egg-info
+	uvx pip wheel -w dist . && rm -rf build && mv tmp.BUILD BUILD
+	rm README.nohtml
+
 test-release:
-	python3 -m twine check bazel-bin/sematic/*.whl
-	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
+	uvx twine check ./dist/*sematic*.whl
+	uvx twine upload --repository testpypi ./dist/*sematic*.whl
 
 release:
-	python3 -m twine upload bazel-bin/sematic/*.whl
+	uvx twine upload ./dist/*sematic*.whl
 
 release-server:
 	rm -f docker/*.whl
-	cp bazel-bin/sematic/*.whl docker/
+	cp ./dist/*sematic*.whl docker/
 	cd docker; docker build --build-arg EXTRA=default -t sematic/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematic/sematic-server:${TAG}
 	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
