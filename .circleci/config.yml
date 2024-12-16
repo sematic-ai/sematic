@@ -28,6 +28,19 @@ commands:
       - node/install-packages:
           app-dir: ./sematic/ui
 
+  installation-tests:
+    description: Do a test of installing sematic via wheel
+    steps:
+      - run:
+          name: Build wheel
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 make wheel
+      - run:
+          name: Test pip install
+          command: bazel run //sematic/tests/integration:test_pip_install
+
+  
   notify-completion:
     description: Send a notification to Slack about job completion
     steps:
@@ -63,6 +76,7 @@ jobs:
     steps:
       - attach_workspace:
           at: /home/circleci
+      - installation-tests
       - persist_to_workspace:
           root: /home/circleci/
           paths:
