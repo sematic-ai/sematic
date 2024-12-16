@@ -37,6 +37,9 @@ commands:
             PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
             retry 5 make wheel
       - run:
+          name: "Move wheel"
+          command: mkdir dist && mv bazel-bin/sematic/sematic-*.whl dist
+      - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
 
@@ -84,6 +87,9 @@ jobs:
     environment:
       CI_VENV_NAME: CIVENV
       REACT_APP_IS_CIRCLE_CI: 1
+- run:
+  name: "Move wheel"
+  command: mkdir dist && mv bazel-bin/sematic/sematic-*.whl dist
     
   
   integration-test:
