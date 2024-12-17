@@ -3,6 +3,7 @@ SHELL=/bin/bash
 UNAME_S := $(shell uname -s)
 RED := \033[0;31m
 NO_COLOR := \033[1;0m
+PY_VERSION := "3.12"
 
 migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
@@ -33,7 +34,7 @@ fix:
 py-prep:
 	uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
 	rm -rf ".venv" || echo "No virtualenv yet"
-	uv venv --python 3.12
+	uv venv --python $(PY_VERSION)
 	uv sync --extra examples --extra ray
 	uv tool install --force ruff==0.8.3
 	uv pip install mypy==1.13.0

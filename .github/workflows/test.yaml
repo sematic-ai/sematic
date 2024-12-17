@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Py-prep
-        run: make py-prep
+        run: make py-prep PY_VERSION=${{ matrix.py-version }}
       - name: Check Format
         run: uvx ruff format --check
       - name: Lint
@@ -24,6 +24,7 @@ jobs:
       - name: Test
         run: |
           source .venv/bin/activate
+          python3 -c "import sys; print(sys.version)"
           pytest
       - name: Check Schemas
         if: matrix.py-version == '3.12'
