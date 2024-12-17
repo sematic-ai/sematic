@@ -1,3 +1,5 @@
+import sys
+
 # Third-party
 import pytest
 
@@ -6,6 +8,7 @@ from sematic.function import Function, func
 from sematic.runners.silent_runner import SilentRunner
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires python >=3.10")
 def test_decorator_3_10_style_hints():
     @func
     def f(a: list[int], b: dict[str, str]) -> int | float:
