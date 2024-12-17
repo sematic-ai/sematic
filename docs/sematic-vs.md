@@ -20,7 +20,7 @@ rest.
 
 ### Lowest barrier to entry
 
-In 2023, with all the great technology there is out there, it is entirely
+In 2025, with all the great technology there is out there, it is entirely
 possible to provide an amazing turn-key onboarding experience with a very low
 barrier to entry for all sets of skills, from beginner padawan to advanced
 ninja.
