@@ -1,10 +1,11 @@
 version: 1
-base_uri: "sematicai/sematic-worker-base:latest@sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c"
+base_uri: "sematicai/sematic-worker-base:cuda@sha256:6cbedeffdbf8ef0e5182819b4ae05a12972f61a4cd862fe41e4b3aaca01888da"
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
   data: ["resources"]
+  src: ["//sematic"]
 push:
-  registry: "558717131297.dkr.ecr.us-west-2.amazonaws.com" # update this to your own registry
-  repository: "sematic-dev" # update this to your own repository
+  registry: "us-central1-docker.pkg.dev/core-400321/main" # update this to your own registry
+  repository: airtrain-pipeline # update this to your own repository
   tag_suffix: "main_example"
