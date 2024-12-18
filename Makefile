@@ -3,7 +3,7 @@ SHELL=/bin/bash
 UNAME_S := $(shell uname -s)
 RED := \033[0;31m
 NO_COLOR := \033[1;0m
-PY_VERSION := "3.12"
+PY_VERSION := "3.13"
 
 migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 

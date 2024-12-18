@@ -4,7 +4,7 @@ description = "Sematic ML orchestration tool"
 
 # The formatting of this line must be maintained for version testing.
 version = "0.40.0"
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.9, <3.14"
 dependencies = [
   # System
   "ipython==8.2.0",
@@ -77,27 +77,31 @@ sematic = "sematic.cli.main:cli"
 [project.optional-dependencies]
 examples = [
   # Examples
-  "snowflake-connector-python==3.12.4",
+  # Most libraries that require python version < 3.13
+  # are marked as such because they do not yet have
+  # full support for python 3.13. Once they do, this restriction
+  # can be removed.
+  "snowflake-connector-python==3.12.4; python_version < '3.13'",
   "pyOpenSSL>=23.0.0",
-  "pyarrow>=12.0.0",
+  "pyarrow>=12.0.0; python_version < '3.13'",
   "python-magic==0.4.27",
-  "torch>=1.13.1",
-  "torchvision>=0.14.1",
-  "pytorch-lightning>=1.6.5",
-  "ray-lightning>=0.3.0",
-  "plotly==5.13.0",
+  "torch>=1.13.1; python_version < '3.13'",
+  "torchvision>=0.14.1; python_version < '3.13'",
+  "pytorch-lightning>=1.6.5; python_version < '3.13'",
+  "ray-lightning>=0.3.0; python_version < '3.13'",
+  "plotly==5.13.0; python_version < '3.13'",
   "pandas>=1.5.3",
-  "seaborn>=0.12.2",
-  "matplotlib>=3.7.0",
-  "statsmodels>=0.13.5",
-  "scikit-learn>=1.2.1",
+  "seaborn>=0.12.2; python_version < '3.13'",
+  "matplotlib>=3.7.0; python_version < '3.13'",
+  "statsmodels>=0.13.5; python_version < '3.13'",
+  "scikit-learn>=1.2.1; python_version < '3.13'",
   "numpy>=1.24.0",
-  "xgboost>=1.7.3",
-  "accelerate==0.19.0",
-  "datasets>=2.12.0",
+  "xgboost>=1.7.3; python_version < '3.13'",
+  "accelerate==0.19.0; python_version < '3.13'",
+  "datasets>=2.12.0; python_version < '3.13'",
   "huggingface-hub>=0.14.1",
-  "peft>=0.3.0",
-  "transformers>=4.29.2",
+  "peft>=0.3.0; python_version < '3.13'",
+  "transformers>=4.29.2; python_version < '3.13'",
   "gradio>=3.35.2",
   "trafilatura>=1.6.0",
   "cohere>=4.9.0",
@@ -111,11 +115,11 @@ ray = [
   # mean our wheel depends on it, nor does it imply that users
   # will/will not have ray[air]. This is only about what is present
   # in Sematic's dev workspace.
-  "ray[default,air]>=2.3.0",
+  "ray[default,air]>=2.3.0; python_version < '3.13'",
 ]
 
 all = [
-  "ray[default,air]>=2.3.0",
+  "ray[default,air]>=2.3.0; python_version < '3.13'",
 ]
 
 [tool.uv]
