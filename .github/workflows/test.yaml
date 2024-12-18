@@ -22,7 +22,9 @@ jobs:
       - name: Lint
         run: uvx ruff check --fix sematic
       - name: MyPy
-        if: matrix.py-version == '3.13'
+        # Use 3.12 for type checking because 3.13 doesn't have all
+        # example libraries.
+        if: matrix.py-version == '3.12'
         run: uv run mypy -p sematic --disable-error-code import-untyped
       - name: Test
         run: |
