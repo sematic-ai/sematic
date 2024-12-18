@@ -9,6 +9,8 @@ MAX_PY_VERSIONS = {
     "ee/plugins/external_resource/ray/tests/test_checkpoint.py": (3, 13),
     "ee/plugins/external_resource/ray/tests/test_cluster.py": (3, 13),
     "types/types/snowflake/tests/test_snowflake_table.py": (3, 13),
+    "types/types/matplotlib/tests/test_figure.py": (3, 13),
+    "types/types/pandas/tests/test_dataframe.py": (3, 13),
 }
 
 collect_ignore: List[str] = []

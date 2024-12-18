@@ -61,14 +61,14 @@ name = "aiohttp"
 version = "3.11.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiohappyeyeballs" },
-    { name = "aiosignal" },
+    { name = "aiohappyeyeballs", marker = "python_full_version < '3.13'" },
+    { name = "aiosignal", marker = "python_full_version < '3.13'" },
     { name = "async-timeout", marker = "python_full_version < '3.11'" },
-    { name = "attrs" },
-    { name = "frozenlist" },
-    { name = "multidict" },
-    { name = "propcache" },
-    { name = "yarl" },
+    { name = "attrs", marker = "python_full_version < '3.13'" },
+    { name = "frozenlist", marker = "python_full_version < '3.13'" },
+    { name = "multidict", marker = "python_full_version < '3.13'" },
+    { name = "propcache", marker = "python_full_version < '3.13'" },
+    { name = "yarl", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/94/c4/3b5a937b16f6c2a0ada842a9066aad0b7a5708427d4a202a07bf09c67cbb/aiohttp-3.11.10.tar.gz", hash = "sha256:b1fc6b45010a8d0ff9e88f9f2418c6fd408c99c211257334aff41597ebece42e", size = 7668832 }
 wheels = [
@@ -166,7 +166,7 @@ name = "aiosignal"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "frozenlist" },
+    { name = "frozenlist", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ae/67/0952ed97a9793b4958e5736f6d2b346b414a2cd63e82d05940032f45b32f/aiosignal-1.3.1.tar.gz", hash = "sha256:54cd96e15e1649b75d6c87526a6ff0b6c1b0dd3459f43d9ca11d48c339b68cfc", size = 19422 }
 wheels = [
@@ -178,11 +178,11 @@ name = "altair"
 version = "5.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jinja2" },
-    { name = "jsonschema" },
-    { name = "narwhals" },
-    { name = "packaging" },
-    { name = "typing-extensions" },
+    { name = "jinja2", marker = "python_full_version < '3.13'" },
+    { name = "jsonschema", marker = "python_full_version < '3.13'" },
+    { name = "narwhals", marker = "python_full_version < '3.13'" },
+    { name = "packaging", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/16/b1/f2969c7bdb8ad8bbdda031687defdce2c19afba2aa2c8e1d2a17f78376d8/altair-5.5.0.tar.gz", hash = "sha256:d960ebe6178c56de3855a68c47b516be38640b73fb3b5111c2a9ca90546dd73d", size = 705305 }
 wheels = [
@@ -587,7 +587,7 @@ name = "contourpy"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f5/f6/31a8f28b4a2a4fa0e01085e542f3081ab0588eff8e589d39d775172c9792/contourpy-1.3.0.tar.gz", hash = "sha256:7ffa0db17717a8ffb127efd0c95a4362d996b892c2904db72428d5b52e1938a4", size = 13464370 }
 wheels = [
@@ -876,9 +876,9 @@ name = "fastapi"
 version = "0.115.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pydantic" },
-    { name = "starlette" },
-    { name = "typing-extensions" },
+    { name = "pydantic", marker = "python_full_version < '3.13'" },
+    { name = "starlette", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/93/72/d83b98cd106541e8f5e5bfab8ef2974ab45a62e8a6c5b5e6940f26d2ed4b/fastapi-0.115.6.tar.gz", hash = "sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654", size = 301336 }
 wheels = [
@@ -1270,32 +1270,32 @@ name = "gradio"
 version = "3.36.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiofiles" },
-    { name = "aiohttp" },
-    { name = "altair" },
-    { name = "fastapi" },
-    { name = "ffmpy" },
-    { name = "gradio-client" },
-    { name = "httpx" },
-    { name = "huggingface-hub" },
-    { name = "jinja2" },
-    { name = "markdown-it-py", extra = ["linkify"] },
-    { name = "markupsafe" },
-    { name = "matplotlib" },
-    { name = "mdit-py-plugins" },
-    { name = "numpy" },
-    { name = "orjson" },
-    { name = "pandas" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pydub" },
-    { name = "pygments" },
-    { name = "python-multipart" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "semantic-version" },
-    { name = "uvicorn" },
-    { name = "websockets" },
+    { name = "aiofiles", marker = "python_full_version < '3.13'" },
+    { name = "aiohttp", marker = "python_full_version < '3.13'" },
+    { name = "altair", marker = "python_full_version < '3.13'" },
+    { name = "fastapi", marker = "python_full_version < '3.13'" },
+    { name = "ffmpy", marker = "python_full_version < '3.13'" },
+    { name = "gradio-client", marker = "python_full_version < '3.13'" },
+    { name = "httpx", marker = "python_full_version < '3.13'" },
+    { name = "huggingface-hub", marker = "python_full_version < '3.13'" },
+    { name = "jinja2", marker = "python_full_version < '3.13'" },
+    { name = "markdown-it-py", extra = ["linkify"], marker = "python_full_version < '3.13'" },
+    { name = "markupsafe", marker = "python_full_version < '3.13'" },
+    { name = "matplotlib", marker = "python_full_version < '3.13'" },
+    { name = "mdit-py-plugins", marker = "python_full_version < '3.13'" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
+    { name = "orjson", marker = "python_full_version < '3.13'" },
+    { name = "pandas", marker = "python_full_version < '3.13'" },
+    { name = "pillow", marker = "python_full_version < '3.13'" },
+    { name = "pydantic", marker = "python_full_version < '3.13'" },
+    { name = "pydub", marker = "python_full_version < '3.13'" },
+    { name = "pygments", marker = "python_full_version < '3.13'" },
+    { name = "python-multipart", marker = "python_full_version < '3.13'" },
+    { name = "pyyaml", marker = "python_full_version < '3.13'" },
+    { name = "requests", marker = "python_full_version < '3.13'" },
+    { name = "semantic-version", marker = "python_full_version < '3.13'" },
+    { name = "uvicorn", marker = "python_full_version < '3.13'" },
+    { name = "websockets", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/70/cc/608a9116e7841d3fc7c7c827a299a1ce7990acbee034504041c303b29509/gradio-3.36.1.tar.gz", hash = "sha256:1d821cee15da066c24c197248ba9aaed5f5e59505d17754561c2f96f90e73a89", size = 20382326 }
 wheels = [
@@ -1307,12 +1307,12 @@ name = "gradio-client"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "fsspec" },
-    { name = "httpx" },
-    { name = "huggingface-hub" },
-    { name = "packaging" },
-    { name = "typing-extensions" },
-    { name = "websockets" },
+    { name = "fsspec", marker = "python_full_version < '3.13'" },
+    { name = "httpx", marker = "python_full_version < '3.13'" },
+    { name = "huggingface-hub", marker = "python_full_version < '3.13'" },
+    { name = "packaging", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "websockets", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7b/86/2697930b274a5c8479a44dcb65c02d7e7445e5d88a72524a0a65593cbb58/gradio_client-1.3.0.tar.gz", hash = "sha256:d904afeae4f5682add0a6a263542c10e7669ff6c9de0a53a5c2fc9b719a24bb8", size = 316713 }
 wheels = [
@@ -1749,10 +1749,10 @@ name = "jsonschema"
 version = "4.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs" },
-    { name = "jsonschema-specifications" },
-    { name = "referencing" },
-    { name = "rpds-py" },
+    { name = "attrs", marker = "python_full_version < '3.13'" },
+    { name = "jsonschema-specifications", marker = "python_full_version < '3.13'" },
+    { name = "referencing", marker = "python_full_version < '3.13'" },
+    { name = "rpds-py", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/38/2e/03362ee4034a4c917f697890ccd4aec0800ccf9ded7f511971c75451deec/jsonschema-4.23.0.tar.gz", hash = "sha256:d71497fef26351a33265337fa77ffeb82423f3ea21283cd9467bb03999266bc4", size = 325778 }
 wheels = [
@@ -1764,7 +1764,7 @@ name = "jsonschema-specifications"
 version = "2024.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "referencing" },
+    { name = "referencing", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/10/db/58f950c996c793472e336ff3655b13fbcf1e3b359dcf52dcf3ed3b52c352/jsonschema_specifications-2024.10.1.tar.gz", hash = "sha256:0f38b83639958ce1152d02a7f062902c41c8fd20d558b0c34344292d417ae272", size = 15561 }
 wheels = [
@@ -1924,7 +1924,7 @@ name = "linkify-it-py"
 version = "2.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "uc-micro-py" },
+    { name = "uc-micro-py", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2a/ae/bb56c6828e4797ba5a4821eec7c43b8bf40f69cda4d4f5f8c8a2810ec96a/linkify-it-py-2.0.3.tar.gz", hash = "sha256:68cda27e162e9215c17d786649d1da0021a451bdc436ef9e0fa0ba5234b9b048", size = 27946 }
 wheels = [
@@ -2083,7 +2083,7 @@ name = "markdown-it-py"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "mdurl" },
+    { name = "mdurl", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e4/c0/59bd6d0571986f72899288a95d9d6178d0eebd70b6650f1bb3f0da90f8f7/markdown-it-py-2.2.0.tar.gz", hash = "sha256:7c9a5e412688bc771c67432cbfebcdd686c93ce6484913dccf06cb5a0bea35a1", size = 67120 }
 wheels = [
@@ -2092,7 +2092,7 @@ wheels = [
 
 [package.optional-dependencies]
 linkify = [
-    { name = "linkify-it-py" },
+    { name = "linkify-it-py", marker = "python_full_version < '3.13'" },
 ]
 plugins = [
     { name = "mdit-py-plugins", marker = "python_full_version < '3.13'" },
@@ -2171,16 +2171,16 @@ name = "matplotlib"
 version = "3.9.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "contourpy" },
-    { name = "cycler" },
-    { name = "fonttools" },
+    { name = "contourpy", marker = "python_full_version < '3.13'" },
+    { name = "cycler", marker = "python_full_version < '3.13'" },
+    { name = "fonttools", marker = "python_full_version < '3.13'" },
     { name = "importlib-resources", marker = "python_full_version < '3.10'" },
-    { name = "kiwisolver" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pillow" },
-    { name = "pyparsing" },
-    { name = "python-dateutil" },
+    { name = "kiwisolver", marker = "python_full_version < '3.13'" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
+    { name = "packaging", marker = "python_full_version < '3.13'" },
+    { name = "pillow", marker = "python_full_version < '3.13'" },
+    { name = "pyparsing", marker = "python_full_version < '3.13'" },
+    { name = "python-dateutil", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/df/17/1747b4154034befd0ed33b52538f5eb7752d05bb51c5e2a31470c3bc7d52/matplotlib-3.9.4.tar.gz", hash = "sha256:1e00e8be7393cbdc6fedfa8a6fba02cf3e83814b285db1c60b906a023ba41bc3", size = 36106529 }
 wheels = [
@@ -2243,7 +2243,7 @@ name = "mdit-py-plugins"
 version = "0.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "markdown-it-py" },
+    { name = "markdown-it-py", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d4/2f/58f06f27e97c9aba61220aee827e0eeef9a89116c76ca7ea1d373c187b8e/mdit-py-plugins-0.3.3.tar.gz", hash = "sha256:5cfd7e7ac582a594e23ba6546a2f406e94e42eb33ae596d0734781261c251260", size = 38199 }
 wheels = [
@@ -2848,10 +2848,10 @@ name = "pandas"
 version = "2.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "python-dateutil" },
-    { name = "pytz" },
-    { name = "tzdata" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
+    { name = "python-dateutil", marker = "python_full_version < '3.13'" },
+    { name = "pytz", marker = "python_full_version < '3.13'" },
+    { name = "tzdata", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9c/d6/9f8431bacc2e19dca897724cd097b1bb224a6ad5433784a44b587c7c13af/pandas-2.2.3.tar.gz", hash = "sha256:4f18ba62b61d7e192368b84517265a99b4d7ee8912f8708660fb4a366cc82667", size = 4399213 }
 wheels = [
@@ -2903,8 +2903,8 @@ name = "pandas-stubs"
 version = "2.2.2.240807"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "types-pytz" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
+    { name = "types-pytz", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1f/df/0da95bc75c76f1e012e0bc0b76da31faaf4254e94b9870f25e6311145e98/pandas_stubs-2.2.2.240807.tar.gz", hash = "sha256:64a559725a57a449f46225fbafc422520b7410bff9252b661a225b5559192a93", size = 103095 }
 wheels = [
@@ -3947,8 +3947,8 @@ name = "referencing"
 version = "0.35.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs" },
-    { name = "rpds-py" },
+    { name = "attrs", marker = "python_full_version < '3.13'" },
+    { name = "rpds-py", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/99/5b/73ca1f8e72fff6fa52119dbd185f73a907b1989428917b24cff660129b6d/referencing-0.35.1.tar.gz", hash = "sha256:25b42124a6c8b632a425174f24087783efb348a6f1e0008e63cd4466fedf703c", size = 62991 }
 wheels = [
@@ -4502,7 +4502,7 @@ examples = [
     { name = "accelerate", marker = "python_full_version < '3.13'" },
     { name = "cohere" },
     { name = "datasets", marker = "python_full_version < '3.13'" },
-    { name = "gradio" },
+    { name = "gradio", marker = "python_full_version < '3.13'" },
     { name = "huggingface-hub" },
     { name = "matplotlib", marker = "python_full_version < '3.13'" },
     { name = "numpy", marker = "python_full_version < '3.13'" },
@@ -4534,7 +4534,7 @@ dev = [
     { name = "debugpy" },
     { name = "mypy" },
     { name = "mypy-extensions" },
-    { name = "pandas-stubs" },
+    { name = "pandas-stubs", marker = "python_full_version < '3.13'" },
     { name = "pathspec" },
     { name = "platformdirs" },
     { name = "pytest" },
@@ -4560,7 +4560,7 @@ requires-dist = [
     { name = "git-python", specifier = ">=1.0.3" },
     { name = "google-auth", specifier = ">=2.16.0" },
     { name = "google-cloud-storage", specifier = ">=2.10.0" },
-    { name = "gradio", marker = "extra == 'examples'", specifier = ">=3.35.2" },
+    { name = "gradio", marker = "python_full_version < '3.13' and extra == 'examples'", specifier = ">=3.35.2" },
     { name = "huggingface-hub", marker = "extra == 'examples'", specifier = ">=0.14.1" },
     { name = "ipython", specifier = "==8.2.0" },
     { name = "kubernetes", specifier = ">=25.3.0" },
@@ -4606,7 +4606,7 @@ dev = [
     { name = "debugpy", specifier = ">=1.6.6" },
     { name = "mypy", specifier = "==1.11.1" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "pandas-stubs", specifier = ">=2.2.2" },
+    { name = "pandas-stubs", marker = "python_full_version < '3.13'", specifier = ">=2.2.2" },
     { name = "pathspec", specifier = "==0.11.2" },
     { name = "platformdirs", specifier = "==3.10.0" },
     { name = "pytest", specifier = "==7.4.0" },
@@ -5814,9 +5814,9 @@ name = "yarl"
 version = "1.18.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "idna" },
-    { name = "multidict" },
-    { name = "propcache" },
+    { name = "idna", marker = "python_full_version < '3.13'" },
+    { name = "multidict", marker = "python_full_version < '3.13'" },
+    { name = "propcache", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b7/9d/4b94a8e6d2b51b599516a5cb88e5bc99b4d8d4583e468057eaa29d5f0918/yarl-1.18.3.tar.gz", hash = "sha256:ac1801c45cbf77b6c99242eeff4fffb5e4e73a800b5c4ad4fc0be5def634d2e1", size = 181062 }
 wheels = [
