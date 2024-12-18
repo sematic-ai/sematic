@@ -96,7 +96,7 @@ _DOCKERFILE_ENSURE_SEMATIC = """
 RUN python3 -c "import sematic" || \
 ( \
 export PYTHONDONTWRITEBYTECODE=1 && \
-pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && \
+pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic cffi && \
 unset PYTHONDONTWRITEBYTECODE \
 )
 
