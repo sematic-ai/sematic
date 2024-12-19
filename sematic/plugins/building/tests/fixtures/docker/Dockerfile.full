@@ -18,7 +18,7 @@ COPY sematic/plugins/building/tests/fixtures/nested/third_level/third_level.txt 
 COPY sematic/plugins/building/tests/fixtures/requirements.txt requirements.txt
 RUN pip install --no-cache-dir --ignore-installed --root-user-action=ignore -r requirements.txt
 
-RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && unset PYTHONDONTWRITEBYTECODE )
+RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic cffi && unset PYTHONDONTWRITEBYTECODE )
 
 ENV PATH="/sematic/bin/:$PATH"
 

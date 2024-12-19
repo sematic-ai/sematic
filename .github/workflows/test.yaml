@@ -8,7 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.9", "3.12"]
+        # 3.9: minimum version supported
+        # 3.12 maximum version that supports all dependencies required for examples
+        # 3.13: maximum version supported
+        py-version: ["3.9", "3.12", "3.13"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,6 +22,8 @@ jobs:
       - name: Lint
         run: uvx ruff check --fix sematic
       - name: MyPy
+        # Use 3.12 for type checking because 3.13 doesn't have all
+        # example libraries.
         if: matrix.py-version == '3.12'
         run: uv run mypy -p sematic --disable-error-code import-untyped
       - name: Test
@@ -27,21 +32,21 @@ jobs:
           python3 -c "import sys; print(sys.version)"
           pytest
       - name: Check Schemas
-        if: matrix.py-version == '3.12'
+        if: matrix.py-version == '3.13'
         run: git checkout . && make migrate_up_sqlite && make update-schema && git diff --exit-code
       - name: Wheel
-        if: matrix.py-version == '3.12'
+        if: matrix.py-version == '3.13'
         run: |
           make ui
           make uv-wheel
       - uses: actions/upload-artifact@v4
-        if: matrix.py-version == '3.12'
+        if: matrix.py-version == '3.13'
         with:
           name: sematic-wheel
           path: "./dist/sematic-*.whl"
           retention-days: 10
       - uses: actions/upload-artifact@v4
-        if: matrix.py-version == '3.12'
+        if: matrix.py-version == '3.13'
         with:
           name: sematic-wheel-test
           path: "sematic/tests/integration/test_pip_install.sh"

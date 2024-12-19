@@ -1,5 +1,5 @@
 version: 1
-base_uri: "sematicai/sematic-worker-base:latest@sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c"
+base_uri: "sematicai/sematic-worker-base:latest@sha256:ce9212acf0ca223c55d55cd91db1a11e1f971adca6817a068f00516264b3cc2b"
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"

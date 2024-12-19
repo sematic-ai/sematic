@@ -15,7 +15,7 @@ COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.requirements sema
 COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.src sematic/plugins/building/tests/fixtures/docker/Dockerfile.src
 COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.target sematic/plugins/building/tests/fixtures/docker/Dockerfile.target
 
-RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && unset PYTHONDONTWRITEBYTECODE )
+RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic cffi && unset PYTHONDONTWRITEBYTECODE )
 
 ENV PATH="/sematic/bin/:$PATH"
 

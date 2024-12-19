@@ -9,7 +9,7 @@ try:
     # Third-party
     import pandas
     import pyarrow  # type: ignore  # noqa: F401
-    import snowflake.connector
+    import snowflake.connector  # type: ignore
 except ImportError as e:
     print(
         "You are attempting to use SnowflakeTable which requires the following dependencies:"  # noqa: E501

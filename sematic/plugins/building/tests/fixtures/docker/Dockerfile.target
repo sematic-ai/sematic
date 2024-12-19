@@ -8,7 +8,7 @@ RUN python3 -c "from distutils import cmd, util" || ( apt-get update -y && apt-g
 
 RUN which pip || ( export PYTHONDONTWRITEBYTECODE=1 && apt-get update -y && apt-get install -y --no-install-recommends wget && wget --no-verbose -O get-pip.py https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py && unset PYTHONDONTWRITEBYTECODE )
 
-RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && unset PYTHONDONTWRITEBYTECODE )
+RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic cffi && unset PYTHONDONTWRITEBYTECODE )
 
 ENV PATH="/sematic/bin/:$PATH"
 

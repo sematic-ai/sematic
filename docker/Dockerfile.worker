@@ -1,5 +1,5 @@
 # This is the base image for the worker for cloud execution
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 #FROM nvidia/cuda:11.7.0-base-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -8,8 +8,8 @@ ENV PATH="/sematic/bin/:${PATH}"
 RUN apt-get update -y
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt-get install -y python3.9
+RUN apt-get install -y python3.11
 
 RUN rm /usr/bin/python3
-RUN ln -s /usr/bin/python3.9 /usr/bin/python3
-RUN ln -s /usr/bin/python3.9 /usr/bin/python
+RUN ln -s /usr/bin/python3.11 /usr/bin/python3
+RUN ln -s /usr/bin/python3.11 /usr/bin/python
