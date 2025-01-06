@@ -166,3 +166,55 @@ jobs:
             sematic/ui/tests/cypress_results
 
 
+  nodejs-integration-test:
+    needs: [nodejs_init]
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:22.12.0
+      options: --user 0
+    steps:
+      - name: write env vars
+        run: echo "TEMP_DIR=$(mktemp -d)" >> $GITHUB_ENV
+      - uses: actions/download-artifact@v4
+        with:
+          name: nodejs-cache
+          path: ${{ env.TEMP_DIR }}
+      - name: Extract
+        run: |
+          mkdir -p $CYPRESS_CACHE_FOLDER
+          PROJECT_FOLDER=${{ needs.nodejs_init.outputs.projectFolder }}
+          mkdir -p $PROJECT_FOLDER
+          tar -xzf $TEMP_DIR/cypress.tar.gz -C /
+          tar -xzf $TEMP_DIR/code.tar.gz -C /
+      - name: build-essential
+        run:  apt update && apt-get install -y build-essential curl wget libmagic1
+      - name: install uv
+        run: wget -qO- https://astral.sh/uv/install.sh | sh
+      - name: Py-prep
+        run: make py-prep
+      - name: build ui
+        run: npm run build
+        working-directory: sematic/ui
+      - name: start sematic run
+        run: . .venv/bin/activate && sematic start && sematic run examples/add
+      - name: cypress:e2e
+        run: npm run cypress:e2e
+        working-directory: sematic/ui
+      - name: Upload cypress video
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_video
+          path: |
+            sematic/ui/tests/cypress_video
+      - name: Upload cypress screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_screenshots
+          path: |
+            sematic/ui/tests/cypress_screenshots
+      - name: Upload cypress test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress_results
+          path: |
+            sematic/ui/tests/cypress_results
