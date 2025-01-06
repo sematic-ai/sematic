@@ -1,4 +1,0 @@
-test --test_tag_filters=nocov 
-test --test_output=all
-test --@io_bazel_rules_docker//transitions:enable=false
-test --spawn_strategy='processwrapper-sandbox'
