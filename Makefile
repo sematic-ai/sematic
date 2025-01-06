@@ -17,9 +17,6 @@ migrate_down_sqlite:
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
 
-install-dev-deps:
-	pip3 install -r requirements/ci-requirements.txt
-
 pre-commit:
 	uvx ruff format --check
 	uvx ruff check --fix sematic
