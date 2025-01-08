@@ -40,8 +40,6 @@ def test_new(project_name):
         "pipeline.py",
         "README.md",
         "AUTHORS",
-        # Will not be present when called from the CLI
-        "BUILD",
     }
 
 

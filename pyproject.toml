@@ -178,3 +178,8 @@ exclude = ".*site-packages.*"
 
 [tool.uv.sources]
 sematic = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = [
+  "sematic",
+]

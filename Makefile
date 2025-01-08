@@ -17,9 +17,6 @@ migrate_down_sqlite:
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
 
-install-dev-deps:
-	pip3 install -r requirements/ci-requirements.txt
-
 pre-commit:
 	uvx ruff format --check
 	uvx ruff check --fix sematic
@@ -63,22 +60,6 @@ worker-image:
 sematic/ui/build:
 	@$(MAKE) ui
 
-wheel : sematic/ui/build
-	rm -f bazel-bin/sematic/*.whl
-	rm -f bazel-bin/sematic/ee/*.whl
-	cat README.md | \
-		grep -v "<img" | \
-		grep -v "<p" | \
-		grep -v "/p>" | \
-		grep -v "<h2" | \
-		grep -v "/h2>" | \
-		grep -v "<h3" | \
-		grep -v "/h3>" | \
-		grep -v "<a" | \
-		grep -v "/a>" | \
-		grep -v "/img>" > README.nohtml
-	bazel build //sematic:wheel
-
 uv-wheel:
 	cat README.md | \
 		grep -v "<img" | \
@@ -91,10 +72,8 @@ uv-wheel:
 		grep -v "<a" | \
 		grep -v "/a>" | \
 		grep -v "/img>" > README.nohtml
-	# source .venv/bin/activate && python3 -m pandoc read --format=markdown README.nohtml
-	cp BUILD tmp.BUILD
 	rm -rf dist build src/*.egg-info
-	uvx pip wheel -w dist . && rm -rf build && mv tmp.BUILD BUILD
+	uvx pip wheel -w dist . && rm -rf build
 	rm README.nohtml
 
 test-release:
@@ -113,7 +92,4 @@ release-server:
 	docker push sematic/sematic-server-ee:${TAG}
 
 test:
-	bazel test //sematic/... --test_tag_filters=nocov --test_output=all
-
-coverage:
-	bazel coverage //sematic/... --combined_report=lcov --test_tag_filters=cov --test_output=all
+	source .venv/bin/activate && pytest

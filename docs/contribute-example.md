@@ -56,44 +56,12 @@ to
 from sematic.examples.my_package.pipeline import pipeline
 ```
 
-### Integrate in the build system.
-
-The Sematic codebase uses [Bazel](https://bazel.build/) as a build system.
-
-Don't worry, you don't have to learn its details. Simply add a `BUILD` file at
-the root of your package:
-
-```
-# sematic/examples/my_package/BUILD
-
-sematic_example(
-    name = "my_package",
-    requirements = [
-        # List of third-party requirements
-        # e.g. "torch", "pandas"
-    ],
-    data = [
-        # If your example uses local data files (e.g. CSV files)
-        # Add a relative path to them here.
-    ]
-)
-```
-
-Then you should be able to run (after [installing Bazel](https://bazel.build/install)):
-
-```shell
-$ bazel run //sematic/examples/my_package
-```
-
 ### Third-party requirements
 
-As a monorepo, Sematic keeps a centralized list of third-party requirements at
-[requirements/requirements.in](https://github.com/sematic-ai/sematic/blob/main/requirements/requirements.in).
+Sematic keeps a centralized list of third-party requirements in its pyproject.toml
 
 If the third-party libraries required by your new examples are not in there
-(Bazel will let you know), add them to
-[requirements/requirements.in](https://github.com/sematic-ai/sematic/blob/main/requirements/requirements.in),
-under the `# Examples` section.
+, add them under the `examples` optional dependencies.
 
 Don't worry, your third-party dependencies will not be added to the Sematic pip wheel.
 

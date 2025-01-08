@@ -1,7 +1,0 @@
-filegroup(
-    name = "ui_build",
-    srcs = glob([
-        "build/**",
-    ]),
-    visibility = ["//visibility:public"],
-)

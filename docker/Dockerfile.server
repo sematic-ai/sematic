@@ -1,6 +1,4 @@
 # Dockerfile for the API server
-# Ideally we would do this via Bazel instead but the py3_image rules
-# are currently broken for M1 Macs
 
 # see https://stackoverflow.com/questions/65612411/forcing-docker-to-use-linux-amd64-platform-by-default-on-macos/69636473#69636473
 # for why --platform

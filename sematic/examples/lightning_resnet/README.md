@@ -34,17 +34,6 @@ mid-execution from a programming error. See [`test_pipeline.py`](./tests/test_pi
 
 ## Running
 
-### Bazel
-
-After updating [BUILD](./BUILD) with your own registry and repository, you can
-launch the pipeline with:
-
-```bash
-$ bazel run sematic/examples/lightning_resnet:main -- --cloud
-```
-
-### Native Docker
-
 After updating [main.yaml](./main.yaml) with your own registry and repository,
 you can launch the pipeline with:
 

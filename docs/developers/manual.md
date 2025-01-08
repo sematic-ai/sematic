@@ -2,32 +2,31 @@
 
 ## Getting started
 
-## Build System
-
-Install Bazel:
-- [MacOS](https://bazel.build/install/os-x#install-on-mac-os-x-homebrew)
-- [Ubuntu](https://bazel.build/install/ubuntu#install-on-ubuntu)
-- [RHEL](https://bazel.build/install/redhat)
-
 ## Dev Tools
 
 ```shell
-$ make install-dev-deps
+$ make py-prep
 ```
 
 ## Add a third-party pip dependency
 
-Add your dependency to `requirements/requirements.in`. Avoid pinning a fixed version unless necessary.
+Add your dependency to `pyproject.toml`. Avoid pinning a fixed version unless necessary.
 
 Then run (only supported on Linux):
 ```shell
 $ make refresh-dependencies
 ```
 
+## Activate virtual environment
+
+```shell
+$ source .venv/bin/activate
+```
+
 ## Starting the API server
 
 ```shell
-$ bazel run //sematic/api:server
+$ python -m sematic.api.server
 ```
 
 ## Starting the UI Dashboard
@@ -111,7 +110,7 @@ If, at a later stage, we need to remove the __MyNewPlugin__ component for any re
 This is if you want to package a dev Sematic version for installation somewhere else:
 
 ```shell
-$ make install-dev-deps  # if not done before
+$ make py-prep  # if not done before
 $ make ui
 $ make wheel
 ```

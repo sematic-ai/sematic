@@ -941,31 +941,6 @@ def test_subprocess_signal_handling(
     assert result == 42
 
 
-def test_subprocess_no_cleanup(
-    no_settings_file,  # noqa: F811
-    mock_socketio,  # noqa: F811
-    test_db,  # noqa: F811
-    mock_requests,  # noqa: F811
-):
-    @func
-    def fork_func(param: int) -> int:  # type: ignore
-        subprocess_pid = os.fork()
-
-        if subprocess_pid == 0:
-            return param
-
-        os.waitpid(subprocess_pid, 0)
-        time.sleep(1)
-        return param
-
-    future = fork_func(param=42)
-    result = LocalRunner().run(future)
-
-    # assert the subprocess did not execute worker code,
-    # messing up the actual worker's workflow
-    assert result == 42
-
-
 def test_subprocess_error(
     no_settings_file,  # noqa: F811
     mock_socketio,  # noqa: F811

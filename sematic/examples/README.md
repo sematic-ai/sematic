@@ -6,8 +6,8 @@ You can run these examples using the Sematic CLI:
 $ sematic run examples/add
 ```
 
-Examples are shorthand simple pipelines declared using the `sematic_pipeline`
-Bazel rule, which expects a `__main__.py` file as the execution entry point.
+Examples are shorthand simple pipelines
+which expect a `__main__.py` file as the execution entry point.
 They can only be executed locally. For cloud execution, you will need to
 declare your own entry points which invoke execution using `CloudRunner`.
 
