@@ -77,10 +77,7 @@ class PromptFormat:
 
 
 def log_metric(name: str, value: float) -> None:
-    """Stand-in for Sematic's `log_metric` that prints to stdout.
-
-    Sematic's log_metric is only available for EE users.
-    """
+    """Stand-in for Sematic's `log_metric` that prints to stdout."""
     print(f"Metric '{name}': {value}")
 
 

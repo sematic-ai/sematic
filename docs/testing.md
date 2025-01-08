@@ -10,7 +10,7 @@ have your pipeline execute for hours or days, and then have it fail near
 the end for a simple error!
 
 Luckily, Sematic provides out-of-the-box support for unit testing your
-Sematic pipelines. With Sematic Enterprise Edition, you can also
+Sematic pipelines. You can also
 integrate Sematic with your version control system to block PRs
 and perform other commit checking. See our [GitHub](./github.md)
 integration for more information.

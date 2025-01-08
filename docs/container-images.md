@@ -19,15 +19,11 @@ Sematic currently supports two build systems:
 ### Docker
 
 {% hint style="warning" %}
-This feature is in "Beta."
+The Native Docker Build System only supports Debian GNU/Linux.
 {% endhint %}
 
 {% hint style="warning" %}
-The Native Docker Build System currently only supports Debian GNU/Linux.
-{% endhint %}
-
-{% hint style="warning" %}
-The Native Docker Build System currently does not support multiple base images.
+The Native Docker Build System does not support multiple base images.
 {% endhint %}
 
 If you don't want to use [Bazel](https://bazel.build) to manage your project,

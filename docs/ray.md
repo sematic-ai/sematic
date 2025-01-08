@@ -1,13 +1,4 @@
-# Ray[^1]
-
-{% hint style="warning" %}
-This feature is in "Beta."
-{% endhint %}
-
-{% hint style="info" %}
-This feature is only available in Sematic
-Enterprise Edition.
-{% endhint %}
+# Ray
 
 ## What is Ray?
 
@@ -217,10 +208,6 @@ of the Ray head AND of the autoscaler.
 
 ## Installation and configuration
 
-Before using this feature, make sure you are set up with a Sematic EE
-license. Once that's taken care of, you will need to make the following
-changes:
-
 ### Pip package
 
 Instead of depending on `sematic`, you will need to depend on `sematic[ray]`
@@ -228,7 +215,8 @@ or `sematic[all]`.
 
 ### Helm chart
 
-Ensure that you are using an [EE server](./upgrades.md#foss-to-enterprise-edition1).
+Ensure that you are using an [EE server](https://hub.docker.com/r/sematic/sematic-server-ee)
+OR v0.41.0 or higher of the standard server.
 Then you will need to install Kuberay into your Kubernetes environment.
 
 #### Installing Kuberay
@@ -268,7 +256,3 @@ ray:
   non_gpu_tolerations: []
   gpu_resource_request_key: null
 ```
-
-[^1]: This feature of Sematic is only available with the "Enterprise Edition."
-Before using, please reach out to Sematic via support@sematic.dev to obtain a
-license for "Sematic EE."

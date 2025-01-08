@@ -1,9 +1,4 @@
-# GitHub[^1]
-
-{% hint style="info" %}
-This feature is only available in Sematic
-Enterprise Edition.
-{% endhint %}
+# GitHub
 
 ## Summary
 
@@ -12,7 +7,7 @@ it be "traditional" code, [unit testing of ML pipelines](./testing.md), or runni
 [regression pipelines](https://www.sematic.dev/blog/continuous-learning-for-safer-and-better-ml-models)
 involving your data and models.
 
-If you have deployed Sematic EE[^1], you can configure it to integrate with GitHub such
+If you have deployed Sematic, you can configure it to integrate with GitHub such
 that you can validate your commits (for PRs or any other purpose) using Sematic runs.
 
 <img
@@ -287,7 +282,3 @@ github:
   enabled: true
   github_access_token: <TOKEN FROM GITHUB>
 ```
-
-[^1]: This feature of Sematic is only available with the "Enterprise Edition."
-Before using, please reach out to Sematic via support@sematic.dev to obtain a
-license for "Sematic EE."
