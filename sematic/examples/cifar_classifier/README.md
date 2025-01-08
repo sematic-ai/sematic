@@ -26,17 +26,6 @@ context.
 
 ## Running
 
-### Bazel
-
-After updating [BUILD](./BUILD) with your own registry and repository, you can
-launch the pipeline with:
-
-```bash
-$ bazel run sematic/examples/cifar_classifier:main -- --cloud
-```
-
-### Native Docker
-
 After updating [main.yaml](./main.yaml) with your own registry and repository,
 you can launch the pipeline with:
 

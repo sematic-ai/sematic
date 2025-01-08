@@ -8,17 +8,6 @@ reduced.
 
 ## Running
 
-### Bazel
-
-After updating [BUILD](./BUILD) with your own registry and repository, you can
-launch the pipeline with:
-
-```bash
-$ bazel run sematic/examples/testing_pipeline:__main__ -- --cloud
-```
-
-### Native Docker
-
 After updating [main.yaml](./__main__.yaml) with your own registry and repository,
 you can launch the pipeline with:
 

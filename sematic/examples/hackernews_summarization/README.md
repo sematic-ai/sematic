@@ -29,10 +29,6 @@ Arguments
 Example usage:
 
 ```shell
-$ bazel run sematic/examples/hackernews_summarization:hackernews_summarization -- --query llm --openai-api-key '<API_KEY>'
-```
-
-```shell
 $ sematic run examples/hackernews_summarization --query llm --openai-api-key '<API_KET>'
 ```
 
