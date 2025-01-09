@@ -5,6 +5,10 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.41.0](https://pypi.org/project/sematic/0.41.0/)
+    * [improvement] Remove Enterprise Edition Licensing, restore Apache 2.0 for
+      all code including features previously limited to EE.
+    * [improvement] Add support for python 3.13, drop support for 3.8.
 * [0.40.0](https://pypi.org/project/sematic/0.40.0/)
     * [feature] Allow custom labels and annotations for Ray integration
     * [bugfix] Fix an issue with tuple type casting checks

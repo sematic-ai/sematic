@@ -2,8 +2,8 @@ apiVersion: v2
 name: sematic-server
 description: Sematic AI Server
 type: application
-version: 1.2.0
-appVersion: v0.40.0
+version: 1.2.1
+appVersion: v0.41.0
 maintainers:
   - name: sematic-ai
     url: https://github.com/sematic-ai/sematic/
