@@ -1,7 +1,3 @@
-{% hint style="warning" %}
-This feature is in "Beta."
-{% endhint %}
-
 ## Using Slack with Sematic
 
 Sematic currently automatically sends [Pipeline Run](glossary.md#pipeline-run)

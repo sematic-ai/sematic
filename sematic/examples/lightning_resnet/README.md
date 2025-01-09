@@ -7,8 +7,7 @@ to do distributed training of a model classifying images in the
 using ResNet.
 
 This example can only be run on Kubernetes clusters set up with sufficiently powerful
-GPU nodes enabled. It makes use of Sematic's Ray integration, which is available in
-Sematic EE.
+GPU nodes enabled. It makes use of Sematic's Ray integration.
 
 The modeling code in `train_eval` is based on an example from
 [the pytorch lightning documentation](https://pytorch-lightning.readthedocs.io/en/stable/notebooks/lightning_examples/cifar10-baseline.html)

@@ -86,9 +86,11 @@ release:
 release-server:
 	rm -f docker/*.whl
 	cp ./dist/*sematic*.whl docker/
-	cd docker; docker build --build-arg EXTRA=default -t sematic/sematic-server:${TAG} -f Dockerfile.server .
+	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematic/sematic-server:${TAG}
-	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
+	# alias the ee server to be the same as the non-ee server for anybody
+	# who continues to rely on the ee tag.
+	docker image tag sematic/sematic-server:${TAG} sematic/sematic-server-ee:${TAG}
 	docker push sematic/sematic-server-ee:${TAG}
 
 test:

@@ -1,7 +1,7 @@
 # Metrics
 
 Sematic surfaces a number of high-level metrics in the Dashboard, and lets
-Enterprise users log their own metrics at runtime.
+users log their own metrics at runtime.
 
 ## Pipeline metrics
 

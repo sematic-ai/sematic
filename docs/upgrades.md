@@ -272,8 +272,7 @@ need to duplicate them in the `deps` field.
 You will need to make the following changes to the `values.yaml`
 for your Helm deployment:
 
-- If you are NOT using Sematic "Enterprise Edition",
-change `image.repository` from `sematicai/sematic-server`
+- Change `image.repository` from `sematicai/sematic-server`
 to `sematic/sematic-server`.
 - You may have hard-coded a Sematic version in `image.tag`
 to work around the bug referenced in
@@ -285,17 +284,6 @@ for the chart you install.
 - If you are specifying `ingress.dashboard_url`, change the name of this
 parameter to
 [`ingress.sematic_dashboard_url`](https://github.com/sematic-ai/sematic/pull/547)
-
-## FOSS to "Enterprise Edition"
-
-0. Reach out to Sematic via [support@sematic.dev](mailto:support@sematic.dev) to obtain
-an Enterprise License.
-1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
-2. In your `pip` installation (client installation), change from depending on `sematic`
-to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing
-the EE features you are interested in. See [integrations](#integrations) below for
-specific extras. Note that `sematic[all]` will equip clients with ALL Enterprise Edition
-features.
 
 ## Integrations
 
