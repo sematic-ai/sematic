@@ -3,7 +3,7 @@ name = "sematic"
 description = "Sematic ML orchestration tool"
 
 # The formatting of this line must be maintained for version testing.
-version = "0.40.0"
+version = "0.41.0"
 requires-python = ">=3.9, <3.14"
 dependencies = [
   # System

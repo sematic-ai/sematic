@@ -117,6 +117,19 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### vX.X.X to v0.41.0
+
+In v0.41.0, Sematic dropped support for python 3.8, which reached EOL as of
+[October 2024](https://devguide.python.org/versions/).
+Before upgrading to or beyond this version, ensure you have migrated to a
+supported python version.
+
+This version also added support for python 3.13, at time of publishing the
+most recent officially supported python version. Note that not all public
+and popular packages yet support python 3.13; at time of writing pytorch
+still does not support 3.13. Thus some examples that rely on such packages
+may not work.
+
 ### vX.X.X to v0.39.0
 
 In v0.39.0, Sematic switched its [SQLAlchemy](https://www.sqlalchemy.org/)

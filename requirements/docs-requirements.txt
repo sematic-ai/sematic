@@ -1,5 +1,0 @@
-sphinx
-# To support markdown docs
-myst-parser
-# Theme
-sphinx-press-theme
