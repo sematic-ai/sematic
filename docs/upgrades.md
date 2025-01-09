@@ -130,6 +130,14 @@ and popular packages yet support python 3.13; at time of writing pytorch
 still does not support 3.13. Thus some examples that rely on such packages
 may not work.
 
+Finally, this version removed Enterprise Edition Licensing constraints and
+merged the EE server with the standard server. If you are using the
+[sematic/sematic-server-ee](https://hub.docker.com/r/sematic/sematic-server-ee)
+base image for your server, you may now use the standard
+[sematic/sematic-server](https://hub.docker.com/r/sematic/sematic-server)
+server, as the EE features have been merged into the standard image and the
+standard and EE tags are now aliases for the same underlying image.
+
 ### vX.X.X to v0.39.0
 
 In v0.39.0, Sematic switched its [SQLAlchemy](https://www.sqlalchemy.org/)
